@@ -1,242 +1,108 @@
-# everyCent
+# EveryCent 智能记账系统
 
-This application was generated using JHipster 8.11.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v8.11.0](https://www.jhipster.tech/documentation-archive/v8.11.0).
+EveryCent 是一个基于 JHipster 生成的课程设计项目，主题是“具有 AI 辅助功能的智能记账系统”。项目保留 JHipster 默认的 Spring Boot + React 单体结构，在此基础上扩展账本、收支记录、预算管理、数据看板、共享账本、Excel 导出、定时提醒和 LLM 自然语言记账能力。
 
-## Project Structure
+## 技术栈
 
-Node is required for generation and recommended for development. `package.json` is always generated for a better development experience with prettier, commit hooks, scripts and so on.
+- 后端：Spring Boot / JHipster / Spring Security / JWT / JPA / Liquibase
+- 前端：React / TypeScript / JHipster Webapp
+- 数据库：MySQL
+- AI：LLM API，用于自然语言消费解析、行为标签识别、情绪标签识别和个性化预算提醒
 
-In the project root, JHipster generates configuration files for tools like git, prettier, eslint, husky, and others that are well known and you can find references in the web.
+## 本地开发启动
 
-`/src/*` structure follows default Java structure.
+后端启动：
 
-- `.yo-rc.json` - Yeoman configuration file
-  JHipster configuration is stored in this file at `generator-jhipster` key. You may find `generator-jhipster-*` for specific blueprints configuration.
-- `.yo-resolve` (optional) - Yeoman conflict resolver
-  Allows to use a specific action when conflicts are found skipping prompts for files that matches a pattern. Each line should match `[pattern] [action]` with pattern been a [Minimatch](https://github.com/isaacs/minimatch#minimatch) pattern and action been one of skip (default if omitted) or force. Lines starting with `#` are considered comments and are ignored.
-- `.jhipster/*.json` - JHipster entity configuration files
-
-- `npmw` - wrapper to use locally installed npm.
-  JHipster installs Node and npm locally using the build tool by default. This wrapper makes sure npm is installed locally and uses it avoiding some differences different versions can cause. By using `./npmw` instead of the traditional `npm` you can configure a Node-less environment to develop or test your application.
-- `/src/main/docker` - Docker configurations for the application and services that the application depends on
-
-## Development
-
-The build system will install automatically the recommended version of Node and npm.
-
-We provide a wrapper to launch npm.
-You will only need to run this command when dependencies change in [package.json](package.json).
-
+```bash
+./mvnw
 ```
+
+前端开发启动：
+
+```bash
+npm start
+```
+
+开发访问地址：
+
+- 前端开发服务：http://localhost:9000
+- 后端服务：http://localhost:8080
+
+默认测试账号：
+
+- 管理员：`admin/admin`
+- 普通用户：`user/user`
+
+如依赖发生变化，可按 JHipster 默认方式安装前端依赖：
+
+```bash
 ./npmw install
 ```
 
-We use npm scripts and [Webpack][] as our build system.
+## 构建与测试
 
-Run the following commands in two separate terminals to create a blissful development experience where your browser
-auto-refreshes when files change on your hard drive.
+运行后端与前端测试：
 
-```
-./mvnw
-./npmw start
-```
-
-Npm is also used to manage CSS and JavaScript dependencies used in this application. You can upgrade dependencies by
-specifying a newer version in [package.json](package.json). You can also run `./npmw update` and `./npmw install` to manage dependencies.
-Add the `help` flag on any command to see how you can use it. For example, `./npmw help update`.
-
-The `./npmw run` command will list all the scripts available to run for this project.
-
-### PWA Support
-
-JHipster ships with PWA (Progressive Web App) support, and it's turned off by default. One of the main components of a PWA is a service worker.
-
-The service worker initialization code is commented out by default. To enable it, uncomment the following code in `src/main/webapp/index.html`:
-
-```html
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').then(function () {
-      console.log('Service Worker Registered');
-    });
-  }
-</script>
-```
-
-Note: [Workbox](https://developers.google.com/web/tools/workbox/) powers JHipster's service worker. It dynamically generates the `service-worker.js` file.
-
-### Managing dependencies
-
-For example, to add [Leaflet][] library as a runtime dependency of your application, you would run following command:
-
-```
-./npmw install --save --save-exact leaflet
-```
-
-To benefit from TypeScript type definitions from [DefinitelyTyped][] repository in development, you would run following command:
-
-```
-./npmw install --save-dev --save-exact @types/leaflet
-```
-
-Then you would import the JS and CSS files specified in library's installation instructions so that [Webpack][] knows about them:
-Note: There are still a few other things remaining to do for Leaflet that we won't detail here.
-
-For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
-
-## Building for production
-
-### Packaging as jar
-
-To build the final jar and optimize the everyCent application for production, run:
-
-```
-./mvnw -Pprod clean verify
-```
-
-This will concatenate and minify the client CSS and JavaScript files. It will also modify `index.html` so it references these new files.
-To ensure everything worked, run:
-
-```
-java -jar target/*.jar
-```
-
-Then navigate to [http://localhost:8080](http://localhost:8080) in your browser.
-
-Refer to [Using JHipster in production][] for more details.
-
-### Packaging as war
-
-To package your application as a war in order to deploy it to an application server, run:
-
-```
-./mvnw -Pprod,war clean verify
-```
-
-### JHipster Control Center
-
-JHipster Control Center can help you manage and control your application(s). You can start a local control center server (accessible on http://localhost:7419) with:
-
-```
-docker compose -f src/main/docker/jhipster-control-center.yml up
-```
-
-## Testing
-
-### Spring Boot tests
-
-To launch your application's tests, run:
-
-```
+```bash
 ./mvnw verify
-```
-
-### Client tests
-
-Unit tests are run by [Jest][]. They're located near components and can be run with:
-
-```
 ./npmw test
 ```
 
-## Others
+生产环境打包为 jar：
 
-### Code quality using Sonar
-
-Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
-
-```
-docker compose -f src/main/docker/sonar.yml up -d
+```bash
+./mvnw -Pprod clean verify
+java -jar target/*.jar
 ```
 
-Note: we have turned off forced authentication redirect for UI in [src/main/docker/sonar.yml](src/main/docker/sonar.yml) for out of the box experience while trying out SonarQube, for real use cases turn it back on.
+生产环境打包为 war：
 
-You can run a Sonar analysis with using the [sonar-scanner](https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner) or by using the maven plugin.
-
-Then, run a Sonar analysis:
-
-```
-./mvnw -Pprod clean verify sonar:sonar -Dsonar.login=admin -Dsonar.password=admin
+```bash
+./mvnw -Pprod,war clean verify
 ```
 
-If you need to re-run the Sonar phase, please be sure to specify at least the `initialize` phase since Sonar properties are loaded from the sonar-project.properties file.
+## 三人分工
 
-```
-./mvnw initialize sonar:sonar -Dsonar.login=admin -Dsonar.password=admin
-```
+- A：负责前端页面、React 组件、路由、表单交互和数据看板图表。
+- B：负责后端接口、业务逻辑、权限校验、服务层和 REST Controller。
+- C：负责数据库设计、Liquibase changelog、LLM 控制器、提示词和 AI 结果校验。
 
-Additionally, Instead of passing `sonar.password` and `sonar.login` as CLI arguments, these parameters can be configured from [sonar-project.properties](sonar-project.properties) as shown below:
+## Git 分支协作规范
 
-```
-sonar.login=admin
-sonar.password=admin
-```
+- `main`：稳定展示版本，只合并阶段性可演示成果。
+- `dev`：集成开发分支，日常功能分支合并目标。
+- `feature/frontend`：前端页面和交互开发。
+- `feature/backend`：后端接口和业务逻辑开发。
+- `feature/database-llm`：数据库、Liquibase 和 LLM 模块开发。
 
-For more information, refer to the [Code quality page][].
+推荐流程：从 `dev` 拉取功能分支，本地开发并提交 commit，push 到远程后发起 Pull Request 合并到 `dev`；阶段稳定后再由 `dev` 合并到 `main`。
 
-### Docker Compose support
+## 目录结构说明
 
-JHipster generates a number of Docker Compose configuration files in the [src/main/docker/](src/main/docker/) folder to launch required third party services.
+本项目不拆分为独立的 `frontend/` 和 `backend/`，而是保留 JHipster 原有单体工程结构：
 
-For example, to start required services in Docker containers, run:
+- `src/main/java/com/everycent/`：后端 Java 源码，包含配置、安全、用户、REST 接口和业务服务。
+- `src/main/resources/`：后端配置、国际化、日志和 Liquibase 配置。
+- `src/main/webapp/app/`：React + TypeScript 前端源码。
+- `src/main/resources/config/liquibase/`：数据库版本管理目录。
+- `docs/`：课程设计说明文档。
+- `src/main/java/com/everycent/llm/`：EveryCent 新增 LLM 模块占位目录。
+- `src/main/webapp/app/modules/everycent/`：EveryCent 自定义业务前端页面目录。
 
-```
-docker compose -f src/main/docker/services.yml up -d
-```
+更详细的目录说明见 [docs/project-structure.md](docs/project-structure.md)。
 
-To stop and remove the containers, run:
+## 注意事项
 
-```
-docker compose -f src/main/docker/services.yml down
-```
+- 不要提交 `.env`、真实 LLM API Key、数据库密码、JWT 密钥等敏感信息。
+- 只提交 `.env.example` 作为环境变量示例。
+- 数据库表结构变更应新增 Liquibase changelog，不要直接修改已经合并的历史 changelog。
+- 不要删除 JHipster 自动生成的认证、安全、配置、测试和构建代码。
 
-[Spring Docker Compose Integration](https://docs.spring.io/spring-boot/reference/features/dev-services.html) is enabled by default. It's possible to disable it in application.yml:
+## 后续开发计划
 
-```yaml
-spring:
-  ...
-  docker:
-    compose:
-      enabled: false
-```
-
-You can also fully dockerize your application and all the services that it depends on.
-To achieve this, first build a Docker image of your app by running:
-
-```sh
-npm run java:docker
-```
-
-Or build a arm64 Docker image when using an arm64 processor os like MacOS with M1 processor family running:
-
-```sh
-npm run java:docker:arm64
-```
-
-Then run:
-
-```sh
-docker compose -f src/main/docker/app.yml up -d
-```
-
-For more information refer to [Using Docker and Docker-Compose][], this page also contains information on the Docker Compose sub-generator (`jhipster docker-compose`), which is able to generate Docker configurations for one or several JHipster applications.
-
-## Continuous Integration (optional)
-
-To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`), this will let you generate configuration files for a number of Continuous Integration systems. Consult the [Setting up Continuous Integration][] page for more information.
-
-[JHipster Homepage and latest documentation]: https://www.jhipster.tech
-[JHipster 8.11.0 archive]: https://www.jhipster.tech/documentation-archive/v8.11.0
-[Using JHipster in development]: https://www.jhipster.tech/documentation-archive/v8.11.0/development/
-[Using Docker and Docker-Compose]: https://www.jhipster.tech/documentation-archive/v8.11.0/docker-compose
-[Using JHipster in production]: https://www.jhipster.tech/documentation-archive/v8.11.0/production/
-[Running tests page]: https://www.jhipster.tech/documentation-archive/v8.11.0/running-tests/
-[Code quality page]: https://www.jhipster.tech/documentation-archive/v8.11.0/code-quality/
-[Setting up Continuous Integration]: https://www.jhipster.tech/documentation-archive/v8.11.0/setting-up-ci/
-[Node.js]: https://nodejs.org/
-[NPM]: https://www.npmjs.com/
-[Webpack]: https://webpack.github.io/
-[BrowserSync]: https://www.browsersync.io/
-[Jest]: https://jestjs.io
-[Leaflet]: https://leafletjs.com/
-[DefinitelyTyped]: https://definitelytyped.org/
+1. 设计 Ledger、Transaction、Budget、LedgerPermission 等实体和 Liquibase changelog。
+2. 实现账本、收支记录、预算、共享账本和数据看板 REST API。
+3. 实现自然语言记账解析接口，并对 LLM 输出做后端校验。
+4. 完成 React 业务页面，包括看板、账本、记账、预算、AI 录入和共享账本。
+5. 增加 Excel 导出、预算超支告警和定时提醒。
+6. 补充单元测试、集成测试和课程设计演示数据。
