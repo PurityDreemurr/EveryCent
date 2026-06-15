@@ -1,0 +1,5 @@
+JDK >= 21
+Node.js
+JHipster == 8.11
+options:
+    Yeoman
