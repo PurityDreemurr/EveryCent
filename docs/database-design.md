@@ -1,94 +1,104 @@
-# 数据库设计说明
+# EveryCent 数据库设计说明
 
-本文档描述 EveryCent 后续业务数据库设计方向。当前 JHipster 已生成用户和权限相关表，业务表应通过新增 Liquibase changelog 逐步加入。
+本文档按根目录 `EveryCent_系统详细设计文档.md` 第 7 章数据库建模设计落地。项目复用 JHipster 内置 `jhi_user`、`jhi_authority`、`jhi_user_authority`，不重新创建用户表。
 
-## 核心实体
+## 当前数据库开发状态
 
-### User
+- JHipster 初始表已存在：`jhi_user`、`jhi_authority`、`jhi_user_authority`。
+- 当前项目没有 `.jhipster/` 实体定义目录，因此业务模型采用手写 JPA 实体、Repository 和 Liquibase changelog。
+- 业务表 changelog：`src/main/resources/config/liquibase/changelog/20260615000100_add_everycent_business_tables.xml`。
+- `master.xml` 已 include 该 changelog。
 
-用户实体，复用 JHipster 已生成的 `jhi_user` 表和权限体系。用于登录、认证、审计和账本归属。
+## E-R 实体说明
 
-### Ledger
+```mermaid
+erDiagram
+    JHI_USER ||--o{ LEDGER : creates
+    JHI_USER ||--o{ USER_LEDGER_PERMISSION : has
+    LEDGER ||--o{ USER_LEDGER_PERMISSION : grants
+    LEDGER ||--o{ TRANSACTION_RECORD : contains
+    JHI_USER ||--o{ TRANSACTION_RECORD : creates
+    BEHAVIOR_TAG ||--o{ TRANSACTION_RECORD : classifies
+    EMOTION_TAG ||--o{ TRANSACTION_RECORD : marks
+    LEDGER ||--o{ BUDGET : owns
+    LEDGER ||--o{ MONTHLY_BALANCE : summarizes
+    JHI_USER ||--o{ NOTIFICATION_MESSAGE : receives
+    LEDGER ||--o{ NOTIFICATION_MESSAGE : generates
+```
 
-账本实体，用于区分个人账本和共享账本。
+## 核心表
 
-建议字段：
+### ledger
 
-- `id`
-- `name`
-- `description`
-- `owner_id`
-- `created_date`
-- `last_modified_date`
+账本表。字段：`id`、`name`、`description`、`creator_id`、`default_currency`、`current_month_balance`、`created_date`、`last_modified_date`。
 
-### LedgerPermission 或 UserLedgerAuth
+约束：`creator_id` 外键关联 `jhi_user.id`；`name`、`creator_id`、`default_currency`、`current_month_balance`、`created_date` 非空。
 
-用户账本权限实体，用于支持多人共同记账和只读监督。
+### user_ledger_permission
 
-建议字段：
+用户账本权限表。字段：`id`、`user_id`、`ledger_id`、`permission_level`、`status`、`invited_by_id`、`created_date`。
 
-- `id`
-- `ledger_id`
-- `user_id`
-- `permission_type`：`OWNER`、`WRITE`、`READ`
-- `created_date`
+约束：`user_id` 外键关联 `jhi_user.id`；`ledger_id` 外键关联 `ledger.id`；`invited_by_id` 外键关联 `jhi_user.id`；`(user_id, ledger_id)` 唯一。
 
-### Transaction
+权限枚举：`OWNER`、`READ_WRITE`、`READ_ONLY`。状态枚举：`ACTIVE`、`PENDING`、`REVOKED`。
 
-收支记录实体，用于记录收入、支出、行为标签和情绪标签。
+### transaction_record
 
-建议字段：
+收支记录表。字段：`id`、`ledger_id`、`creator_id`、`amount`、`type`、`behavior_tag_id`、`emotion_tag_id`、`transaction_date`、`source`、`description`、`raw_input`、`created_date`、`last_modified_date`。
 
-- `id`
-- `ledger_id`
-- `amount`
-- `type`：`INCOME` 或 `EXPENSE`
-- `behavior_tag`
-- `mood_tag`
-- `occurred_date`
-- `remark`
-- `created_by`
-- `created_date`
+约束：`ledger_id` 外键关联 `ledger.id`；`creator_id` 外键关联 `jhi_user.id`；`behavior_tag_id` 外键关联 `behavior_tag.id`；`emotion_tag_id` 外键关联 `emotion_tag.id`；MySQL 下有 `amount > 0` check。实体层使用 `@DecimalMin("0.01")` 补充校验。
 
-### Budget
+### behavior_tag
 
-预算实体，用于维护周预算和月预算。
+行为标签表。字段：`id`、`code`、`name`、`system_default`、`creator_id`。
 
-建议字段：
+约束：`code` 唯一且非空；`creator_id` 可为空并外键关联 `jhi_user.id`。系统默认标签通过 Liquibase 初始化：`FOOD`、`TRANSPORT`、`SHOPPING`、`ENTERTAINMENT`、`STUDY`、`MEDICAL`、`SALARY`、`PART_TIME`、`OTHER`。
 
-- `id`
-- `ledger_id`
-- `period_type`：`WEEK` 或 `MONTH`
-- `period_value`
-- `amount`
-- `created_date`
+### emotion_tag
 
-## 实体关系
+情绪标签表。字段：`id`、`code`、`name`、`valence`、`system_default`、`creator_id`。
 
-- 一个 `User` 可以拥有多个 `Ledger`。
-- 一个 `Ledger` 只能有一个所有者，但可以通过 `LedgerPermission` 授权多个用户访问。
-- 一个 `Ledger` 可以包含多条 `Transaction`。
-- 一个 `Ledger` 可以配置多个 `Budget`，按周或按月区分。
-- `Transaction.created_by` 用于记录多人账本中是哪位用户录入。
+约束：`code` 唯一且非空；`valence` 非空；`creator_id` 可为空并外键关联 `jhi_user.id`。系统默认标签通过 Liquibase 初始化：`HAPPY`、`CALM`、`IMPULSIVE`、`ANXIOUS`、`REGRET`、`STRESSED`、`NONE`。
 
-## 3NF 设计原则
+### budget
 
-- 每张表只描述一个业务对象，避免把用户、账本、预算、记录混在一张表。
-- 非主键字段应直接依赖主键，不通过其他非主键字段间接依赖。
-- 行为标签、情绪标签和权限类型建议使用枚举或受控字典，避免自由文本导致统计困难。
-- 汇总数据如月余额、分类占比优先通过查询计算；如需缓存汇总结果，应明确刷新规则。
+预算表。字段：`id`、`ledger_id`、`cycle`、`period_start`、`period_end`、`limit_amount`、`alert_threshold`、`enabled`。
 
-## Liquibase 管理规范
+约束：`ledger_id` 外键关联 `ledger.id`；`(ledger_id, cycle, period_start, period_end)` 唯一；MySQL 下有 `limit_amount > 0` 和 `alert_threshold between 0 and 1` check。
 
-- 所有业务表结构变更都应新增 `src/main/resources/config/liquibase/changelog/` 下的 changelog。
-- 新 changelog 应在 `src/main/resources/config/liquibase/master.xml` 中 include。
-- 已经合并并被团队成员使用过的 changelog 不要直接修改，应通过新的 changelog 增量变更。
-- changelog 文件命名建议包含时间戳和业务含义，例如 `20260615000100_add_ledger_tables.xml`。
+### monthly_balance
 
-## 触发器、完整性约束和测试数据
+月度余额快照表。字段：`id`、`ledger_id`、`year`、`month`、`total_income`、`total_expense`、`balance`、`updated_date`。
 
-- 外键、唯一约束、非空约束应优先在 Liquibase changelog 中声明。
-- 预算超支、余额计算等业务逻辑优先放在后端服务层，只有确有必要时才使用数据库触发器。
-- 如需触发器，也应通过 Liquibase 管理，禁止手动在本地数据库直接创建后不提交。
-- 测试数据可放在 Liquibase data CSV 或测试专用 changelog 中，避免污染生产配置。
-- 涉及金额的字段应使用精确小数类型，避免使用浮点类型。
+约束：`ledger_id` 外键关联 `ledger.id`；`(ledger_id, year, month)` 唯一；MySQL 下有 `month between 1 and 12` check。
+
+### notification_message
+
+消息提醒表。字段：`id`、`user_id`、`ledger_id`、`budget_id`、`title`、`content`、`type`、`level`、`is_read`、`created_date`。
+
+约束：`user_id` 外键关联 `jhi_user.id`；`ledger_id` 可为空并外键关联 `ledger.id`；`budget_id` 可为空并外键关联 `budget.id`。
+
+## 3NF 分析
+
+- 用户资料留在 JHipster `jhi_user`，业务表只保存用户外键。
+- `user_ledger_permission` 独立保存账本授权关系，避免在 `ledger` 中存成员列表。
+- `behavior_tag` 和 `emotion_tag` 独立成表，支持系统默认标签和用户自定义标签。
+- `transaction_record` 保存单条收支事实，不保存预算使用率等派生值。
+- `monthly_balance` 是缓存快照，可由 `transaction_record` 重算，不作为真实流水来源。
+
+## 设计原因
+
+权限表用于支持多人共享账本。`OWNER` 可管理账本和成员，`READ_WRITE` 可共同记账，`READ_ONLY` 只允许查看，适合家庭监督场景。
+
+预算表使用 `period_start` 和 `period_end`，与系统详细设计文档和 API DTO 保持一致，后端可以直接按日期范围计算预算使用情况。
+
+收支记录表使用 `transaction_record`，避免使用 `transaction` 作为表名或类名。`source` 用于区分手工录入和自然语言录入结果，但 LLM 结果必须经过后端校验后才能入库。
+
+月度余额可以通过数据库触发器或 Service 层更新。当前只建立 `monthly_balance` 表和约束，建议先由 `TransactionRecordService` 在新增、修改、删除记录后调用汇总服务重算，后续如需触发器再新增 changelog。
+
+## 风险控制
+
+- 数据库层已实现主键、外键、唯一、非空、常用索引和 MySQL check 约束。
+- 只读权限、写权限、所有者权限必须在后端 Service/Resource 层校验。
+- 标签入库应校验 `behavior_tag.code` 和 `emotion_tag.code` 是否存在。
+- 测试演示数据不写入正式 changelog，避免污染真实数据库。

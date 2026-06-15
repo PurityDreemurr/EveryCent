@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260615000100-1" author="everycent">
+        <createTable tableName="ledger">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ledger"/>
+            </column>
+            <column name="name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(500)"/>
+            <column name="creator_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="default_currency" type="varchar(10)" defaultValue="CNY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_month_balance" type="decimal(19,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="${datetimeType}"/>
+        </createTable>
+
+        <createTable tableName="user_ledger_permission">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_user_ledger_permission"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ledger_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permission_level" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(30)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="invited_by_id" type="bigint"/>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="behavior_tag">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_behavior_tag"/>
+            </column>
+            <column name="code" type="varchar(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_behavior_tag_code"/>
+            </column>
+            <column name="name" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="system_default" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creator_id" type="bigint"/>
+        </createTable>
+
+        <createTable tableName="emotion_tag">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_emotion_tag"/>
+            </column>
+            <column name="code" type="varchar(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_emotion_tag_code"/>
+            </column>
+            <column name="name" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valence" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="system_default" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creator_id" type="bigint"/>
+        </createTable>
+
+        <createTable tableName="transaction_record">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_transaction_record"/>
+            </column>
+            <column name="ledger_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creator_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="behavior_tag_id" type="bigint"/>
+            <column name="emotion_tag_id" type="bigint"/>
+            <column name="transaction_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source" type="varchar(30)" defaultValue="MANUAL">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(500)"/>
+            <column name="raw_input" type="text"/>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="${datetimeType}"/>
+        </createTable>
+
+        <createTable tableName="budget">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_budget"/>
+            </column>
+            <column name="ledger_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cycle" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="period_start" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="period_end" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="limit_amount" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alert_threshold" type="decimal(5,2)" defaultValueNumeric="0.80">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="monthly_balance">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_monthly_balance"/>
+            </column>
+            <column name="ledger_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="year" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="month" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_income" type="decimal(19,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_expense" type="decimal(19,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="balance" type="decimal(19,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="notification_message">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_notification_message"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ledger_id" type="bigint"/>
+            <column name="budget_id" type="bigint"/>
+            <column name="title" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_read" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260615000100-2" author="everycent">
+        <addUniqueConstraint tableName="user_ledger_permission" columnNames="user_id, ledger_id" constraintName="uk_user_ledger"/>
+        <addUniqueConstraint tableName="budget" columnNames="ledger_id, cycle, period_start, period_end" constraintName="uk_budget_ledger_cycle_period"/>
+        <addUniqueConstraint tableName="monthly_balance" columnNames="ledger_id, year, month" constraintName="uk_monthly_balance_ledger_year_month"/>
+
+        <createIndex tableName="ledger" indexName="idx_ledger_creator_id">
+            <column name="creator_id"/>
+        </createIndex>
+        <createIndex tableName="user_ledger_permission" indexName="idx_user_ledger_permission_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="transaction_record" indexName="idx_transaction_ledger_date">
+            <column name="ledger_id"/>
+            <column name="transaction_date"/>
+        </createIndex>
+        <createIndex tableName="transaction_record" indexName="idx_transaction_creator_id">
+            <column name="creator_id"/>
+        </createIndex>
+        <createIndex tableName="transaction_record" indexName="idx_transaction_behavior_tag">
+            <column name="behavior_tag_id"/>
+        </createIndex>
+        <createIndex tableName="transaction_record" indexName="idx_transaction_emotion_tag">
+            <column name="emotion_tag_id"/>
+        </createIndex>
+        <createIndex tableName="budget" indexName="idx_budget_ledger_cycle_period">
+            <column name="ledger_id"/>
+            <column name="cycle"/>
+            <column name="period_start"/>
+            <column name="period_end"/>
+        </createIndex>
+        <createIndex tableName="notification_message" indexName="idx_notification_message_user_read">
+            <column name="user_id"/>
+            <column name="is_read"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260615000100-3" author="everycent">
+        <addForeignKeyConstraint baseTableName="ledger" baseColumnNames="creator_id"
+                                 constraintName="fk_ledger_creator_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="user_ledger_permission" baseColumnNames="user_id"
+                                 constraintName="fk_user_ledger_permission_user_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="user_ledger_permission" baseColumnNames="ledger_id"
+                                 constraintName="fk_user_ledger_permission_ledger_id"
+                                 referencedTableName="ledger" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="user_ledger_permission" baseColumnNames="invited_by_id"
+                                 constraintName="fk_user_ledger_permission_invited_by_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="behavior_tag" baseColumnNames="creator_id"
+                                 constraintName="fk_behavior_tag_creator_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="emotion_tag" baseColumnNames="creator_id"
+                                 constraintName="fk_emotion_tag_creator_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="transaction_record" baseColumnNames="ledger_id"
+                                 constraintName="fk_transaction_record_ledger_id"
+                                 referencedTableName="ledger" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="transaction_record" baseColumnNames="creator_id"
+                                 constraintName="fk_transaction_record_creator_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="transaction_record" baseColumnNames="behavior_tag_id"
+                                 constraintName="fk_transaction_record_behavior_tag_id"
+                                 referencedTableName="behavior_tag" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="transaction_record" baseColumnNames="emotion_tag_id"
+                                 constraintName="fk_transaction_record_emotion_tag_id"
+                                 referencedTableName="emotion_tag" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="budget" baseColumnNames="ledger_id"
+                                 constraintName="fk_budget_ledger_id"
+                                 referencedTableName="ledger" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="monthly_balance" baseColumnNames="ledger_id"
+                                 constraintName="fk_monthly_balance_ledger_id"
+                                 referencedTableName="ledger" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="notification_message" baseColumnNames="user_id"
+                                 constraintName="fk_notification_message_user_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="notification_message" baseColumnNames="ledger_id"
+                                 constraintName="fk_notification_message_ledger_id"
+                                 referencedTableName="ledger" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="notification_message" baseColumnNames="budget_id"
+                                 constraintName="fk_notification_message_budget_id"
+                                 referencedTableName="budget" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260615000100-4" author="everycent" dbms="mysql">
+        <sql>ALTER TABLE transaction_record ADD CONSTRAINT ck_transaction_record_amount_positive CHECK (amount &gt; 0)</sql>
+        <sql>ALTER TABLE budget ADD CONSTRAINT ck_budget_limit_amount_positive CHECK (limit_amount &gt; 0)</sql>
+        <sql>ALTER TABLE budget ADD CONSTRAINT ck_budget_alert_threshold_range CHECK (alert_threshold &gt;= 0 AND alert_threshold &lt;= 1)</sql>
+        <sql>ALTER TABLE monthly_balance ADD CONSTRAINT ck_monthly_balance_month_range CHECK (month &gt;= 1 AND month &lt;= 12)</sql>
+    </changeSet>
+
+    <changeSet id="20260615000100-5" author="everycent">
+        <insert tableName="behavior_tag">
+            <column name="code" value="FOOD"/>
+            <column name="name" value="Food"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="behavior_tag">
+            <column name="code" value="TRANSPORT"/>
+            <column name="name" value="Transport"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="behavior_tag">
+            <column name="code" value="SHOPPING"/>
+            <column name="name" value="Shopping"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="behavior_tag">
+            <column name="code" value="ENTERTAINMENT"/>
+            <column name="name" value="Entertainment"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="behavior_tag">
+            <column name="code" value="STUDY"/>
+            <column name="name" value="Study"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="behavior_tag">
+            <column name="code" value="MEDICAL"/>
+            <column name="name" value="Medical"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="behavior_tag">
+            <column name="code" value="SALARY"/>
+            <column name="name" value="Salary"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="behavior_tag">
+            <column name="code" value="PART_TIME"/>
+            <column name="name" value="Part time"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="behavior_tag">
+            <column name="code" value="OTHER"/>
+            <column name="name" value="Other"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="emotion_tag">
+            <column name="code" value="HAPPY"/>
+            <column name="name" value="Happy"/>
+            <column name="valence" value="POSITIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="CALM"/>
+            <column name="name" value="Calm"/>
+            <column name="valence" value="POSITIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="IMPULSIVE"/>
+            <column name="name" value="Impulsive"/>
+            <column name="valence" value="NEGATIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="ANXIOUS"/>
+            <column name="name" value="Anxious"/>
+            <column name="valence" value="NEGATIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="REGRET"/>
+            <column name="name" value="Regret"/>
+            <column name="valence" value="NEGATIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="STRESSED"/>
+            <column name="name" value="Stressed"/>
+            <column name="valence" value="NEGATIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="NONE"/>
+            <column name="name" value="None"/>
+            <column name="valence" value="NEUTRAL"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
