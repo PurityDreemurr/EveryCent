@@ -70,6 +70,7 @@
     "browser-sync": "3.0.4"
   },
   "dependencies": {
+    "@assistant-ui/react": "^0.14.20",
     "@eslint/js": "9.26.0",
     "@fortawesome/fontawesome-svg-core": "6.7.2",
     "@fortawesome/free-solid-svg-icons": "6.7.2",
