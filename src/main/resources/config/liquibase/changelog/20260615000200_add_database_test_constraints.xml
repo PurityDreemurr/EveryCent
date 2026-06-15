@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260615000200-1" author="everycent" dbms="mysql">
+        <sql>ALTER TABLE transaction_record ADD CONSTRAINT ck_transaction_record_type CHECK (type IN ('INCOME', 'EXPENSE'))</sql>
+        <sql>ALTER TABLE budget ADD CONSTRAINT ck_budget_cycle CHECK (cycle IN ('WEEKLY', 'MONTHLY'))</sql>
+        <sql>ALTER TABLE user_ledger_permission ADD CONSTRAINT ck_user_ledger_permission_level CHECK (permission_level IN ('OWNER', 'READ_WRITE', 'READ_ONLY'))</sql>
+        <sql>ALTER TABLE user_ledger_permission ADD CONSTRAINT ck_user_ledger_permission_status CHECK (status IN ('ACTIVE', 'PENDING', 'REVOKED'))</sql>
+        <sql>ALTER TABLE transaction_record ADD CONSTRAINT ck_transaction_record_source CHECK (source IN ('MANUAL', 'NATURAL_LANGUAGE'))</sql>
+        <sql>ALTER TABLE emotion_tag ADD CONSTRAINT ck_emotion_tag_valence CHECK (valence IN ('POSITIVE', 'NEUTRAL', 'NEGATIVE'))</sql>
+        <sql>ALTER TABLE notification_message ADD CONSTRAINT ck_notification_message_type CHECK (type IN ('BUDGET_ALERT', 'REMINDER', 'SHARE_INVITE'))</sql>
+        <sql>ALTER TABLE notification_message ADD CONSTRAINT ck_notification_message_level CHECK (level IN ('INFO', 'WARNING', 'DANGER'))</sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-2" author="everycent" dbms="mysql">
+        <sql splitStatements="false"><![CDATA[
+CREATE TRIGGER trg_transaction_record_after_insert
+AFTER INSERT ON transaction_record
+FOR EACH ROW
+BEGIN
+    IF YEAR(NEW.transaction_date) = YEAR(CURDATE()) AND MONTH(NEW.transaction_date) = MONTH(CURDATE()) THEN
+        UPDATE ledger
+        SET current_month_balance = (
+            SELECT COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE -amount END), 0)
+            FROM transaction_record
+            WHERE ledger_id = NEW.ledger_id
+              AND transaction_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+              AND transaction_date < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+        )
+        WHERE id = NEW.ledger_id;
+    END IF;
+END
+        ]]></sql>
+        <sql splitStatements="false"><![CDATA[
+CREATE TRIGGER trg_transaction_record_after_update
+AFTER UPDATE ON transaction_record
+FOR EACH ROW
+BEGIN
+    IF YEAR(OLD.transaction_date) = YEAR(CURDATE()) AND MONTH(OLD.transaction_date) = MONTH(CURDATE()) THEN
+        UPDATE ledger
+        SET current_month_balance = (
+            SELECT COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE -amount END), 0)
+            FROM transaction_record
+            WHERE ledger_id = OLD.ledger_id
+              AND transaction_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+              AND transaction_date < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+        )
+        WHERE id = OLD.ledger_id;
+    END IF;
+
+    IF NEW.ledger_id <> OLD.ledger_id
+        AND YEAR(NEW.transaction_date) = YEAR(CURDATE())
+        AND MONTH(NEW.transaction_date) = MONTH(CURDATE()) THEN
+        UPDATE ledger
+        SET current_month_balance = (
+            SELECT COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE -amount END), 0)
+            FROM transaction_record
+            WHERE ledger_id = NEW.ledger_id
+              AND transaction_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+              AND transaction_date < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+        )
+        WHERE id = NEW.ledger_id;
+    END IF;
+END
+        ]]></sql>
+        <sql splitStatements="false"><![CDATA[
+CREATE TRIGGER trg_transaction_record_after_delete
+AFTER DELETE ON transaction_record
+FOR EACH ROW
+BEGIN
+    IF YEAR(OLD.transaction_date) = YEAR(CURDATE()) AND MONTH(OLD.transaction_date) = MONTH(CURDATE()) THEN
+        UPDATE ledger
+        SET current_month_balance = (
+            SELECT COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE -amount END), 0)
+            FROM transaction_record
+            WHERE ledger_id = OLD.ledger_id
+              AND transaction_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+              AND transaction_date < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+        )
+        WHERE id = OLD.ledger_id;
+    END IF;
+END
+        ]]></sql>
+    </changeSet>
+</databaseChangeLog>
