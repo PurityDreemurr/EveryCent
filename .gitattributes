@@ -10,6 +10,9 @@
 *.bat           text eol=crlf
 *.cmd           text eol=crlf
 *.ps1           text eol=crlf
+Dockerfile      text eol=lf
+Dockerfile.*    text eol=lf
+mvnw            text eol=lf
 *.coffee        text
 *.css           text
 *.cql           text
@@ -28,8 +31,8 @@
 *.txt           text
 *.ts            text
 *.xml           text
-*.yaml          text
-*.yml           text
+*.yaml          text eol=lf
+*.yml           text eol=lf
 
 # Documents
 *.doc           diff=astextplain
