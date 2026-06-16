@@ -45,6 +45,8 @@ module.exports = async options =>
       ],
     },
     devServer: {
+      host: '0.0.0.0',
+      allowedHosts: 'all',
       hot: true,
       static: {
         directory: './target/classes/static/',
@@ -70,7 +72,8 @@ module.exports = async options =>
       new BrowserSyncPlugin(
         {
           https: options.tls,
-          host: 'localhost',
+          host: '0.0.0.0',
+          listen: '0.0.0.0',
           port: 9000,
           proxy: {
             target: `http${options.tls ? 's' : ''}://localhost:${options.watch ? '8080' : '9060'}`,

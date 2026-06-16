@@ -226,4 +226,13 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
+app:
+  llm:
+    enabled: true
+    provider: openai-compatible
+    base-url: https://api.example.com
+    api-key: your_api_key_here
+    model: gpt-compatible-model
+    timeout-seconds: 20
+    min-confidence: 0.70
+    max-input-length: 500
