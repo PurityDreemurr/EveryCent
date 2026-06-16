@@ -2,7 +2,7 @@
 #
 # Auto detect text files and perform LF normalization
 # http://davidlaing.com/2012/09/19/customise-your-gitattributes-to-become-a-git-ninja/
-* text=auto
+* text=auto eol=lf
 
 # The above will handle all files NOT found below
 # These files are text and should be normalized (Convert crlf => lf)
@@ -13,24 +13,25 @@
 Dockerfile      text eol=lf
 Dockerfile.*    text eol=lf
 mvnw            text eol=lf
-*.coffee        text
-*.css           text
-*.cql           text
-*.df            text
-*.ejs           text
-*.html          text
-*.java          text
-*.js            text
-*.json          text
-*.less          text
-*.properties    text
-*.sass          text
-*.scss          text
+*.coffee        text eol=lf
+*.css           text eol=lf
+*.cql           text eol=lf
+*.df            text eol=lf
+*.ejs           text eol=lf
+*.html          text eol=lf
+*.java          text eol=lf
+*.js            text eol=lf
+*.json          text eol=lf
+*.less          text eol=lf
+*.properties    text eol=lf
+*.sass          text eol=lf
+*.scss          text eol=lf
 *.sh            text eol=lf
-*.sql           text
-*.txt           text
-*.ts            text
-*.xml           text
+*.sql           text eol=lf
+*.txt           text eol=lf
+*.ts            text eol=lf
+*.tsx           text eol=lf
+*.xml           text eol=lf
 *.yaml          text eol=lf
 *.yml           text eol=lf
 
@@ -45,29 +46,28 @@ mvnw            text eol=lf
 *.PDF           diff=astextplain
 *.rtf           diff=astextplain
 *.RTF           diff=astextplain
-*.markdown      text
-*.md            text
-*.adoc          text
-*.textile       text
-*.mustache      text
-*.csv           text
-*.tab           text
-*.tsv           text
-*.txt           text
-AUTHORS         text
-CHANGELOG       text
-CHANGES         text
-CONTRIBUTING    text
-COPYING         text
-copyright       text
-*COPYRIGHT*     text
-INSTALL         text
-license         text
-LICENSE         text
-NEWS            text
-readme          text
-*README*        text
-TODO            text
+*.markdown      text eol=lf
+*.md            text eol=lf
+*.adoc          text eol=lf
+*.textile       text eol=lf
+*.mustache      text eol=lf
+*.csv           text eol=lf
+*.tab           text eol=lf
+*.tsv           text eol=lf
+AUTHORS         text eol=lf
+CHANGELOG       text eol=lf
+CHANGES         text eol=lf
+CONTRIBUTING    text eol=lf
+COPYING         text eol=lf
+copyright       text eol=lf
+*COPYRIGHT*     text eol=lf
+INSTALL         text eol=lf
+license         text eol=lf
+LICENSE         text eol=lf
+NEWS            text eol=lf
+readme          text eol=lf
+*README*        text eol=lf
+TODO            text eol=lf
 
 # Graphics
 *.png           binary
@@ -77,10 +77,7 @@ TODO            text
 *.tif           binary
 *.tiff          binary
 *.ico           binary
-# SVG treated as an asset (binary) by default. If you want to treat it as text,
-# comment-out the following line and uncomment the line after.
-*.svg           binary
-#*.svg          text
+*.svg           text eol=lf
 *.eps           binary
 
 # These files are binary and should be left untouched
@@ -90,26 +87,26 @@ TODO            text
 *.war           binary
 
 ## LINTERS
-.csslintrc      text
-.eslintrc       text
-.jscsrc         text
-.jshintrc       text
-.jshintignore   text
-.stylelintrc    text
+.csslintrc      text eol=lf
+.eslintrc       text eol=lf
+.jscsrc         text eol=lf
+.jshintrc       text eol=lf
+.jshintignore   text eol=lf
+.stylelintrc    text eol=lf
 
 ## CONFIGS
-*.conf          text
-*.config        text
-.editorconfig   text
-.gitattributes  text
-.gitconfig      text
-.gitignore      text
-.htaccess       text
-*.npmignore     text
+*.conf          text eol=lf
+*.config        text eol=lf
+.editorconfig   text eol=lf
+.gitattributes  text eol=lf
+.gitconfig      text eol=lf
+.gitignore      text eol=lf
+.htaccess       text eol=lf
+*.npmignore     text eol=lf
 
 ## HEROKU
-Procfile        text
-.slugignore     text
+Procfile        text eol=lf
+.slugignore     text eol=lf
 
 ## AUDIO
 *.kar           binary
