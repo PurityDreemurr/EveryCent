@@ -9,6 +9,7 @@ const utils = require('./utils.js');
 const commonConfig = require('./webpack.common.js');
 
 const ENV = 'development';
+const pollInterval = Number(process.env.WEBPACK_POLL_INTERVAL || process.env.CHOKIDAR_INTERVAL || 1000);
 
 module.exports = async options =>
   webpackMerge(await commonConfig({ env: ENV }), {
@@ -22,6 +23,11 @@ module.exports = async options =>
     },
     optimization: {
       moduleIds: 'named',
+    },
+    watchOptions: {
+      poll: pollInterval,
+      aggregateTimeout: 300,
+      ignored: /node_modules/,
     },
     module: {
       rules: [
