@@ -4,18 +4,66 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="20260615000200-1" author="everycent" dbms="mysql">
+    <changeSet id="20260615000200-1-1" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'ck_transaction_record_type'</sqlCheck>
+        </preConditions>
         <sql>ALTER TABLE transaction_record ADD CONSTRAINT ck_transaction_record_type CHECK (type IN ('INCOME', 'EXPENSE'))</sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-1-2" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'ck_budget_cycle'</sqlCheck>
+        </preConditions>
         <sql>ALTER TABLE budget ADD CONSTRAINT ck_budget_cycle CHECK (cycle IN ('WEEKLY', 'MONTHLY'))</sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-1-3" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'ck_user_ledger_permission_level'</sqlCheck>
+        </preConditions>
         <sql>ALTER TABLE user_ledger_permission ADD CONSTRAINT ck_user_ledger_permission_level CHECK (permission_level IN ('OWNER', 'READ_WRITE', 'READ_ONLY'))</sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-1-4" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'ck_user_ledger_permission_status'</sqlCheck>
+        </preConditions>
         <sql>ALTER TABLE user_ledger_permission ADD CONSTRAINT ck_user_ledger_permission_status CHECK (status IN ('ACTIVE', 'PENDING', 'REVOKED'))</sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-1-5" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'ck_transaction_record_source'</sqlCheck>
+        </preConditions>
         <sql>ALTER TABLE transaction_record ADD CONSTRAINT ck_transaction_record_source CHECK (source IN ('MANUAL', 'NATURAL_LANGUAGE'))</sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-1-6" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'ck_emotion_tag_valence'</sqlCheck>
+        </preConditions>
         <sql>ALTER TABLE emotion_tag ADD CONSTRAINT ck_emotion_tag_valence CHECK (valence IN ('POSITIVE', 'NEUTRAL', 'NEGATIVE'))</sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-1-7" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'ck_notification_message_type'</sqlCheck>
+        </preConditions>
         <sql>ALTER TABLE notification_message ADD CONSTRAINT ck_notification_message_type CHECK (type IN ('BUDGET_ALERT', 'REMINDER', 'SHARE_INVITE'))</sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-1-8" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'ck_notification_message_level'</sqlCheck>
+        </preConditions>
         <sql>ALTER TABLE notification_message ADD CONSTRAINT ck_notification_message_level CHECK (level IN ('INFO', 'WARNING', 'DANGER'))</sql>
     </changeSet>
 
-    <changeSet id="20260615000200-2" author="everycent" dbms="mysql">
+    <changeSet id="20260615000200-2-1" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND TRIGGER_NAME = 'trg_transaction_record_after_insert'</sqlCheck>
+        </preConditions>
         <sql splitStatements="false"><![CDATA[
 CREATE TRIGGER trg_transaction_record_after_insert
 AFTER INSERT ON transaction_record
@@ -34,6 +82,12 @@ BEGIN
     END IF;
 END
         ]]></sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-2-2" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND TRIGGER_NAME = 'trg_transaction_record_after_update'</sqlCheck>
+        </preConditions>
         <sql splitStatements="false"><![CDATA[
 CREATE TRIGGER trg_transaction_record_after_update
 AFTER UPDATE ON transaction_record
@@ -66,6 +120,12 @@ BEGIN
     END IF;
 END
         ]]></sql>
+    </changeSet>
+
+    <changeSet id="20260615000200-2-3" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND TRIGGER_NAME = 'trg_transaction_record_after_delete'</sqlCheck>
+        </preConditions>
         <sql splitStatements="false"><![CDATA[
 CREATE TRIGGER trg_transaction_record_after_delete
 AFTER DELETE ON transaction_record
