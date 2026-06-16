@@ -230,9 +230,9 @@ app:
   llm:
     enabled: true
     provider: openai-compatible
-    base-url: https://api.example.com
-    api-key: your_api_key_here
-    model: gpt-compatible-model
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api-key: sk-192af75cbf204886ae4e7ce6417ab8a3
+    model: qwen3.6-flash
     timeout-seconds: 20
     min-confidence: 0.70
     max-input-length: 500
