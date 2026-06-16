@@ -1,19 +1,18 @@
-# This configuration runs only the EveryCent application container.
-# MySQL is expected to run on an external physical server and is accessed by IP and port.
-name: everycent
+# Development container for live code editing.
+# It does not build the application into the image. Source code is mounted from the host.
+name: everycent-dev
 services:
-  app:
-    image: everycent:latest
+  dev:
+    image: everycent-dev:latest
     build:
       context: ../../..
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
+    working_dir: /workspace
+    network_mode: host
     environment:
-      _JAVA_OPTIONS: -Xmx1024m -Xms256m
-      JAVA_OPTS: ${JAVA_OPTS:-}
-      JHIPSTER_SLEEP: ${JHIPSTER_SLEEP:-0}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod,api-docs}
+      SPRING_OUTPUT_ANSI_ENABLED: ALWAYS
+      SPRING_PROFILES_ACTIVE: ${DEV_SPRING_PROFILES_ACTIVE:-dev,api-docs}
       SPRING_DOCKER_COMPOSE_ENABLED: 'false'
-      MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED: ${MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED:-true}
       SERVER_PORT: ${APP_PORT:-8080}
       SPRING_DATASOURCE_URL: jdbc:mysql://${DB_HOST:?DB_HOST is required}:${DB_PORT:-3306}/${DB_NAME:-everycent}?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
@@ -31,11 +30,19 @@ services:
       APP_LLM_TIMEOUT_SECONDS: ${APP_LLM_TIMEOUT_SECONDS:-20}
       APP_LLM_MIN_CONFIDENCE: ${APP_LLM_MIN_CONFIDENCE:-0.70}
       APP_LLM_MAX_INPUT_LENGTH: ${APP_LLM_MAX_INPUT_LENGTH:-500}
-    network_mode: host
-    healthcheck:
-      test: ['CMD-SHELL', 'timeout 5 bash -c "</dev/tcp/127.0.0.1/${APP_PORT:-8080}"']
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 30s
-    restart: unless-stopped
+      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_INTERVAL: ${CHOKIDAR_INTERVAL:-1000}
+      WATCHPACK_POLLING: 'true'
+      WEBPACK_POLL_INTERVAL: ${WEBPACK_POLL_INTERVAL:-1000}
+    volumes:
+      - ../../..:/workspace
+      - everycent-dev-maven-cache:/root/.m2
+      - everycent-dev-node-modules:/workspace/node_modules
+      - everycent-dev-target:/workspace/target
+    stdin_open: true
+    tty: true
+
+volumes:
+  everycent-dev-maven-cache:
+  everycent-dev-node-modules:
+  everycent-dev-target:
