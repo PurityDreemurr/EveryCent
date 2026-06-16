@@ -13,23 +13,27 @@
 Dockerfile      text eol=lf
 Dockerfile.*    text eol=lf
 mvnw            text eol=lf
+.mvn/wrapper/maven-wrapper.properties text eol=lf
 *.coffee        text
 *.css           text
+*.css           text eol=lf
 *.cql           text
 *.df            text
 *.ejs           text
-*.html          text
+*.html          text eol=lf
 *.java          text
-*.js            text
-*.json          text
+*.js            text eol=lf
+*.jsx           text eol=lf
+*.json          text eol=lf
 *.less          text
 *.properties    text
 *.sass          text
-*.scss          text
+*.scss          text eol=lf
 *.sh            text eol=lf
 *.sql           text
 *.txt           text
-*.ts            text
+*.ts            text eol=lf
+*.tsx           text eol=lf
 *.xml           text
 *.yaml          text eol=lf
 *.yml           text eol=lf
