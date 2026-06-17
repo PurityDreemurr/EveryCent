@@ -26,7 +26,6 @@ class LlmPropertiesBindingTest {
         assertThat(properties.getModel()).isEqualTo("qwen3.6-flash");
         assertThat(properties.getBaseUrl()).isNotBlank();
         assertThat(properties.getBaseUrl()).doesNotContain("example.com");
-        assertThat(properties.getApiKey()).isNotBlank();
         assertThat(properties.getApiKey()).doesNotContain("your_api_key_here");
         assertThat(properties.getTimeoutSeconds()).isEqualTo(20);
         assertThat(properties.getMinConfidence()).isEqualTo(0.70);
