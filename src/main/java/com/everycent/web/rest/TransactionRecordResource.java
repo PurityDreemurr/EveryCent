@@ -2,8 +2,11 @@ package com.everycent.web.rest;
 
 import com.everycent.domain.User;
 import com.everycent.domain.enumeration.TransactionType;
+import com.everycent.llm.dto.NaturalLanguageTransactionCreateRequestDTO;
+import com.everycent.llm.dto.NaturalLanguageTransactionCreateResultDTO;
 import com.everycent.repository.UserRepository;
 import com.everycent.security.SecurityUtils;
+import com.everycent.service.LlmParsingService;
 import com.everycent.service.TransactionRecordService;
 import com.everycent.service.dto.TransactionPageDTO;
 import com.everycent.service.dto.TransactionQueryDTO;
@@ -35,9 +38,16 @@ public class TransactionRecordResource {
 
     private final UserRepository userRepository;
 
-    public TransactionRecordResource(TransactionRecordService transactionRecordService, UserRepository userRepository) {
+    private final LlmParsingService llmParsingService;
+
+    public TransactionRecordResource(
+        TransactionRecordService transactionRecordService,
+        UserRepository userRepository,
+        LlmParsingService llmParsingService
+    ) {
         this.transactionRecordService = transactionRecordService;
         this.userRepository = userRepository;
+        this.llmParsingService = llmParsingService;
     }
 
     @GetMapping({ "/ledgers/{ledgerId}/transactions", "/ledgers/{ledgerId}/transactions/" })
@@ -76,6 +86,16 @@ public class TransactionRecordResource {
             .created(URI.create("/api/transactions/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
+    }
+
+    @PostMapping({ "/ledgers/{ledgerId}/transactions/natural-language", "/ledgers/{ledgerId}/transactions/natural-language/" })
+    public ResponseEntity<NaturalLanguageTransactionCreateResultDTO> createFromNaturalLanguage(
+        @PathVariable Long ledgerId,
+        @Valid @RequestBody NaturalLanguageTransactionCreateRequestDTO request
+    ) {
+        User currentUser = getCurrentUser();
+        LOG.debug("REST request to create transaction from natural language for Ledger : {}", ledgerId);
+        return ResponseEntity.ok(llmParsingService.parseAndCreateTransaction(ledgerId, request, currentUser));
     }
 
     @GetMapping({ "/transactions/{transactionId}", "/transactions/{transactionId}/" })
