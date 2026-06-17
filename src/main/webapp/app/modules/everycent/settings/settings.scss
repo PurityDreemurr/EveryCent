@@ -1,0 +1,55 @@
+.everycent-settings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.everycent-settings__layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.everycent-settings__tabs,
+.everycent-settings__panel {
+  border: 1px solid var(--ec-border);
+  border-radius: 12px;
+  background: var(--ec-panel);
+}
+
+.everycent-settings__tabs {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.everycent-settings__tabs button {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ec-muted);
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  font-weight: 700;
+}
+
+.everycent-settings__tabs button:hover,
+.everycent-settings__tabs button.active {
+  background: var(--ec-soft);
+  color: var(--ec-text);
+}
+
+.everycent-settings__panel {
+  padding: 1rem;
+}
+
+@media (max-width: 860px) {
+  .everycent-settings__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .everycent-settings__tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

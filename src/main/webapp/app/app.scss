@@ -24,6 +24,7 @@ a {
 
 .app-container {
   box-sizing: border-box;
+  padding-top: 60px;
   .view-container {
     width: 100%;
     height: calc(100% - 40px);
@@ -39,6 +40,19 @@ a {
         height: 100%;
       }
     }
+  }
+}
+
+.app-container--everycent {
+  padding-top: 0;
+
+  .view-container {
+    height: 100vh;
+    padding: 0;
+  }
+
+  .view-routes {
+    height: 100%;
   }
 }
 
