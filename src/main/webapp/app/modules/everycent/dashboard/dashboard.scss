@@ -151,11 +151,15 @@
 .everycent-dashboard-card {
   display: grid;
   align-content: start;
-  min-height: 440px;
+  min-height: 360px;
   border: 1px solid var(--ec-border);
   border-radius: 12px;
   background: var(--ec-panel);
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+
+.everycent-dashboard-card:has(.everycent-chart) {
+  min-height: 440px;
 }
 
 .everycent-dashboard-card__header {
