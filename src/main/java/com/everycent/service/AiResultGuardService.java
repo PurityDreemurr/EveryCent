@@ -5,6 +5,7 @@ import com.everycent.domain.EmotionTag;
 import com.everycent.domain.User;
 import com.everycent.domain.enumeration.TransactionType;
 import com.everycent.llm.config.LlmProperties;
+import com.everycent.llm.dto.AiAlertResultDTO;
 import com.everycent.llm.dto.TransactionParseResultDTO;
 import com.everycent.repository.BehaviorTagRepository;
 import com.everycent.repository.EmotionTagRepository;
@@ -88,6 +89,21 @@ public class AiResultGuardService {
         }
     }
 
+    public AiAlertResultDTO validateAlertResult(AiAlertResultDTO result) {
+        if (result == null) {
+            throw new InvalidAiResultException("AI 提醒结果不能为空");
+        }
+        if (result.getLevel() == null) {
+            throw new InvalidAiResultException("AI 提醒级别不能为空");
+        }
+        result.setTitle(sanitizeRequiredText(result.getTitle(), 100, "AI 提醒标题不能为空"));
+        result.setContent(sanitizeRequiredText(result.getContent(), DESCRIPTION_MAX_LENGTH, "AI 提醒正文不能为空"));
+        if (result.getNeedNotification() == null) {
+            result.setNeedNotification(false);
+        }
+        return result;
+    }
+
     public String sanitizeText(String text) {
         return sanitizeText(text, DESCRIPTION_MAX_LENGTH);
     }
@@ -98,6 +114,14 @@ public class AiResultGuardService {
         }
         String sanitized = text.replace('\r', ' ').replace('\n', ' ').trim();
         return sanitized.length() > maxLength ? sanitized.substring(0, maxLength) : sanitized;
+    }
+
+    private String sanitizeRequiredText(String text, int maxLength, String emptyMessage) {
+        String sanitized = sanitizeText(text, maxLength);
+        if (sanitized == null || sanitized.isBlank()) {
+            throw new InvalidAiResultException(emptyMessage);
+        }
+        return sanitized;
     }
 
     private int rawInputMaxLength() {
