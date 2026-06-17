@@ -7,34 +7,47 @@ import static org.mockito.Mockito.when;
 import com.everycent.domain.User;
 import com.everycent.llm.dto.NaturalLanguageTransactionCreateRequestDTO;
 import com.everycent.llm.dto.NaturalLanguageTransactionCreateResultDTO;
+import com.everycent.repository.UserRepository;
 import com.everycent.service.LlmParsingService;
-import com.everycent.service.UserService;
+import com.everycent.service.TransactionRecordService;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionRecordResourceTest {
 
     @Mock
+    private TransactionRecordService transactionRecordService;
+
+    @Mock
     private LlmParsingService llmParsingService;
 
     @Mock
-    private UserService userService;
+    private UserRepository userRepository;
 
     private TransactionRecordResource resource;
     private User currentUser;
 
     @BeforeEach
     void setUp() {
-        resource = new TransactionRecordResource(llmParsingService, userService);
+        resource = new TransactionRecordResource(transactionRecordService, userRepository, llmParsingService);
         currentUser = new User();
         currentUser.setLogin("user");
-        when(userService.getUserWithAuthorities()).thenReturn(Optional.of(currentUser));
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", "password"));
+        when(userRepository.findOneByLogin("user")).thenReturn(Optional.of(currentUser));
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
