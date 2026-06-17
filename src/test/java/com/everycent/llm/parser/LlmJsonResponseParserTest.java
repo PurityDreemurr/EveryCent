@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.everycent.domain.enumeration.TransactionType;
+import com.everycent.llm.dto.AiAlertResultDTO;
 import com.everycent.llm.dto.TransactionParseResultDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
@@ -56,5 +57,49 @@ class LlmJsonResponseParserTest {
         assertThatThrownBy(() -> parser.parseTransaction(aiResponse))
             .isInstanceOf(LlmParseException.class)
             .hasMessageContaining("description");
+    }
+
+    @Test
+    void shouldParseAlertJsonFromAiResponse() {
+        String aiResponse = """
+            模型返回如下：
+            ```json
+            {
+              "title": "本月预算即将超支",
+              "content": "预算已使用 82%。建议减少非必要支出。",
+              "level": "WARNING",
+              "needNotification": true
+            }
+            ```
+            """;
+
+        AiAlertResultDTO result = parser.parseAlert(aiResponse);
+
+        assertThat(result.getTitle()).isEqualTo("本月预算即将超支");
+        assertThat(result.getContent()).isEqualTo("预算已使用 82%。建议减少非必要支出。");
+        assertThat(result.getLevel()).isEqualTo(AiAlertResultDTO.AlertLevel.WARNING);
+        assertThat(result.getNeedNotification()).isTrue();
+    }
+
+    @Test
+    void shouldRejectAlertJsonMissingRequiredField() {
+        String aiResponse = """
+            {
+              "title": "本月预算即将超支",
+              "content": "预算已使用 82%。建议减少非必要支出。",
+              "needNotification": true
+            }
+            """;
+
+        assertThatThrownBy(() -> parser.parseAlert(aiResponse))
+            .isInstanceOf(LlmParseException.class)
+            .hasMessageContaining("level");
+    }
+
+    @Test
+    void shouldRejectInvalidJsonText() {
+        assertThatThrownBy(() -> parser.parseTransaction("not json"))
+            .isInstanceOf(LlmParseException.class)
+            .hasMessageContaining("不包含 JSON 对象");
     }
 }

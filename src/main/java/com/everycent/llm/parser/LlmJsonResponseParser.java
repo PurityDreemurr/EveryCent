@@ -48,7 +48,20 @@ public class LlmJsonResponseParser {
 
     public AiAlertResultDTO parseAlert(String jsonText) {
         try {
-            return objectMapper.readValue(extractJson(jsonText), AiAlertResultDTO.class);
+            JsonNode root = objectMapper.readTree(extractJson(jsonText));
+            require(root, "title");
+            require(root, "content");
+            require(root, "level");
+            require(root, "needNotification");
+
+            AiAlertResultDTO dto = new AiAlertResultDTO();
+            dto.setTitle(root.path("title").asText());
+            dto.setContent(root.path("content").asText());
+            dto.setLevel(AiAlertResultDTO.AlertLevel.valueOf(root.path("level").asText()));
+            dto.setNeedNotification(root.path("needNotification").asBoolean());
+            return dto;
+        } catch (LlmParseException e) {
+            throw e;
         } catch (Exception e) {
             throw new LlmParseException("LLM 提醒 JSON 无法解析", e);
         }

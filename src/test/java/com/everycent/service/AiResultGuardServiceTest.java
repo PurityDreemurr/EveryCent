@@ -107,6 +107,19 @@ class AiResultGuardServiceTest {
         assertThat(validated.getNeedUserConfirm()).isTrue();
     }
 
+    @Test
+    void shouldSanitizeAndTruncateDescriptionAndRawInput() {
+        TestData testData = prepareTestData();
+        TransactionParseResultDTO result = validResult(testData);
+        result.setDescription(("描述文本\n").repeat(200));
+        result.setRawInput(("原始输入文本\n").repeat(200));
+
+        TransactionParseResultDTO validated = guardService.validateTransactionResult(result, testData.ledger().getId(), testData.user());
+
+        assertThat(validated.getDescription()).doesNotContain("\n").hasSize(500);
+        assertThat(validated.getRawInput()).doesNotContain("\n").hasSizeLessThanOrEqualTo(500);
+    }
+
     private TestData prepareTestData() {
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
