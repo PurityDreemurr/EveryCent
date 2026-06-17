@@ -7,19 +7,22 @@ import org.springframework.validation.annotation.Validated;
 
 @Component
 @Validated
-@ConfigurationProperties(prefix = "app.vector-store")
-public class VectorStoreProperties {
+@ConfigurationProperties(prefix = "app.embedding")
+public class EmbeddingProperties {
 
-    private String provider = "qdrant";
+    private String provider = "openai-compatible";
 
-    private String baseUrl = "http://127.0.0.1:6333";
+    private String baseUrl = "";
 
-    private String memoryCollection = "everycent_ai_memory";
+    private String apiKey = "";
 
-    private String roleKnowledgeCollection = "everycent_ai_role_knowledge";
+    private String model = "text-embedding-v3";
 
     @Min(1)
-    private Integer timeoutSeconds = 10;
+    private Integer dimension = 1024;
+
+    @Min(1)
+    private Integer timeoutSeconds = 20;
 
     public String getProvider() {
         return provider;
@@ -37,20 +40,28 @@ public class VectorStoreProperties {
         this.baseUrl = baseUrl;
     }
 
-    public String getMemoryCollection() {
-        return memoryCollection;
+    public String getApiKey() {
+        return apiKey;
     }
 
-    public void setMemoryCollection(String memoryCollection) {
-        this.memoryCollection = memoryCollection;
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
     }
 
-    public String getRoleKnowledgeCollection() {
-        return roleKnowledgeCollection;
+    public String getModel() {
+        return model;
     }
 
-    public void setRoleKnowledgeCollection(String roleKnowledgeCollection) {
-        this.roleKnowledgeCollection = roleKnowledgeCollection;
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public Integer getDimension() {
+        return dimension;
+    }
+
+    public void setDimension(Integer dimension) {
+        this.dimension = dimension;
     }
 
     public Integer getTimeoutSeconds() {

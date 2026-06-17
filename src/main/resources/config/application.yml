@@ -236,3 +236,16 @@ app:
     timeout-seconds: 20
     min-confidence: 0.70
     max-input-length: 500
+  vector-store:
+    provider: qdrant
+    base-url: ${APP_VECTOR_STORE_BASE_URL:http://127.0.0.1:6333}
+    memory-collection: ${APP_VECTOR_STORE_MEMORY_COLLECTION:everycent_ai_memory}
+    role-knowledge-collection: ${APP_VECTOR_STORE_ROLE_KNOWLEDGE_COLLECTION:everycent_ai_role_knowledge}
+    timeout-seconds: ${APP_VECTOR_STORE_TIMEOUT_SECONDS:10}
+  embedding:
+    provider: openai-compatible
+    base-url: ${APP_EMBEDDING_BASE_URL:}
+    api-key: ${APP_EMBEDDING_API_KEY:}
+    model: ${APP_EMBEDDING_MODEL:text-embedding-v3}
+    dimension: ${APP_EMBEDDING_DIMENSION:1024}
+    timeout-seconds: ${APP_EMBEDDING_TIMEOUT_SECONDS:20}
