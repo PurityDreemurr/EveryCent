@@ -16,4 +16,6 @@ public interface UserLedgerPermissionRepository extends JpaRepository<UserLedger
     List<UserLedgerPermission> findAllByUserAndStatus(User user, PermissionStatus status);
 
     List<UserLedgerPermission> findAllByLedgerAndStatus(Ledger ledger, PermissionStatus status);
+
+    void deleteAllByLedger(Ledger ledger);
 }
