@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface UserLedgerPermissionRepository extends JpaRepository<UserLedgerPermission, Long> {
     Optional<UserLedgerPermission> findOneByUserAndLedgerAndStatus(User user, Ledger ledger, PermissionStatus status);
 
+    Optional<UserLedgerPermission> findOneByUserAndLedger(User user, Ledger ledger);
+
     List<UserLedgerPermission> findAllByUserAndStatus(User user, PermissionStatus status);
 
     List<UserLedgerPermission> findAllByLedgerAndStatus(Ledger ledger, PermissionStatus status);
