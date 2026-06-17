@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -84,6 +85,32 @@ public class QdrantVectorStoreClient implements VectorStoreClient {
         return search(roleKnowledgeCollection, queryVector, filter, limit);
     }
 
+    public List<VectorSearchResult> scrollRoleKnowledge(Long roleProfileId, int limit) {
+        requireId(roleProfileId, "roleProfileId");
+        if (limit <= 0) {
+            throw new VectorStoreException("向量滚动读取 limit 必须大于 0");
+        }
+        Map<String, Object> body = Map.of(
+            "filter",
+            mustFilter(Map.of("roleProfileId", roleProfileId, "enabled", true)),
+            "limit",
+            limit,
+            "with_payload",
+            true,
+            "with_vector",
+            false
+        );
+        JsonNode response = exchange(HttpMethod.POST, "/collections/" + roleKnowledgeCollection + "/points/scroll", body);
+        List<VectorSearchResult> results = new ArrayList<>();
+        for (JsonNode item : response.path("result").path("points")) {
+            VectorSearchResult result = new VectorSearchResult();
+            result.setVectorId(item.path("id").asText());
+            result.setPayload(toMap(item.path("payload")));
+            results.add(result);
+        }
+        return results;
+    }
+
     @Override
     public void delete(String vectorId) {
         if (!StringUtils.hasText(vectorId)) {
@@ -130,7 +157,7 @@ public class QdrantVectorStoreClient implements VectorStoreClient {
             ResponseEntity<String> response = restTemplate.exchange(
                 baseUrl + path,
                 method,
-                new HttpEntity<>(objectMapper.writeValueAsString(body), headers()),
+                new HttpEntity<>(objectMapper.writeValueAsBytes(body), headers()),
                 String.class
             );
             return objectMapper.readTree(response.getBody());
@@ -196,7 +223,7 @@ public class QdrantVectorStoreClient implements VectorStoreClient {
 
     private HttpHeaders headers() {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(new MediaType(MediaType.APPLICATION_JSON, StandardCharsets.UTF_8));
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         return headers;
     }

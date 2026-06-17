@@ -78,6 +78,8 @@ curl http://127.0.0.1:6333/collections/everycent_ai_role_knowledge
 ./mvnw -Dskip.installnodenpm=true -Dskip.npm=true -Dtest=QdrantVectorStoreIT test
 ```
 
+在 `docker-dev.yml` 的开发容器内运行后端或测试时，默认通过 `http://host.docker.internal:6333` 访问宿主机上的 Qdrant。该映射由 `extra_hosts: host.docker.internal:host-gateway` 提供，因此通常不需要手动传服务器 IP。
+
 如果 Qdrant 不在本机默认端口：
 
 ```bash

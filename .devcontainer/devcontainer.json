@@ -40,6 +40,14 @@
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [9060, 3001, 9000, 8080],
 
+  "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+
+  "containerEnv": {
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "JAVA_TOOL_OPTIONS": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+  },
+
   // Use 'postCreateCommand' to run commands after the container is created.
   // "postCreateCommand": "java -version",
 
