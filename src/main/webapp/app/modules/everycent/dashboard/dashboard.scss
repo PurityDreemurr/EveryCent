@@ -1,43 +1,83 @@
 .everycent-dashboard {
+  --ec-chart-bar: #0f172a;
+
+  gap: 1.5rem;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0.5rem 0.25rem 1.5rem;
+}
+
+.dark .everycent-dashboard {
+  --ec-chart-bar: #f8fafc;
+}
+
+.everycent-dashboard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
 }
 
+.everycent-dashboard__title {
+  margin: 0;
+  color: var(--ec-text);
+  font-size: 1.75rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
 .everycent-dashboard__download {
-  min-height: 38px;
-  padding: 0 0.9rem;
-  border: 1px solid var(--ec-accent);
+  min-height: 42px;
+  padding: 0 1.1rem;
+  border: 1px solid #0f172a;
   border-radius: 8px;
   color: #ffffff;
-  background: var(--ec-accent);
+  background: #0f172a;
   font-weight: 800;
+}
+
+.dark .everycent-dashboard__download {
+  border-color: var(--ec-primary);
+  color: var(--ec-primary-foreground);
+  background: var(--ec-primary);
+}
+
+.everycent-dashboard__tabs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .everycent-dashboard__tabs {
-  display: flex;
-  gap: 0.35rem;
+  display: inline-flex;
+  gap: 0.2rem;
   overflow-x: auto;
-  padding-bottom: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 10px;
+  background: var(--ec-soft);
 }
 
 .everycent-dashboard__tabs button {
-  min-height: 38px;
-  padding: 0 0.9rem;
-  border: 1px solid var(--ec-border);
+  min-height: 34px;
+  padding: 0 0.8rem;
+  border: 1px solid transparent;
   border-radius: 8px;
   color: var(--ec-muted);
-  background: #ffffff;
-  font-weight: 800;
+  background: transparent;
+  font-weight: 750;
   white-space: nowrap;
 }
 
 .everycent-dashboard__tabs button.active {
   color: var(--ec-text);
-  background: var(--ec-accent-soft);
-  border-color: var(--ec-accent);
+  border-color: var(--ec-border);
+  background: var(--ec-panel);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
 }
 
 .everycent-dashboard__tabs button:disabled {
-  opacity: 0.45;
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .everycent-dashboard__tab-panel {
@@ -53,12 +93,14 @@
 
 .everycent-summary-card {
   display: grid;
-  gap: 0.45rem;
-  min-height: 126px;
-  padding: 1rem;
+  align-content: space-between;
+  gap: 1.25rem;
+  min-height: 150px;
+  padding: 1.25rem;
   border: 1px solid var(--ec-border);
-  border-radius: 8px;
-  background: #ffffff;
+  border-radius: 12px;
+  background: var(--ec-panel);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
 }
 
 .everycent-summary-card header {
@@ -68,30 +110,28 @@
   gap: 1rem;
 }
 
-.everycent-summary-card span,
-.everycent-summary-card small {
+.everycent-summary-card span {
+  color: var(--ec-text);
+  font-size: 0.95rem;
+  font-weight: 760;
+}
+
+.everycent-summary-card svg {
   color: var(--ec-muted);
-  font-weight: 700;
 }
 
 .everycent-summary-card strong {
-  font-size: 1.45rem;
+  display: block;
+  color: var(--ec-text);
+  font-size: clamp(1.65rem, 2vw, 2rem);
+  font-weight: 900;
+  line-height: 1.05;
 }
 
-.everycent-summary-card--success strong {
-  color: var(--ec-success);
-}
-
-.everycent-summary-card--danger strong {
-  color: var(--ec-danger);
-}
-
-.everycent-summary-card--warning strong {
-  color: var(--ec-warning);
-}
-
-.everycent-summary-card--accent strong {
-  color: var(--ec-accent);
+.everycent-summary-card small {
+  color: var(--ec-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .everycent-dashboard__main-grid {
@@ -111,19 +151,22 @@
 .everycent-dashboard-card {
   display: grid;
   align-content: start;
+  min-height: 440px;
   border: 1px solid var(--ec-border);
-  border-radius: 8px;
-  background: #ffffff;
+  border-radius: 12px;
+  background: var(--ec-panel);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
 }
 
 .everycent-dashboard-card__header {
-  padding: 1rem 1rem 0;
+  padding: 1.25rem 1.25rem 0;
 }
 
 .everycent-dashboard-card__header h2 {
   margin: 0;
+  color: var(--ec-text);
   font-size: 1.05rem;
-  font-weight: 900;
+  font-weight: 850;
 }
 
 .everycent-dashboard-card__header p {
@@ -133,7 +176,7 @@
 
 .everycent-dashboard-card__content {
   min-width: 0;
-  padding: 1rem;
+  padding: 1.25rem;
 }
 
 .everycent-chart {
@@ -143,26 +186,27 @@
 
 .everycent-recent-records {
   display: grid;
-  gap: 0.9rem;
+  gap: 1.45rem;
+  padding-top: 0.3rem;
 }
 
 .everycent-recent-records__item {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .everycent-recent-records__avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
-  color: #ffffff;
-  background: var(--ec-accent);
-  font-weight: 900;
+  color: var(--ec-text);
+  background: var(--ec-soft);
+  font-weight: 760;
 }
 
 .everycent-recent-records__copy {
@@ -177,16 +221,19 @@
   white-space: nowrap;
 }
 
+.everycent-recent-records__copy strong {
+  color: var(--ec-text);
+  font-weight: 820;
+}
+
 .everycent-recent-records__copy small {
   color: var(--ec-muted);
 }
 
-.everycent-recent-records__amount--income {
-  color: var(--ec-success);
-}
-
-.everycent-recent-records__amount--expense {
-  color: var(--ec-danger);
+.everycent-recent-records__amount {
+  color: var(--ec-text);
+  font-size: 1rem;
+  font-weight: 850;
 }
 
 .everycent-simple-bars {
@@ -211,17 +258,17 @@
   height: 10px;
   overflow: hidden;
   border-radius: 999px;
-  background: #edf1f6;
+  background: var(--ec-soft);
 }
 
 .everycent-simple-bars__track span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--ec-accent);
+  background: var(--ec-chart-bar);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1120px) {
   .everycent-dashboard__summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -237,6 +284,15 @@
 }
 
 @media (max-width: 640px) {
+  .everycent-dashboard {
+    padding: 0;
+  }
+
+  .everycent-dashboard__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .everycent-dashboard__summary {
     grid-template-columns: 1fr;
   }

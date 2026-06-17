@@ -16,56 +16,56 @@ type SummaryCard = {
 };
 
 const summaryCards: SummaryCard[] = [
-  { label: 'Total Income', value: '12,000.00', change: '+20.1% from last month', icon: 'save', tone: 'success' },
-  { label: 'Total Expense', value: '3,248.60', change: '+8.4% from last month', icon: 'list', tone: 'danger' },
-  { label: 'Budget Left', value: '1,751.40', change: '35% remaining this month', icon: 'tasks', tone: 'warning' },
-  { label: 'Net Balance', value: '8,751.40', change: '+12.8% from last month', icon: 'tachometer-alt', tone: 'accent' },
+  { label: '总收入', value: '$45,231.89', change: '较上月 +20.1%', icon: 'dollar-sign', tone: 'neutral' },
+  { label: '订阅数', value: '+2350', change: '较上月 +180.1%', icon: 'users', tone: 'neutral' },
+  { label: '销售额', value: '+12,234', change: '较上月 +19%', icon: 'save', tone: 'neutral' },
+  { label: '当前活跃', value: '+573', change: '较上小时 +201', icon: 'wave-square', tone: 'neutral' },
 ];
 
 const overviewData = [
-  { name: 'Jan', total: 4200 },
-  { name: 'Feb', total: 3600 },
-  { name: 'Mar', total: 5100 },
-  { name: 'Apr', total: 4700 },
-  { name: 'May', total: 5900 },
-  { name: 'Jun', total: 4300 },
-  { name: 'Jul', total: 6200 },
-  { name: 'Aug', total: 5400 },
-  { name: 'Sep', total: 4800 },
-  { name: 'Oct', total: 6900 },
-  { name: 'Nov', total: 6500 },
-  { name: 'Dec', total: 7200 },
+  { name: '1月', total: 3650 },
+  { name: '2月', total: 2850 },
+  { name: '3月', total: 1100 },
+  { name: '4月', total: 5800 },
+  { name: '5月', total: 1900 },
+  { name: '6月', total: 6000 },
+  { name: '7月', total: 5450 },
+  { name: '8月', total: 5700 },
+  { name: '9月', total: 2000 },
+  { name: '10月', total: 1100 },
+  { name: '11月', total: 6050 },
+  { name: '12月', total: 3900 },
 ];
 
 const analyticsData = [
-  { name: 'Mon', income: 900, expense: 520 },
-  { name: 'Tue', income: 720, expense: 430 },
-  { name: 'Wed', income: 1080, expense: 610 },
-  { name: 'Thu', income: 840, expense: 760 },
-  { name: 'Fri', income: 1240, expense: 680 },
-  { name: 'Sat', income: 680, expense: 520 },
-  { name: 'Sun', income: 960, expense: 390 },
+  { name: '周一', income: 900, expense: 520 },
+  { name: '周二', income: 720, expense: 430 },
+  { name: '周三', income: 1080, expense: 610 },
+  { name: '周四', income: 840, expense: 760 },
+  { name: '周五', income: 1240, expense: 680 },
+  { name: '周六', income: 680, expense: 520 },
+  { name: '周日', income: 960, expense: 390 },
 ];
 
 const recentRecords = [
-  { name: 'Lunch', email: 'food / calm', amount: '-28.00', tone: 'expense' },
-  { name: 'Metro', email: 'transport / routine', amount: '-6.00', tone: 'expense' },
-  { name: 'Salary', email: 'income / work', amount: '+12,000.00', tone: 'income' },
-  { name: 'Coffee', email: 'food / relaxed', amount: '-18.00', tone: 'expense' },
-  { name: 'Book', email: 'learning / happy', amount: '-56.00', tone: 'expense' },
+  { name: '刘晨', email: 'liuchen@email.com', amount: '+$1,999.00', tone: 'income' },
+  { name: '张译', email: 'zhangyi@email.com', amount: '+$39.00', tone: 'income' },
+  { name: '李宁', email: 'lining@email.com', amount: '+$299.00', tone: 'income' },
+  { name: '王凯', email: 'wangkai@email.com', amount: '+$99.00', tone: 'income' },
+  { name: '陈雪', email: 'chenxue@email.com', amount: '+$39.00', tone: 'income' },
 ];
 
 const referrers = [
-  { name: 'Dining', value: 512 },
-  { name: 'Shopping', value: 238 },
-  { name: 'Transport', value: 174 },
-  { name: 'Housing', value: 104 },
+  { name: '餐饮', value: 512 },
+  { name: '购物', value: 238 },
+  { name: '交通', value: 174 },
+  { name: '住房', value: 104 },
 ];
 
 const devices = [
-  { name: 'Manual Entry', value: 74 },
-  { name: 'AI Parsed', value: 22 },
-  { name: 'Import', value: 4 },
+  { name: '手动录入', value: 74 },
+  { name: 'AI 解析', value: 22 },
+  { name: '导入', value: 4 },
 ];
 
 const DashboardCard = ({
@@ -90,11 +90,11 @@ const DashboardCard = ({
 
 const OverviewChart = () => (
   <div className="everycent-chart">
-    <ResponsiveContainer width="100%" height={350}>
+    <ResponsiveContainer width="100%" height={360}>
       <BarChart data={overviewData}>
-        <XAxis dataKey="name" stroke="#6f7b8d" fontSize={12} tickLine={false} axisLine={false} />
-        <YAxis stroke="#6f7b8d" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `${value}`} />
-        <Bar dataKey="total" fill="#166f86" radius={[4, 4, 0, 0]} />
+        <XAxis dataKey="name" stroke="var(--ec-muted)" fontSize={12} tickLine={false} axisLine={false} />
+        <YAxis stroke="var(--ec-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} />
+        <Bar dataKey="total" fill="var(--ec-chart-bar, #0f172a)" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   </div>
@@ -163,34 +163,35 @@ const Dashboard = () => {
 
   return (
     <div className="everycent-page everycent-dashboard">
-      <div className="everycent-page__header">
+      <div className="everycent-dashboard__header">
         <div>
-          <h1 className="everycent-page__title">Dashboard</h1>
-          <p className="everycent-page__subtitle">Track income, expenses, budgets, and account activity.</p>
+          <h1 className="everycent-dashboard__title">仪表盘</h1>
         </div>
         <button type="button" className="everycent-dashboard__download">
-          Download
+          下载
         </button>
       </div>
 
-      <div className="everycent-dashboard__tabs" role="tablist" aria-label="Dashboard tabs">
-        <button type="button" className={activeTab === 'overview' ? 'active' : ''} onClick={() => setActiveTab('overview')}>
-          Overview
-        </button>
-        <button type="button" className={activeTab === 'analytics' ? 'active' : ''} onClick={() => setActiveTab('analytics')}>
-          Analytics
-        </button>
-        <button type="button" disabled>
-          Reports
-        </button>
-        <button type="button" disabled>
-          Notifications
-        </button>
+      <div className="everycent-dashboard__tabs-row">
+        <div className="everycent-dashboard__tabs" role="tablist" aria-label="仪表盘标签页">
+          <button type="button" className={activeTab === 'overview' ? 'active' : ''} onClick={() => setActiveTab('overview')}>
+            概览
+          </button>
+          <button type="button" className={activeTab === 'analytics' ? 'active' : ''} onClick={() => setActiveTab('analytics')}>
+            数据分析
+          </button>
+          <button type="button" disabled>
+            报表
+          </button>
+          <button type="button" disabled>
+            通知
+          </button>
+        </div>
       </div>
 
       {activeTab === 'overview' && (
         <div className="everycent-dashboard__tab-panel">
-          <section className="everycent-dashboard__summary" aria-label="Account summary">
+          <section className="everycent-dashboard__summary" aria-label="账户摘要">
             {summaryCards.map(card => (
               <article key={card.label} className={`everycent-summary-card everycent-summary-card--${card.tone}`}>
                 <header>
@@ -204,14 +205,10 @@ const Dashboard = () => {
           </section>
 
           <section className="everycent-dashboard__main-grid">
-            <DashboardCard title="Overview" className="everycent-dashboard__span-4">
+            <DashboardCard title="概览" className="everycent-dashboard__span-4">
               <OverviewChart />
             </DashboardCard>
-            <DashboardCard
-              title="Recent Records"
-              description="You recorded 265 entries this month."
-              className="everycent-dashboard__span-3"
-            >
+            <DashboardCard title="最近记录" description="本月已记录 265 条。" className="everycent-dashboard__span-3">
               <RecentRecords />
             </DashboardCard>
           </section>
@@ -220,16 +217,16 @@ const Dashboard = () => {
 
       {activeTab === 'analytics' && (
         <div className="everycent-dashboard__tab-panel">
-          <DashboardCard title="Finance Overview" description="Weekly income and expense movement.">
+          <DashboardCard title="财务概览" description="每周收入与支出变化。">
             <AnalyticsChart />
           </DashboardCard>
 
-          <section className="everycent-dashboard__summary" aria-label="Analytics summary">
+          <section className="everycent-dashboard__summary" aria-label="数据分析摘要">
             {[
-              { label: 'AI Parsed', value: '1,248', change: '+12.4% vs last week', icon: 'pencil-alt' as IconProp, tone: 'accent' },
-              { label: 'Unique Tags', value: '832', change: '+5.8% vs last week', icon: 'flag' as IconProp, tone: 'success' },
-              { label: 'Over Budget', value: '42%', change: '-3.2% vs last week', icon: 'tasks' as IconProp, tone: 'warning' },
-              { label: 'Avg. Entry Time', value: '3m 24s', change: '+18s vs last week', icon: 'sync' as IconProp, tone: 'danger' },
+              { label: 'AI 解析', value: '1,248', change: '较上周 +12.4%', icon: 'pencil-alt' as IconProp, tone: 'accent' },
+              { label: '唯一标签', value: '832', change: '较上周 +5.8%', icon: 'flag' as IconProp, tone: 'success' },
+              { label: '超预算', value: '42%', change: '较上周 -3.2%', icon: 'tasks' as IconProp, tone: 'warning' },
+              { label: '平均录入时间', value: '3m 24s', change: '较上周 +18s', icon: 'sync' as IconProp, tone: 'danger' },
             ].map(card => (
               <article key={card.label} className={`everycent-summary-card everycent-summary-card--${card.tone}`}>
                 <header>
@@ -243,10 +240,10 @@ const Dashboard = () => {
           </section>
 
           <section className="everycent-dashboard__main-grid">
-            <DashboardCard title="Categories" description="Top spending categories." className="everycent-dashboard__span-4">
+            <DashboardCard title="分类" description="支出最高的分类。" className="everycent-dashboard__span-4">
               <SimpleBarList items={referrers} valueFormatter={value => `${value}`} />
             </DashboardCard>
-            <DashboardCard title="Entry Sources" description="How records enter EveryCent." className="everycent-dashboard__span-3">
+            <DashboardCard title="录入来源" description="记录进入 EveryCent 的方式。" className="everycent-dashboard__span-3">
               <SimpleBarList items={devices} valueFormatter={value => `${value}%`} />
             </DashboardCard>
           </section>

@@ -12,35 +12,41 @@ const formatAmount = (amount?: number) => {
 };
 
 const formatConfidence = (confidence?: number) => {
-  if (confidence === undefined) return 'Review';
+  if (confidence === undefined) return '待确认';
   return `${Math.round(confidence * 100)}%`;
+};
+
+const formatType = (type?: string) => {
+  if (type === 'income') return '收入';
+  if (type === 'expense') return '支出';
+  return '-';
 };
 
 const ParsePreviewCard = ({ preview }: ParsePreviewCardProps) => (
   <section className="everycent-parse-card">
     <header>
       <div>
-        <span className="everycent-parse-card__label">Transaction preview</span>
-        <h2>{preview.type === 'income' ? 'Income record' : 'Expense record'}</h2>
+        <span className="everycent-parse-card__label">解析预览</span>
+        <h2>{preview.type === 'income' ? '收入记录' : '支出记录'}</h2>
       </div>
       <strong>{formatConfidence(preview.confidence)}</strong>
     </header>
 
     <dl>
       <div>
-        <dt>Amount</dt>
+        <dt>金额</dt>
         <dd>{formatAmount(preview.amount)}</dd>
       </div>
       <div>
-        <dt>Type</dt>
-        <dd>{preview.type ?? '-'}</dd>
+        <dt>类型</dt>
+        <dd>{formatType(preview.type)}</dd>
       </div>
       <div>
-        <dt>Behavior</dt>
+        <dt>行为</dt>
         <dd>{preview.behaviorTag ?? '-'}</dd>
       </div>
       <div>
-        <dt>Mood</dt>
+        <dt>情绪</dt>
         <dd>{preview.moodTag ?? '-'}</dd>
       </div>
     </dl>
@@ -49,12 +55,12 @@ const ParsePreviewCard = ({ preview }: ParsePreviewCardProps) => (
 
     <footer>
       <button type="button" className="everycent-primary-button">
-        Confirm
+        确认入账
       </button>
       <button type="button" className="everycent-secondary-button">
-        Edit
+        继续编辑
       </button>
-      {preview.source === 'fallback' && <span>Local preview. Backend API is not connected yet.</span>}
+      {preview.source === 'fallback' && <span>本地预览，后端解析接口暂未连接。</span>}
     </footer>
   </section>
 );

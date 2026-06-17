@@ -24,7 +24,6 @@ const TeamSwitcher = ({ teams, collapsed }: TeamSwitcherProps) => {
       >
         <span className="everycent-sidebar__mark">{activeTeam.initials}</span>
         <span className="everycent-sidebar__team-copy">
-          <span>Current ledger</span>
           <strong>{activeTeam.name}</strong>
           <small>{activeTeam.description}</small>
         </span>
@@ -32,7 +31,7 @@ const TeamSwitcher = ({ teams, collapsed }: TeamSwitcherProps) => {
       </button>
       {open && !collapsed && (
         <div className="everycent-sidebar__menu" role="menu">
-          <div className="everycent-sidebar__menu-label">Ledgers</div>
+          <div className="everycent-sidebar__menu-label">账本</div>
           {teams.map((team, index) => (
             <button
               key={team.name}
@@ -50,7 +49,7 @@ const TeamSwitcher = ({ teams, collapsed }: TeamSwitcherProps) => {
           ))}
           <button className="everycent-sidebar__menu-item" type="button" onClick={() => setOpen(false)}>
             <FontAwesomeIcon icon="plus" fixedWidth />
-            <span>Add ledger</span>
+            <span>新增账本</span>
           </button>
         </div>
       )}

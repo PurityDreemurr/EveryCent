@@ -25,7 +25,7 @@ const ChatComposer = ({ disabled, onSubmit, variant = 'thread' }: ChatComposerPr
         value={text}
         rows={variant === 'hero' ? 2 : 1}
         disabled={disabled}
-        placeholder="Ask anything"
+        placeholder="说点什么"
         onChange={event => setText(event.target.value)}
         onKeyDown={event => {
           if (event.key === 'Enter' && !event.shiftKey) {
@@ -35,14 +35,14 @@ const ChatComposer = ({ disabled, onSubmit, variant = 'thread' }: ChatComposerPr
         }}
       />
       <div className="everycent-chat-composer__toolbar">
-        <button type="button" className="everycent-chat-composer__ghost" aria-label="Add context">
+        <button type="button" className="everycent-chat-composer__ghost" aria-label="添加上下文">
           <FontAwesomeIcon icon="plus" />
         </button>
-        <span className="everycent-chat-composer__tool">Tools</span>
-        <button type="button" className="everycent-chat-composer__ghost" aria-label="Voice input">
+        <span className="everycent-chat-composer__tool">工具</span>
+        <button type="button" className="everycent-chat-composer__ghost" aria-label="语音输入">
           <FontAwesomeIcon icon="microphone" />
         </button>
-        <button type="button" className="everycent-chat-composer__send" disabled={!canSubmit} onClick={submit} aria-label="Send message">
+        <button type="button" className="everycent-chat-composer__send" disabled={!canSubmit} onClick={submit} aria-label="发送消息">
           <FontAwesomeIcon icon="arrow-left" rotation={180} />
         </button>
       </div>

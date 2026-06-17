@@ -25,9 +25,7 @@ const AssistantChat = () => {
 
     const preview = await parseTransactionText(text);
     const responseText =
-      preview.source === 'api'
-        ? 'I parsed this into a transaction. Please review it before saving.'
-        : 'I made a local preview because the backend parse API is not available yet.';
+      preview.source === 'api' ? '我已把这段内容解析成一条记账记录，请确认后再保存。' : '后端解析接口暂不可用，我先生成了一条本地预览。';
 
     setMessages(current => [...current, createMessage('assistant', responseText, preview)]);
     setLoading(false);
@@ -37,7 +35,7 @@ const AssistantChat = () => {
     <section className={`everycent-chat${isEmpty ? ' everycent-chat--empty' : ' everycent-chat--thread'}`} aria-label="AI transaction chat">
       {isEmpty ? (
         <div className="everycent-chat-home">
-          <h2>Where should we begin?</h2>
+          <h2>今天从哪里开始记？</h2>
           <ChatComposer disabled={loading} onSubmit={submitMessage} variant="hero" />
         </div>
       ) : (

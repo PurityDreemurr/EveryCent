@@ -25,9 +25,9 @@ export const SignOutDialog = ({ open, onOpenChange }: SignOutDialogProps) => {
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Sign out"
-      desc="Are you sure you want to sign out? You will need to sign in again to access your account."
-      confirmText="Sign out"
+      title="退出登录"
+      desc="确定要退出登录吗？再次访问账户时需要重新登录。"
+      confirmText="退出登录"
       destructive
       handleConfirm={handleSignOut}
     />

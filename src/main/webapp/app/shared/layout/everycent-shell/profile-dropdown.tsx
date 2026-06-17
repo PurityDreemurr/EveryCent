@@ -12,7 +12,7 @@ const ProfileDropdown = () => {
 
   return (
     <div className="everycent-topbar__menu-wrap">
-      <button className="everycent-profile-button" type="button" aria-label="Open profile menu" onClick={() => setOpen(value => !value)}>
+      <button className="everycent-profile-button" type="button" aria-label="打开个人菜单" onClick={() => setOpen(value => !value)}>
         {login.slice(0, 2).toUpperCase()}
       </button>
       {open && (
@@ -23,15 +23,15 @@ const ProfileDropdown = () => {
           </div>
           <Link to="/account/settings" onClick={() => setOpen(false)}>
             <FontAwesomeIcon icon="user" fixedWidth />
-            Profile
+            个人资料
           </Link>
           <Link to="/account/password" onClick={() => setOpen(false)}>
             <FontAwesomeIcon icon="lock" fixedWidth />
-            Password
+            密码
           </Link>
           <Link className="danger" to="/logout" onClick={() => setOpen(false)}>
             <FontAwesomeIcon icon="sign-out-alt" fixedWidth />
-            Sign out
+            退出登录
           </Link>
         </div>
       )}

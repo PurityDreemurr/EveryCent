@@ -18,34 +18,34 @@ import './forms.scss';
 
 const userSchema = z
   .object({
-    firstName: z.string().min(1, 'First name is required.'),
-    lastName: z.string().min(1, 'Last name is required.'),
-    username: z.string().min(1, 'Username is required.'),
-    phoneNumber: z.string().min(1, 'Phone number is required.'),
-    email: z.string().min(1, 'Email is required.').email('Please enter a valid email.'),
-    role: z.string().min(1, 'Role is required.'),
+    firstName: z.string().min(1, '名是必填项。'),
+    lastName: z.string().min(1, '姓是必填项。'),
+    username: z.string().min(1, '用户名是必填项。'),
+    phoneNumber: z.string().min(1, '手机号是必填项。'),
+    email: z.string().min(1, '邮箱是必填项。').email('请输入有效的邮箱地址。'),
+    role: z.string().min(1, '角色是必填项。'),
     password: z.string(),
     confirmPassword: z.string(),
     isEdit: z.boolean(),
   })
   .refine(values => values.isEdit || values.password.length > 0, {
-    message: 'Password is required.',
+    message: '密码是必填项。',
     path: ['password'],
   })
   .refine(values => (values.isEdit && !values.password ? true : values.password.length >= 8), {
-    message: 'Password must be at least 8 characters.',
+    message: '密码至少需要 8 个字符。',
     path: ['password'],
   })
   .refine(values => (values.isEdit && !values.password ? true : /[a-z]/.test(values.password)), {
-    message: 'Password must contain a lowercase letter.',
+    message: '密码必须包含一个小写字母。',
     path: ['password'],
   })
   .refine(values => (values.isEdit && !values.password ? true : /\d/.test(values.password)), {
-    message: 'Password must contain a number.',
+    message: '密码必须包含一个数字。',
     path: ['password'],
   })
   .refine(values => (values.isEdit && !values.password ? true : values.password === values.confirmPassword), {
-    message: "Passwords don't match.",
+    message: '两次输入的密码不一致。',
     path: ['confirmPassword'],
   });
 
@@ -59,9 +59,9 @@ type UsersActionDialogProps = {
 };
 
 const roles = [
-  { label: 'User', value: 'user' },
-  { label: 'Manager', value: 'manager' },
-  { label: 'Admin', value: 'admin' },
+  { label: '普通用户', value: 'user' },
+  { label: '管理员', value: 'manager' },
+  { label: '超级管理员', value: 'admin' },
 ];
 
 const UsersActionDialog = ({ open, currentRow, onOpenChange, onSubmit }: UsersActionDialogProps) => {
@@ -104,40 +104,40 @@ const UsersActionDialog = ({ open, currentRow, onOpenChange, onSubmit }: UsersAc
     <Dialog open={open} onOpenChange={value => (value ? onOpenChange(true) : close())}>
       <DialogContent aria-labelledby="ec-user-dialog-title">
         <DialogHeader>
-          <DialogTitle id="ec-user-dialog-title">{isEdit ? 'Edit User' : 'Add New User'}</DialogTitle>
-          <DialogDescription>{isEdit ? 'Update the selected user.' : 'Create a new user account.'}</DialogDescription>
+          <DialogTitle id="ec-user-dialog-title">{isEdit ? '编辑用户' : '新增用户'}</DialogTitle>
+          <DialogDescription>{isEdit ? '更新当前选中的用户。' : '创建一个新的用户账户。'}</DialogDescription>
         </DialogHeader>
 
         <form id="ec-user-form" className="ec-form ec-form--grid" onSubmit={handleSubmit(submit)}>
           <label className="ec-field">
-            <span>First name</span>
+            <span>名</span>
             <input {...register('firstName')} />
             {errors.firstName && <small>{errors.firstName.message}</small>}
           </label>
           <label className="ec-field">
-            <span>Last name</span>
+            <span>姓</span>
             <input {...register('lastName')} />
             {errors.lastName && <small>{errors.lastName.message}</small>}
           </label>
           <label className="ec-field">
-            <span>Username</span>
+            <span>用户名</span>
             <input {...register('username')} />
             {errors.username && <small>{errors.username.message}</small>}
           </label>
           <label className="ec-field">
-            <span>Email</span>
+            <span>邮箱</span>
             <input type="email" {...register('email')} />
             {errors.email && <small>{errors.email.message}</small>}
           </label>
           <label className="ec-field">
-            <span>Phone number</span>
+            <span>手机号</span>
             <input {...register('phoneNumber')} />
             {errors.phoneNumber && <small>{errors.phoneNumber.message}</small>}
           </label>
           <label className="ec-field">
-            <span>Role</span>
+            <span>角色</span>
             <select {...register('role')}>
-              <option value="">Select role</option>
+              <option value="">请选择角色</option>
               {roles.map(role => (
                 <option key={role.value} value={role.value}>
                   {role.label}
@@ -147,12 +147,12 @@ const UsersActionDialog = ({ open, currentRow, onOpenChange, onSubmit }: UsersAc
             {errors.role && <small>{errors.role.message}</small>}
           </label>
           <label className="ec-field">
-            <span>Password</span>
+            <span>密码</span>
             <input type="password" {...register('password')} />
             {errors.password && <small>{errors.password.message}</small>}
           </label>
           <label className="ec-field">
-            <span>Confirm password</span>
+            <span>确认密码</span>
             <input type="password" disabled={!passwordTouched} {...register('confirmPassword')} />
             {errors.confirmPassword && <small>{errors.confirmPassword.message}</small>}
           </label>
@@ -160,10 +160,10 @@ const UsersActionDialog = ({ open, currentRow, onOpenChange, onSubmit }: UsersAc
 
         <DialogFooter>
           <button className="ec-button" type="button" onClick={close}>
-            Cancel
+            取消
           </button>
           <button className="ec-button ec-button--primary" type="submit" form="ec-user-form">
-            Save changes
+            保存更改
           </button>
         </DialogFooter>
       </DialogContent>

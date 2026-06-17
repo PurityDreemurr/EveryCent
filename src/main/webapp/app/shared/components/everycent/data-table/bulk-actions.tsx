@@ -16,7 +16,7 @@ export function DataTableBulkActions<TData>({ table, entityName, children }: Dat
 
   useEffect(() => {
     if (selectedCount > 0) {
-      const message = `${selectedCount} ${entityName}${selectedCount > 1 ? 's' : ''} selected. Bulk actions toolbar is available.`;
+      const message = `已选择 ${selectedCount} 个${entityName}，批量操作工具栏已可用。`;
       setAnnouncement(message);
       const timer = setTimeout(() => setAnnouncement(''), 3000);
       return () => clearTimeout(timer);
@@ -64,18 +64,15 @@ export function DataTableBulkActions<TData>({ table, entityName, children }: Dat
         ref={toolbarRef}
         className="ec-data-table__bulk-actions"
         role="toolbar"
-        aria-label={`Bulk actions for ${selectedCount} selected ${entityName}${selectedCount > 1 ? 's' : ''}`}
+        aria-label={`对已选择的 ${selectedCount} 个${entityName}执行批量操作`}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
       >
-        <button type="button" onClick={handleClearSelection} aria-label="Clear selection" title="Clear selection">
+        <button type="button" onClick={handleClearSelection} aria-label="清除选择" title="清除选择">
           <FontAwesomeIcon icon="times-circle" />
         </button>
         <strong>{selectedCount}</strong>
-        <span>
-          {entityName}
-          {selectedCount > 1 ? 's' : ''} selected
-        </span>
+        <span>已选择 {entityName}</span>
         {children}
       </div>
     </>

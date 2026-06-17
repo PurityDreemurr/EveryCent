@@ -10,10 +10,10 @@ import { previewSubmittedData } from './submission-preview';
 import './forms.scss';
 
 const taskSchema = z.object({
-  title: z.string().min(1, 'Title is required.'),
-  status: z.string().min(1, 'Please select a status.'),
-  label: z.string().min(1, 'Please select a label.'),
-  priority: z.string().min(1, 'Please choose a priority.'),
+  title: z.string().min(1, '标题是必填项。'),
+  status: z.string().min(1, '请选择状态。'),
+  label: z.string().min(1, '请选择标签。'),
+  priority: z.string().min(1, '请选择优先级。'),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -57,44 +57,44 @@ const TasksMutateDrawer = ({ open, currentRow, onOpenChange, onSubmit }: TasksMu
     <Sheet open={open} onOpenChange={value => (value ? onOpenChange(true) : close())}>
       <SheetContent aria-labelledby="ec-task-drawer-title">
         <SheetHeader>
-          <SheetTitle id="ec-task-drawer-title">{isUpdate ? 'Update Task' : 'Create Task'}</SheetTitle>
-          <SheetDescription>{isUpdate ? 'Update the task details.' : 'Add a task with status, label, and priority.'}</SheetDescription>
+          <SheetTitle id="ec-task-drawer-title">{isUpdate ? '更新任务' : '新建任务'}</SheetTitle>
+          <SheetDescription>{isUpdate ? '更新任务详情。' : '添加一个包含状态、标签和优先级的任务。'}</SheetDescription>
         </SheetHeader>
 
         <form id="ec-task-form" className="ec-form" onSubmit={handleSubmit(submit)}>
           <label className="ec-field">
-            <span>Title</span>
-            <input placeholder="Enter a title" {...register('title')} />
+            <span>标题</span>
+            <input placeholder="请输入标题" {...register('title')} />
             {errors.title && <small>{errors.title.message}</small>}
           </label>
           <label className="ec-field">
-            <span>Status</span>
+            <span>状态</span>
             <select {...register('status')}>
-              <option value="">Select status</option>
-              <option value="in-progress">In Progress</option>
-              <option value="backlog">Backlog</option>
-              <option value="todo">Todo</option>
-              <option value="done">Done</option>
-              <option value="canceled">Canceled</option>
+              <option value="">请选择状态</option>
+              <option value="in-progress">进行中</option>
+              <option value="backlog">待处理</option>
+              <option value="todo">待办</option>
+              <option value="done">已完成</option>
+              <option value="canceled">已取消</option>
             </select>
             {errors.status && <small>{errors.status.message}</small>}
           </label>
           <fieldset className="ec-radio-group">
-            <legend>Label</legend>
+            <legend>标签</legend>
             {['documentation', 'feature', 'bug'].map(label => (
               <label key={label}>
                 <input type="radio" value={label} {...register('label')} />
-                <span>{label}</span>
+                <span>{label === 'documentation' ? '文档' : label === 'feature' ? '功能' : '缺陷'}</span>
               </label>
             ))}
             {errors.label && <small>{errors.label.message}</small>}
           </fieldset>
           <fieldset className="ec-radio-group">
-            <legend>Priority</legend>
+            <legend>优先级</legend>
             {['high', 'medium', 'low'].map(priority => (
               <label key={priority}>
                 <input type="radio" value={priority} {...register('priority')} />
-                <span>{priority}</span>
+                <span>{priority === 'high' ? '高' : priority === 'medium' ? '中' : '低'}</span>
               </label>
             ))}
             {errors.priority && <small>{errors.priority.message}</small>}
@@ -103,10 +103,10 @@ const TasksMutateDrawer = ({ open, currentRow, onOpenChange, onSubmit }: TasksMu
 
         <SheetFooter>
           <button className="ec-button" type="button" onClick={close}>
-            Close
+            关闭
           </button>
           <button className="ec-button ec-button--primary" type="submit" form="ec-task-form">
-            Save changes
+            保存更改
           </button>
         </SheetFooter>
       </SheetContent>

@@ -31,8 +31,8 @@ const createFallbackPreview = (text: string): TransactionParsePreview => {
   return {
     amount,
     type: isIncome ? 'income' : 'expense',
-    behaviorTag: isIncome ? 'Income' : 'General',
-    moodTag: 'Neutral',
+    behaviorTag: isIncome ? '收入' : '普通',
+    moodTag: '平静',
     remark: text,
     confidence: amount ? 0.62 : 0.28,
     needsManualReview: true,

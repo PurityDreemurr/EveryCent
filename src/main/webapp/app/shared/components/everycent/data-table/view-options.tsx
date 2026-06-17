@@ -14,11 +14,11 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
     <div className="ec-data-table__view-options">
       <button type="button" onClick={() => setOpen(value => !value)}>
         <FontAwesomeIcon icon="eye" />
-        View
+        视图
       </button>
       {open && (
         <div className="ec-data-table__view-menu">
-          <strong>Toggle columns</strong>
+          <strong>切换列显示</strong>
           {columns.map(column => (
             <label key={column.id}>
               <input type="checkbox" checked={column.getIsVisible()} onChange={event => column.toggleVisibility(event.target.checked)} />

@@ -1,12 +1,12 @@
 .everycent-shell {
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
+  grid-template-columns: 248px minmax(0, 1fr);
   min-height: calc(100vh - 124px);
   overflow: hidden;
   color: var(--ec-text);
   background: var(--ec-bg);
   border: 1px solid var(--ec-border);
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .everycent-shell--collapsed {
@@ -17,25 +17,25 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background: var(--sidebar);
-  color: var(--sidebar-foreground);
+  background: var(--ec-panel);
+  color: var(--ec-text);
+  border-right: 1px solid var(--ec-border);
   overflow: visible;
 }
 
 .everycent-sidebar__team {
   position: relative;
-  min-height: 64px;
-  padding: 0 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  min-height: 68px;
+  padding: 0.85rem 0.9rem;
 }
 
 .everycent-sidebar__team-button,
 .everycent-sidebar__user-button {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.7rem;
   width: 100%;
-  min-height: 64px;
+  min-height: 44px;
   padding: 0;
   border: 0;
   color: inherit;
@@ -47,27 +47,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  border-radius: 8px;
-  background: var(--sidebar-primary);
-  color: var(--sidebar-primary-foreground);
-  font-weight: 800;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 9px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
   letter-spacing: 0;
 }
 
 .everycent-sidebar__team-copy {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.05rem;
   min-width: 0;
   flex: 1;
 }
 
 .everycent-sidebar__team-copy span {
-  color: var(--muted-foreground);
-  font-size: 0.72rem;
-  font-weight: 700;
+  display: none;
 }
 
 .everycent-sidebar__team-copy strong,
@@ -78,26 +77,30 @@
 }
 
 .everycent-sidebar__team-copy strong {
-  color: var(--sidebar-foreground);
-  font-weight: 800;
+  color: var(--ec-text);
+  font-size: 0.96rem;
+  font-weight: 850;
 }
 
 .everycent-sidebar__team-copy small {
-  color: var(--muted-foreground);
+  color: var(--ec-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .everycent-sidebar__team-caret {
   margin-left: auto;
-  color: var(--muted-foreground);
+  color: var(--ec-muted);
+  font-size: 0.8rem;
 }
 
 .everycent-sidebar__nav {
   display: grid;
   align-content: start;
-  gap: 0.85rem;
+  gap: 1.25rem;
   flex: 1;
   overflow: auto;
-  padding: 0.75rem;
+  padding: 0.3rem 0.85rem 0.85rem;
 }
 
 .everycent-sidebar__group {
@@ -107,17 +110,17 @@
 
 .everycent-sidebar__group-title {
   margin: 0;
-  padding: 0 0.75rem;
-  color: var(--muted-foreground);
-  font-size: 0.7rem;
-  font-weight: 800;
+  padding: 0 0.1rem;
+  color: var(--ec-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
   letter-spacing: 0;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .everycent-sidebar__group-items {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.12rem;
 }
 
 .everycent-sidebar__collapsible {
@@ -131,28 +134,35 @@
 .everycent-sidebar__link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  min-height: 42px;
-  padding: 0 0.75rem;
-  border-radius: 8px;
-  color: var(--sidebar-foreground);
-  font-weight: 600;
-  text-decoration: none;
+  gap: 0.65rem;
+  min-height: 38px;
+  padding: 0 0.65rem;
   border: 0;
+  border-radius: 7px;
+  color: var(--ec-text);
+  background: transparent;
+  font-size: 0.94rem;
+  font-weight: 650;
+  text-decoration: none;
   width: 100%;
 }
 
 .everycent-sidebar__link:hover,
 .everycent-sidebar__link.active {
-  color: var(--sidebar-accent-foreground);
-  background: var(--sidebar-accent);
+  color: var(--ec-text);
+  background: var(--ec-soft);
   text-decoration: none;
 }
 
 .everycent-sidebar__link--button {
   cursor: pointer;
   text-align: left;
-  background: transparent;
+}
+
+.everycent-sidebar__link svg,
+.everycent-sidebar__sublink svg {
+  color: currentColor;
+  font-size: 0.9rem;
 }
 
 .everycent-sidebar__chevron,
@@ -164,40 +174,41 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 22px;
+  min-width: 20px;
+  height: 20px;
   padding: 0 0.35rem;
   border-radius: 999px;
-  color: var(--primary-foreground);
-  background: var(--primary);
-  font-size: 0.72rem;
-  font-weight: 800;
+  color: #ffffff;
+  background: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 850;
 }
 
 .everycent-sidebar__subnav {
   display: grid;
-  gap: 0.15rem;
-  margin: 0.15rem 0 0.35rem 1.25rem;
-  padding-left: 0.8rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.16);
+  gap: 0.1rem;
+  margin: 0.12rem 0 0.25rem 1rem;
+  padding-left: 0.65rem;
+  border-left: 1px solid var(--ec-border);
 }
 
 .everycent-sidebar__sublink {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  min-height: 34px;
-  padding: 0 0.65rem;
-  border-radius: 8px;
-  color: var(--sidebar-foreground);
-  font-weight: 600;
+  min-height: 32px;
+  padding: 0 0.6rem;
+  border-radius: 7px;
+  color: var(--ec-muted);
+  font-size: 0.9rem;
+  font-weight: 650;
   text-decoration: none;
 }
 
 .everycent-sidebar__sublink:hover,
 .everycent-sidebar__sublink.active {
-  color: var(--sidebar-accent-foreground);
-  background: var(--sidebar-accent);
+  color: var(--ec-text);
+  background: var(--ec-soft);
   text-decoration: none;
 }
 
@@ -211,10 +222,10 @@
   gap: 0.25rem;
   padding: 0.5rem;
   border: 1px solid var(--ec-border);
-  border-radius: 8px;
+  border-radius: 9px;
   color: var(--ec-text);
   background: var(--popover);
-  box-shadow: 0 16px 40px rgba(8, 20, 40, 0.2);
+  box-shadow: 0 16px 40px rgba(8, 20, 40, 0.16);
 }
 
 .everycent-sidebar__flyout-title {
@@ -242,7 +253,7 @@
 .everycent-sidebar__flyout-link:hover,
 .everycent-sidebar__flyout-link.active {
   color: var(--ec-text);
-  background: var(--ec-accent-soft);
+  background: var(--ec-soft);
   text-decoration: none;
 }
 
@@ -256,10 +267,10 @@
   gap: 0.25rem;
   padding: 0.5rem;
   border: 1px solid var(--ec-border);
-  border-radius: 8px;
+  border-radius: 9px;
   color: var(--ec-text);
   background: var(--popover);
-  box-shadow: 0 16px 40px rgba(8, 20, 40, 0.2);
+  box-shadow: 0 16px 40px rgba(8, 20, 40, 0.16);
 }
 
 .everycent-sidebar__menu--user {
@@ -295,7 +306,7 @@
 .everycent-sidebar__menu-item.active,
 .everycent-sidebar__menu-link:hover {
   color: var(--ec-text);
-  background: var(--ec-accent-soft);
+  background: var(--ec-soft);
   text-decoration: none;
 }
 
@@ -310,8 +321,8 @@
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  color: var(--ec-primary-foreground);
-  background: var(--ec-primary);
+  color: #ffffff;
+  background: #0f172a;
   font-size: 0.68rem;
   font-weight: 800;
 }
@@ -324,8 +335,8 @@
 .everycent-sidebar__user {
   position: relative;
   min-height: 64px;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: auto;
+  padding: 0.75rem 0.9rem;
 }
 
 .everycent-sidebar__avatar {
@@ -335,9 +346,9 @@
   width: 36px;
   height: 36px;
   flex: 0 0 36px;
-  border-radius: 8px;
-  color: var(--sidebar-primary-foreground);
-  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  color: var(--ec-text);
+  background: var(--ec-soft);
   font-weight: 800;
 }
 
@@ -353,8 +364,14 @@
   white-space: nowrap;
 }
 
+.everycent-sidebar__user-copy strong {
+  color: var(--ec-text);
+  font-size: 0.9rem;
+}
+
 .everycent-sidebar__user-copy small {
-  color: var(--muted-foreground);
+  color: var(--ec-muted);
+  font-size: 0.78rem;
 }
 
 .everycent-sidebar.is-collapsed .everycent-sidebar__team-copy,
@@ -373,7 +390,6 @@
 .everycent-sidebar.is-collapsed .everycent-sidebar__user-button {
   justify-content: center;
 }
-
 .everycent-shell__main {
   min-width: 0;
   display: flex;

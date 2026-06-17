@@ -16,7 +16,7 @@ export function DataTableColumnHeader<TData, TValue>({ column, title, className 
 
   return (
     <div className={`ec-data-table__column-header ${className}`}>
-      <button type="button" onClick={() => column.toggleSorting(sorted === 'asc')} title={`Sort ${title}`}>
+      <button type="button" onClick={() => column.toggleSorting(sorted === 'asc')} title={`排序 ${title}`}>
         <span>{title}</span>
         {sorted === 'desc' ? (
           <FontAwesomeIcon icon="sort" className="ec-data-table__sort-icon is-desc" />
@@ -27,7 +27,7 @@ export function DataTableColumnHeader<TData, TValue>({ column, title, className 
         )}
       </button>
       {column.getCanHide() && (
-        <button className="ec-data-table__hide-column" type="button" onClick={() => column.toggleVisibility(false)} title={`Hide ${title}`}>
+        <button className="ec-data-table__hide-column" type="button" onClick={() => column.toggleVisibility(false)} title={`隐藏 ${title}`}>
           <FontAwesomeIcon icon="eye" />
         </button>
       )}

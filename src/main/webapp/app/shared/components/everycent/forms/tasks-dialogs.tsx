@@ -30,13 +30,13 @@ const TasksDialogs = () => {
             key={`task-delete-${currentRow.title}`}
             open={open === 'delete'}
             onOpenChange={value => (value ? setOpen('delete') : closeWithRowCleanup())}
-            title={`Delete this task: ${currentRow.title}?`}
+            title={`删除这个任务：${currentRow.title}？`}
             desc={
               <>
-                You are about to delete a task with priority <strong>{currentRow.priority}</strong>. This action cannot be undone.
+                你即将删除一个优先级为 <strong>{currentRow.priority}</strong> 的任务。此操作无法撤销。
               </>
             }
-            confirmText="Delete"
+            confirmText="删除"
             destructive
             handleConfirm={() => {
               previewSubmittedData('task-delete', currentRow);

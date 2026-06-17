@@ -17,11 +17,11 @@ import {
 import './settings.scss';
 
 const tabs = [
-  { id: 'profile', label: 'Profile' },
-  { id: 'account', label: 'Account' },
-  { id: 'appearance', label: 'Appearance' },
-  { id: 'display', label: 'Display' },
-  { id: 'notifications', label: 'Notifications' },
+  { id: 'profile', label: '资料' },
+  { id: 'account', label: '账户' },
+  { id: 'appearance', label: '外观' },
+  { id: 'display', label: '显示' },
+  { id: 'notifications', label: '通知' },
 ] as const;
 
 type SettingsTab = (typeof tabs)[number]['id'];
@@ -68,22 +68,22 @@ const SettingsDialogActions = () => {
   return (
     <div className="everycent-settings__actions">
       <button className="ec-button" type="button" onClick={openAddUser}>
-        Add user
+        添加用户
       </button>
       <button className="ec-button" type="button" onClick={openEditUser}>
-        Edit user
+        编辑用户
       </button>
       <button className="ec-button" type="button" onClick={openDeleteUser}>
-        Delete user
+        删除用户
       </button>
       <button className="ec-button ec-button--primary" type="button" onClick={openCreateTask}>
-        Create task
+        新建任务
       </button>
       <button className="ec-button" type="button" onClick={openUpdateTask}>
-        Update task
+        更新任务
       </button>
       <button className="ec-button" type="button" onClick={openDeleteTask}>
-        Delete task
+        删除任务
       </button>
     </div>
   );
@@ -113,14 +113,14 @@ const SettingsContent = () => {
     <div className="everycent-page everycent-settings">
       <div className="everycent-page__header">
         <div>
-          <h1 className="everycent-page__title">Settings</h1>
-          <p className="everycent-page__subtitle">Form patterns adapted from shadcn-admin for EveryCent.</p>
+          <h1 className="everycent-page__title">设置</h1>
+          <p className="everycent-page__subtitle">表单结构保持不变，仅替换为中文文案。</p>
         </div>
         <SettingsDialogActions />
       </div>
 
       <div className="everycent-settings__layout">
-        <nav className="everycent-settings__tabs" aria-label="Settings sections">
+        <nav className="everycent-settings__tabs" aria-label="设置分区">
           {tabs.map(tab => (
             <button key={tab.id} className={activeTab === tab.id ? 'active' : ''} type="button" onClick={() => setActiveTab(tab.id)}>
               {tab.label}

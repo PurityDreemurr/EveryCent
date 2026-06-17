@@ -38,17 +38,17 @@ export function DataTablePagination<TData>({ table, className = '' }: DataTableP
             </option>
           ))}
         </select>
-        <span>Rows per page</span>
+        <span>每页行数</span>
       </div>
 
       <div className="ec-data-table__pager">
         <span className="ec-data-table__page-label">
-          Page {currentPage} of {totalPages}
+          第 {currentPage} 页，共 {totalPages} 页
         </span>
-        <button type="button" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} aria-label="Go to first page">
+        <button type="button" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} aria-label="跳到第一页">
           <FontAwesomeIcon icon="sync" rotation={180} />
         </button>
-        <button type="button" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label="Go to previous page">
+        <button type="button" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label="上一页">
           <FontAwesomeIcon icon="arrow-left" />
         </button>
         {pageNumbers.map((pageNumber, index) =>
@@ -62,20 +62,20 @@ export function DataTablePagination<TData>({ table, className = '' }: DataTableP
               type="button"
               className={currentPage === pageNumber ? 'active' : ''}
               onClick={() => table.setPageIndex((pageNumber as number) - 1)}
-              aria-label={`Go to page ${pageNumber}`}
+              aria-label={`跳到第 ${pageNumber} 页`}
             >
               {pageNumber}
             </button>
           ),
         )}
-        <button type="button" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="Go to next page">
+        <button type="button" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="下一页">
           <FontAwesomeIcon icon="arrow-left" rotation={180} />
         </button>
         <button
           type="button"
           onClick={() => table.setPageIndex(table.getPageCount() - 1)}
           disabled={!table.getCanNextPage()}
-          aria-label="Go to last page"
+          aria-label="跳到最后一页"
         >
           <FontAwesomeIcon icon="sync" />
         </button>

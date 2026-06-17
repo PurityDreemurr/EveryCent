@@ -37,18 +37,18 @@ const NavUser = ({ fallbackUser, collapsed }: NavUserProps) => {
       </button>
       {open && !collapsed && (
         <div className="everycent-sidebar__menu everycent-sidebar__menu--user" role="menu">
-          <div className="everycent-sidebar__menu-label">Account</div>
+          <div className="everycent-sidebar__menu-label">账户</div>
           <Link className="everycent-sidebar__menu-link" to="/account/settings" onClick={() => setOpen(false)}>
             <FontAwesomeIcon icon="user" fixedWidth />
-            <span>Profile</span>
+            <span>个人资料</span>
           </Link>
           <Link className="everycent-sidebar__menu-link" to="/account/password" onClick={() => setOpen(false)}>
             <FontAwesomeIcon icon="lock" fixedWidth />
-            <span>Password</span>
+            <span>密码</span>
           </Link>
           <Link className="everycent-sidebar__menu-link everycent-sidebar__menu-link--danger" to="/logout" onClick={() => setOpen(false)}>
             <FontAwesomeIcon icon="sign-out-alt" fixedWidth />
-            <span>Sign out</span>
+            <span>退出登录</span>
           </Link>
         </div>
       )}

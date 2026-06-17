@@ -12,9 +12,9 @@ type CommandMenuProps = {
 };
 
 const themeOptions: { icon: 'asterisk' | 'cloud' | 'cogs'; label: string; value: EveryCentTheme }[] = [
-  { value: 'light', label: 'Light', icon: 'asterisk' },
-  { value: 'dark', label: 'Dark', icon: 'cloud' },
-  { value: 'system', label: 'System', icon: 'cogs' },
+  { value: 'light', label: '浅色', icon: 'asterisk' },
+  { value: 'dark', label: '深色', icon: 'cloud' },
+  { value: 'system', label: '跟随系统', icon: 'cogs' },
 ];
 
 const getCommandItems = () =>
@@ -53,16 +53,16 @@ const CommandMenu = ({ open, onOpenChange }: CommandMenuProps) => {
   const updateQuery = (event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value);
 
   return (
-    <div className="everycent-command" role="dialog" aria-modal="true" aria-label="Command menu">
-      <button className="everycent-command__backdrop" type="button" aria-label="Close search" onClick={closeCommandMenu} />
+    <div className="everycent-command" role="dialog" aria-modal="true" aria-label="命令面板">
+      <button className="everycent-command__backdrop" type="button" aria-label="关闭搜索" onClick={closeCommandMenu} />
       <div className="everycent-command__panel">
         <div className="everycent-command__input-wrap">
           <FontAwesomeIcon icon="search" />
-          <input value={query} onChange={updateQuery} autoFocus placeholder="Type a command or search..." />
+          <input value={query} onChange={updateQuery} autoFocus placeholder="输入命令或搜索..." />
         </div>
         <div className="everycent-command__list">
-          <div className="everycent-command__group-title">Navigation</div>
-          {hasNoResults ? <div className="everycent-command__empty">No results found.</div> : null}
+          <div className="everycent-command__group-title">导航</div>
+          {hasNoResults ? <div className="everycent-command__empty">没有找到结果。</div> : null}
           {filteredItems.map(item => (
             <button key={item.group + '-' + item.title + '-' + item.url} type="button" onClick={() => runCommand(() => navigate(item.url))}>
               <FontAwesomeIcon icon="arrow-left" rotation={180} fixedWidth />
@@ -70,7 +70,7 @@ const CommandMenu = ({ open, onOpenChange }: CommandMenuProps) => {
               <small>{item.group}</small>
             </button>
           ))}
-          <div className="everycent-command__group-title">Theme</div>
+          <div className="everycent-command__group-title">主题</div>
           {themeOptions.map(option => (
             <button key={option.value} type="button" onClick={() => runCommand(() => setTheme(option.value))}>
               <FontAwesomeIcon icon={option.icon} fixedWidth />

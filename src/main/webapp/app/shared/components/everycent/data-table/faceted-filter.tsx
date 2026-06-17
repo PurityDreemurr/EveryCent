@@ -13,7 +13,7 @@ type DataTableFacetedFilterProps<TData, TValue> = {
   options: FacetedOption[];
 };
 
-export function DataTableFacetedFilter<TData, TValue>({ column, title = 'Filter', options }: DataTableFacetedFilterProps<TData, TValue>) {
+export function DataTableFacetedFilter<TData, TValue>({ column, title = '筛选', options }: DataTableFacetedFilterProps<TData, TValue>) {
   const [open, setOpen] = useState(false);
   const selectedValues = new Set((column?.getFilterValue() as string[]) ?? []);
   const selectedLabels = options.filter(option => selectedValues.has(option.value)).map(option => option.label);
@@ -36,7 +36,7 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title = 'Filter'
         <FontAwesomeIcon icon="plus" />
         <span>{title}</span>
         {selectedValues.size > 0 && (
-          <strong>{selectedValues.size > 2 ? `${selectedValues.size} selected` : selectedLabels.join(', ')}</strong>
+          <strong>{selectedValues.size > 2 ? `已选择 ${selectedValues.size} 项` : selectedLabels.join(', ')}</strong>
         )}
       </button>
       {open && (
@@ -55,7 +55,7 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title = 'Filter'
           })}
           {selectedValues.size > 0 && (
             <button className="ec-data-table__clear-filter" type="button" onClick={() => column?.setFilterValue(undefined)}>
-              Clear filters
+              清除筛选
             </button>
           )}
         </div>
