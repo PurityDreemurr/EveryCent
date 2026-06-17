@@ -105,9 +105,29 @@ class LedgerServiceTest {
 
         when(permissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
         when(userRepository.findById(2L)).thenReturn(Optional.of(member));
-        when(permissionService.findActivePermission(member, ledger)).thenReturn(Optional.of(permission(member, PermissionLevel.READ_ONLY)));
+        when(permissionRepository.findOneByUserAndLedger(member, ledger)).thenReturn(Optional.of(permission(member, PermissionLevel.READ_ONLY)));
 
         assertThatThrownBy(() -> service.addMember(owner, 10L, requestDTO)).isInstanceOf(BadRequestAlertException.class);
+    }
+
+    @Test
+    void addMemberShouldReactivateRevokedPermission() {
+        LedgerMemberRequestDTO requestDTO = new LedgerMemberRequestDTO();
+        requestDTO.setUserId(2L);
+        requestDTO.setPermissionLevel(PermissionLevel.READ_WRITE);
+        UserLedgerPermission revokedPermission = permission(member, PermissionLevel.READ_ONLY);
+        revokedPermission.setStatus(PermissionStatus.REVOKED);
+
+        when(permissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(member));
+        when(permissionRepository.findOneByUserAndLedger(member, ledger)).thenReturn(Optional.of(revokedPermission));
+        when(permissionRepository.save(any(UserLedgerPermission.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LedgerMemberDTO result = service.addMember(owner, 10L, requestDTO);
+
+        assertThat(result.getPermissionLevel()).isEqualTo(PermissionLevel.READ_WRITE);
+        assertThat(result.getStatus()).isEqualTo(PermissionStatus.ACTIVE);
+        assertThat(revokedPermission.getInvitedBy()).isEqualTo(owner);
     }
 
     @Test
@@ -118,7 +138,7 @@ class LedgerServiceTest {
 
         when(permissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
         when(userRepository.findById(2L)).thenReturn(Optional.of(member));
-        when(permissionService.findActivePermission(member, ledger)).thenReturn(Optional.empty());
+        when(permissionRepository.findOneByUserAndLedger(member, ledger)).thenReturn(Optional.empty());
         when(permissionRepository.save(any(UserLedgerPermission.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         LedgerMemberDTO result = service.addMember(owner, 10L, requestDTO);

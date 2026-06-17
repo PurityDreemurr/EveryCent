@@ -110,8 +110,16 @@ public class LedgerService {
         if (requestDTO.getPermissionLevel() == PermissionLevel.OWNER) {
             throw new BadRequestAlertException("Cannot add another owner", ENTITY_NAME, "ownerisnotassignable");
         }
-        if (permissionService.findActivePermission(member, ledger).isPresent()) {
+        UserLedgerPermission existingPermission = permissionRepository.findOneByUserAndLedger(member, ledger).orElse(null);
+        if (existingPermission != null && existingPermission.getStatus() == PermissionStatus.ACTIVE) {
             throw new BadRequestAlertException("User already has permission for this ledger", ENTITY_NAME, "permissionexists");
+        }
+        if (existingPermission != null) {
+            existingPermission.setInvitedBy(owner);
+            existingPermission.setPermissionLevel(requestDTO.getPermissionLevel());
+            existingPermission.setStatus(PermissionStatus.ACTIVE);
+            existingPermission.setCreatedDate(Instant.now());
+            return toMemberDTO(permissionRepository.save(existingPermission));
         }
 
         UserLedgerPermission permission = new UserLedgerPermission()
