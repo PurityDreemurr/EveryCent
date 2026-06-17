@@ -1,5 +1,9 @@
 package com.everycent.web.rest.errors;
 
+import com.everycent.llm.client.LlmClientException;
+import com.everycent.llm.parser.LlmParseException;
+import com.everycent.service.InvalidAiResultException;
+import com.everycent.service.NoLedgerPermissionException;
 import static org.springframework.core.annotation.AnnotatedElementUtils.findMergedAnnotation;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -214,6 +218,10 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     private HttpStatus getMappedStatus(Throwable err) {
         // Where we disagree with Spring defaults
         if (err instanceof AccessDeniedException) return HttpStatus.FORBIDDEN;
+        if (err instanceof NoLedgerPermissionException) return HttpStatus.FORBIDDEN;
+        if (err instanceof InvalidAiResultException) return HttpStatus.BAD_REQUEST;
+        if (err instanceof LlmParseException) return HttpStatus.BAD_GATEWAY;
+        if (err instanceof LlmClientException) return HttpStatus.SERVICE_UNAVAILABLE;
         if (err instanceof ConcurrencyFailureException) return HttpStatus.CONFLICT;
         if (err instanceof BadCredentialsException) return HttpStatus.UNAUTHORIZED;
         return null;
