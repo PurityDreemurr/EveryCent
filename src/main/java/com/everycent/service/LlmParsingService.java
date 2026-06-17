@@ -3,17 +3,23 @@ package com.everycent.service;
 import com.everycent.domain.Budget;
 import com.everycent.domain.EmotionTag;
 import com.everycent.domain.Ledger;
+import com.everycent.domain.NotificationMessage;
 import com.everycent.domain.TransactionRecord;
 import com.everycent.domain.User;
 import com.everycent.domain.UserLedgerPermission;
+import com.everycent.domain.enumeration.NotificationLevel;
+import com.everycent.domain.enumeration.NotificationType;
 import com.everycent.domain.enumeration.PermissionLevel;
 import com.everycent.domain.enumeration.PermissionStatus;
+import com.everycent.domain.enumeration.RecordSource;
 import com.everycent.domain.enumeration.TransactionType;
 import com.everycent.llm.client.LlmClient;
 import com.everycent.llm.dto.AiAlertRequestDTO;
 import com.everycent.llm.dto.AiAlertResultDTO;
 import com.everycent.llm.dto.BudgetStatusDTO;
 import com.everycent.llm.dto.EmotionStatDTO;
+import com.everycent.llm.dto.NaturalLanguageTransactionCreateRequestDTO;
+import com.everycent.llm.dto.NaturalLanguageTransactionCreateResultDTO;
 import com.everycent.llm.dto.TransactionParseRequestDTO;
 import com.everycent.llm.dto.TransactionParseResultDTO;
 import com.everycent.llm.parser.LlmJsonResponseParser;
@@ -23,10 +29,12 @@ import com.everycent.repository.BehaviorTagRepository;
 import com.everycent.repository.BudgetRepository;
 import com.everycent.repository.EmotionTagRepository;
 import com.everycent.repository.LedgerRepository;
+import com.everycent.repository.NotificationMessageRepository;
 import com.everycent.repository.TransactionRecordRepository;
 import com.everycent.repository.UserLedgerPermissionRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +53,7 @@ public class LlmParsingService {
     private final EmotionTagRepository emotionTagRepository;
     private final BudgetRepository budgetRepository;
     private final TransactionRecordRepository transactionRecordRepository;
+    private final NotificationMessageRepository notificationMessageRepository;
     private final UserLedgerPermissionRepository userLedgerPermissionRepository;
     private final TransactionPromptBuilder transactionPromptBuilder;
     private final AlertPromptBuilder alertPromptBuilder;
@@ -58,6 +67,7 @@ public class LlmParsingService {
         EmotionTagRepository emotionTagRepository,
         BudgetRepository budgetRepository,
         TransactionRecordRepository transactionRecordRepository,
+        NotificationMessageRepository notificationMessageRepository,
         UserLedgerPermissionRepository userLedgerPermissionRepository,
         TransactionPromptBuilder transactionPromptBuilder,
         AlertPromptBuilder alertPromptBuilder,
@@ -70,6 +80,7 @@ public class LlmParsingService {
         this.emotionTagRepository = emotionTagRepository;
         this.budgetRepository = budgetRepository;
         this.transactionRecordRepository = transactionRecordRepository;
+        this.notificationMessageRepository = notificationMessageRepository;
         this.userLedgerPermissionRepository = userLedgerPermissionRepository;
         this.transactionPromptBuilder = transactionPromptBuilder;
         this.alertPromptBuilder = alertPromptBuilder;
@@ -99,6 +110,29 @@ public class LlmParsingService {
         return guardService.validateTransactionResult(result, request.getLedgerId(), currentUser);
     }
 
+    @Transactional
+    public NaturalLanguageTransactionCreateResultDTO parseAndCreateTransaction(
+        Long ledgerId,
+        NaturalLanguageTransactionCreateRequestDTO request,
+        User currentUser
+    ) {
+        if (request == null || !Boolean.TRUE.equals(request.getConfirm())) {
+            throw new InvalidAiResultException("自然语言记账必须由用户确认后才能入库");
+        }
+
+        TransactionParseRequestDTO parseRequest = new TransactionParseRequestDTO();
+        parseRequest.setLedgerId(ledgerId);
+        parseRequest.setText(request.getText());
+        parseRequest.setTransactionDate(request.getTransactionDate());
+        TransactionParseResultDTO parsed = parseTransaction(parseRequest, currentUser);
+
+        Ledger ledger = getLedger(ledgerId);
+        ensureCanWrite(currentUser, ledger);
+        TransactionRecord saved = transactionRecordRepository.save(toTransactionRecord(parsed, ledger, currentUser));
+        return toCreateResult(saved);
+    }
+
+    @Transactional
     public AiAlertResultDTO generateBudgetAlert(AiAlertRequestDTO request, User currentUser) {
         if (request == null || request.getLedgerId() == null || request.getBudgetId() == null) {
             throw new InvalidAiResultException("ledgerId 和 budgetId 不能为空");
@@ -146,7 +180,12 @@ public class LlmParsingService {
         result.setLimitAmount(budget.getLimitAmount());
         result.setUsedRatio(usedRatio);
         result.setNeedNotification(Boolean.TRUE.equals(result.getNeedNotification()) && usedRatio.compareTo(budget.getAlertThreshold()) >= 0);
-        return guardService.validateAlertResult(result);
+        AiAlertResultDTO validated = guardService.validateAlertResult(result);
+        if (Boolean.TRUE.equals(request.getSaveAsNotification()) && Boolean.TRUE.equals(validated.getNeedNotification())) {
+            NotificationMessage notification = notificationMessageRepository.save(toNotification(validated, currentUser, ledger, budget));
+            validated.setNotificationId(notification.getId());
+        }
+        return validated;
     }
 
     private Ledger getLedger(Long ledgerId) {
@@ -177,6 +216,48 @@ public class LlmParsingService {
             .map(UserLedgerPermission::getPermissionLevel)
             .map(allowed)
             .orElse(false);
+    }
+
+    private TransactionRecord toTransactionRecord(TransactionParseResultDTO parsed, Ledger ledger, User currentUser) {
+        return new TransactionRecord()
+            .amount(parsed.getAmount())
+            .type(parsed.getType())
+            .transactionDate(parsed.getTransactionDate())
+            .source(RecordSource.NATURAL_LANGUAGE)
+            .description(parsed.getDescription())
+            .rawInput(parsed.getRawInput())
+            .createdDate(Instant.now())
+            .ledger(ledger)
+            .creator(currentUser)
+            .behaviorTag(behaviorTagRepository.findOneByCode(parsed.getBehaviorTagCode()).orElse(null))
+            .emotionTag(emotionTagRepository.findOneByCode(parsed.getEmotionTagCode()).orElse(null));
+    }
+
+    private NaturalLanguageTransactionCreateResultDTO toCreateResult(TransactionRecord record) {
+        NaturalLanguageTransactionCreateResultDTO result = new NaturalLanguageTransactionCreateResultDTO();
+        result.setTransactionId(record.getId());
+        result.setAmount(record.getAmount());
+        result.setType(record.getType());
+        if (record.getBehaviorTag() != null) {
+            result.setBehaviorTagName(record.getBehaviorTag().getName());
+        }
+        if (record.getEmotionTag() != null) {
+            result.setEmotionTagName(record.getEmotionTag().getName());
+        }
+        return result;
+    }
+
+    private NotificationMessage toNotification(AiAlertResultDTO result, User currentUser, Ledger ledger, Budget budget) {
+        return new NotificationMessage()
+            .title(result.getTitle())
+            .content(result.getContent())
+            .type(NotificationType.BUDGET_ALERT)
+            .level(NotificationLevel.valueOf(result.getLevel().name()))
+            .read(false)
+            .createdDate(Instant.now())
+            .user(currentUser)
+            .ledger(ledger)
+            .budget(budget);
     }
 
     private List<EmotionStatDTO> buildEmotionStats(List<TransactionRecord> records) {
