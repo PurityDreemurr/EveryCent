@@ -19,7 +19,7 @@ type DataTableToolbarProps<TData> = {
   }[];
 };
 
-export function DataTableToolbar<TData>({ table, searchPlaceholder = 'Filter...', searchKey, filters = [] }: DataTableToolbarProps<TData>) {
+export function DataTableToolbar<TData>({ table, searchPlaceholder = '筛选...', searchKey, filters = [] }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0 || table.getState().globalFilter;
 
   return (
@@ -55,7 +55,7 @@ export function DataTableToolbar<TData>({ table, searchPlaceholder = 'Filter...'
               table.setGlobalFilter('');
             }}
           >
-            Reset
+            重置
             <FontAwesomeIcon icon="times-circle" />
           </button>
         )}

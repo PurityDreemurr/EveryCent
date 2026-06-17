@@ -16,9 +16,9 @@ const appearanceSchema = z.object({
 type AppearanceFormValues = z.infer<typeof appearanceSchema>;
 
 const themeOptions: { label: string; previewClassName: string; value: EveryCentTheme }[] = [
-  { value: 'light', label: 'light', previewClassName: 'ec-theme-preview ec-theme-preview--light' },
-  { value: 'dark', label: 'dark', previewClassName: 'ec-theme-preview ec-theme-preview--dark' },
-  { value: 'system', label: 'system', previewClassName: 'ec-theme-preview ec-theme-preview--system' },
+  { value: 'light', label: '浅色', previewClassName: 'ec-theme-preview ec-theme-preview--light' },
+  { value: 'dark', label: '深色', previewClassName: 'ec-theme-preview ec-theme-preview--dark' },
+  { value: 'system', label: '跟随系统', previewClassName: 'ec-theme-preview ec-theme-preview--system' },
 ];
 
 const AppearanceForm = () => {
@@ -41,15 +41,15 @@ const AppearanceForm = () => {
   return (
     <form className="ec-form" onSubmit={handleSubmit(submitAppearance)}>
       <label className="ec-field">
-        <span>Font density</span>
+        <span>字体密度</span>
         <select {...register('density')}>
-          <option value="comfortable">Comfortable</option>
-          <option value="compact">Compact</option>
+          <option value="comfortable">舒适</option>
+          <option value="compact">紧凑</option>
         </select>
       </label>
 
       <fieldset className="ec-theme-picker">
-        <legend>Theme</legend>
+        <legend>主题</legend>
         {themeOptions.map(option => (
           <label className={selectedTheme === option.value ? 'active' : ''} key={option.value}>
             <input type="radio" value={option.value} {...register('theme')} />
@@ -64,7 +64,7 @@ const AppearanceForm = () => {
       </fieldset>
 
       <button className="ec-button ec-button--primary" type="submit">
-        Update preferences
+        更新偏好
       </button>
     </form>
   );

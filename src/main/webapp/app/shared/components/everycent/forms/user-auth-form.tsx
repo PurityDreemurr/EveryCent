@@ -7,8 +7,8 @@ import { previewSubmittedData } from './submission-preview';
 import './forms.scss';
 
 const authSchema = z.object({
-  email: z.string().min(1, 'Email is required.').email('Please enter a valid email.'),
-  password: z.string().min(1, 'Password is required.').min(7, 'Password must be at least 7 characters.'),
+  email: z.string().min(1, '邮箱是必填项。').email('请输入有效的邮箱地址。'),
+  password: z.string().min(1, '密码是必填项。').min(7, '密码至少需要 7 个字符。'),
 });
 
 type AuthFormValues = z.infer<typeof authSchema>;
@@ -44,19 +44,19 @@ const UserAuthForm = ({ onSubmit }: UserAuthFormProps) => {
   return (
     <form className="ec-form ec-form--compact" onSubmit={handleSubmit(submit)}>
       <label className="ec-field">
-        <span>Email</span>
+        <span>邮箱</span>
         <input type="email" placeholder="name@example.com" {...register('email')} />
         {errors.email && <small>{errors.email.message}</small>}
       </label>
 
       <label className="ec-field">
-        <span>Password</span>
+        <span>密码</span>
         <input type="password" placeholder="********" {...register('password')} />
         {errors.password && <small>{errors.password.message}</small>}
       </label>
 
       <button className="ec-button ec-button--primary" type="submit" disabled={isLoading}>
-        {isLoading ? 'Signing in...' : 'Sign in'}
+        {isLoading ? '登录中...' : '登录'}
       </button>
     </form>
   );

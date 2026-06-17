@@ -70,7 +70,7 @@ export const SheetContent = ({ children, className = '', side = 'right', ...prop
         {...props}
       >
         {children}
-        <button className="ec-overlay__close" type="button" aria-label="Close" onClick={() => onOpenChange(false)}>
+        <button className="ec-overlay__close" type="button" aria-label="关闭" onClick={() => onOpenChange(false)}>
           x
         </button>
       </aside>

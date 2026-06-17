@@ -7,7 +7,7 @@ import { previewSubmittedData } from './submission-preview';
 import './forms.scss';
 
 const notificationsSchema = z.object({
-  type: z.enum(['all', 'important', 'none'], { message: 'Please select a notification type.' }),
+  type: z.enum(['all', 'important', 'none'], { message: '请选择通知范围。' }),
   mobile: z.boolean().optional(),
   budgetEmails: z.boolean().optional(),
   sharedLedgerEmails: z.boolean().optional(),
@@ -33,48 +33,48 @@ const NotificationsForm = () => {
   return (
     <form className="ec-form" onSubmit={handleSubmit(values => previewSubmittedData('notifications', values))}>
       <fieldset className="ec-radio-group">
-        <legend>Notify me about</legend>
+        <legend>通知范围</legend>
         <label>
           <input type="radio" value="all" {...register('type')} />
-          <span>All activity</span>
+          <span>全部活动</span>
         </label>
         <label>
           <input type="radio" value="important" {...register('type')} />
-          <span>Budget warnings and shared ledger updates</span>
+          <span>预算预警和共享账本更新</span>
         </label>
         <label>
           <input type="radio" value="none" {...register('type')} />
-          <span>Nothing</span>
+          <span>不通知</span>
         </label>
       </fieldset>
 
       <fieldset className="ec-switch-list">
-        <legend>Email notifications</legend>
+        <legend>邮件通知</legend>
         <label>
           <span>
-            <strong>Budget emails</strong>
-            <em>Receive warnings when spending approaches a budget limit.</em>
+            <strong>预算邮件</strong>
+            <em>当支出接近预算上限时接收提醒。</em>
           </span>
           <input type="checkbox" {...register('budgetEmails')} />
         </label>
         <label>
           <span>
-            <strong>Shared ledger emails</strong>
-            <em>Receive member invitations and ledger change summaries.</em>
+            <strong>共享账本邮件</strong>
+            <em>接收成员邀请和账本变更摘要。</em>
           </span>
           <input type="checkbox" {...register('sharedLedgerEmails')} />
         </label>
         <label>
           <span>
-            <strong>Weekly reports</strong>
-            <em>Receive a weekly income and expense digest.</em>
+            <strong>周报</strong>
+            <em>接收每周收支摘要。</em>
           </span>
           <input type="checkbox" {...register('weeklyReports')} />
         </label>
         <label>
           <span>
-            <strong>Security emails</strong>
-            <em>Always receive important account security notices.</em>
+            <strong>安全邮件</strong>
+            <em>始终接收重要账户安全通知。</em>
           </span>
           <input type="checkbox" disabled {...register('securityEmails')} />
         </label>
@@ -82,11 +82,11 @@ const NotificationsForm = () => {
 
       <label className="ec-check-row">
         <input type="checkbox" {...register('mobile')} />
-        <span>Use different notification settings on mobile devices.</span>
+        <span>在移动设备上使用不同的通知设置。</span>
       </label>
 
       <button className="ec-button ec-button--primary" type="submit">
-        Update notifications
+        更新通知
       </button>
     </form>
   );

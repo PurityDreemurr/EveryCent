@@ -32,7 +32,7 @@ export const ConfirmDialog = ({
   children,
   className = '',
   confirmText = 'Continue',
-  cancelBtnText = 'Cancel',
+  cancelBtnText = '取消',
   destructive,
   disabled,
   isLoading,

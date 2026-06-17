@@ -13,8 +13,8 @@ type TopNavProps = {
 };
 
 const TopNav = ({ links }: TopNavProps) => (
-  <nav className="everycent-topnav" aria-label="Top navigation">
-    <button className="everycent-icon-button everycent-topnav__menu" type="button" aria-label="Toggle navigation menu">
+  <nav className="everycent-topnav" aria-label="顶部导航">
+    <button className="everycent-icon-button everycent-topnav__menu" type="button" aria-label="切换导航菜单">
       <FontAwesomeIcon icon="th-list" />
     </button>
     <div className="everycent-topnav__links">

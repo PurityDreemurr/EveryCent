@@ -22,7 +22,7 @@ const ChatMessageList = ({ loading, messages }: ChatMessageListProps) => {
         <article key={message.id} className={`everycent-chat-message everycent-chat-message--${message.role}`}>
           <div className="everycent-chat-message__avatar">{message.role === 'assistant' ? <FontAwesomeIcon icon="pencil-alt" /> : 'U'}</div>
           <div className="everycent-chat-message__body">
-            <strong>{message.role === 'assistant' ? 'EveryCent AI' : 'You'}</strong>
+            <strong>{message.role === 'assistant' ? 'EveryCent AI' : '你'}</strong>
             <p>{message.content}</p>
             {message.preview && <ParsePreviewCard preview={message.preview} />}
           </div>
@@ -36,7 +36,7 @@ const ChatMessageList = ({ loading, messages }: ChatMessageListProps) => {
           </div>
           <div className="everycent-chat-message__body">
             <strong>EveryCent AI</strong>
-            <p>Parsing your transaction...</p>
+            <p>正在解析你的记账内容...</p>
           </div>
         </article>
       )}

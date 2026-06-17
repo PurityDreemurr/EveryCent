@@ -7,16 +7,16 @@ import { previewSubmittedData } from './submission-preview';
 import './forms.scss';
 
 const sidebarItems = [
-  { id: 'ai', label: 'AI Record' },
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'ledger', label: 'Ledgers' },
-  { id: 'transactions', label: 'Transactions' },
-  { id: 'budget', label: 'Budgets' },
-  { id: 'analytics', label: 'Analytics' },
+  { id: 'ai', label: 'AI 记账' },
+  { id: 'dashboard', label: '仪表盘' },
+  { id: 'ledger', label: '账本' },
+  { id: 'transactions', label: '收支记录' },
+  { id: 'budget', label: '预算' },
+  { id: 'analytics', label: '数据分析' },
 ] as const;
 
 const displaySchema = z.object({
-  items: z.array(z.string()).min(1, 'Select at least one item.'),
+  items: z.array(z.string()).min(1, '请至少选择一项。'),
 });
 
 type DisplayFormValues = z.infer<typeof displaySchema>;
@@ -36,8 +36,8 @@ const DisplayForm = () => {
   return (
     <form className="ec-form" onSubmit={handleSubmit(values => previewSubmittedData('display', values))}>
       <fieldset className="ec-checkbox-list">
-        <legend>Sidebar</legend>
-        <p>Select the items you want to display in the EveryCent sidebar.</p>
+        <legend>侧边栏</legend>
+        <p>选择要显示在 EveryCent 侧边栏中的项目。</p>
         {sidebarItems.map(item => (
           <label key={item.id}>
             <input type="checkbox" value={item.id} {...register('items')} />
@@ -47,7 +47,7 @@ const DisplayForm = () => {
         {errors.items && <small>{errors.items.message}</small>}
       </fieldset>
       <button className="ec-button ec-button--primary" type="submit">
-        Update display
+        更新显示
       </button>
     </form>
   );

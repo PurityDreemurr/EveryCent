@@ -14,10 +14,10 @@ type TopbarProps = {
 };
 
 const topNavLinks: TopNavLink[] = [
-  { title: 'Overview', href: '/everycent/dashboard' },
-  { title: 'AI Record', href: '/everycent/ai' },
-  { title: 'Transactions', href: '/everycent/transactions' },
-  { title: 'Budgets', href: '/everycent/budgets' },
+  { title: '概览', href: '/everycent/dashboard' },
+  { title: 'AI 记账', href: '/everycent/ai' },
+  { title: '收支记录', href: '/everycent/transactions' },
+  { title: '预算', href: '/everycent/budgets' },
 ];
 
 const Topbar = ({ collapsed, onToggleSidebar }: TopbarProps) => {
@@ -43,9 +43,9 @@ const Topbar = ({ collapsed, onToggleSidebar }: TopbarProps) => {
       <button
         className="everycent-icon-button"
         type="button"
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? '展开侧边栏' : '收起侧边栏'}
         onClick={onToggleSidebar}
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        title={collapsed ? '展开侧边栏' : '收起侧边栏'}
       >
         <FontAwesomeIcon icon="th-list" />
       </button>
@@ -55,7 +55,7 @@ const Topbar = ({ collapsed, onToggleSidebar }: TopbarProps) => {
       ) : (
         <button className="everycent-search-button everycent-search-button--grow" type="button" onClick={() => setCommandOpen(true)}>
           <FontAwesomeIcon icon="search" />
-          <span>Search</span>
+          <span>搜索</span>
           <kbd>Ctrl K</kbd>
         </button>
       )}
@@ -63,7 +63,7 @@ const Topbar = ({ collapsed, onToggleSidebar }: TopbarProps) => {
         {showTopNav && (
           <button className="everycent-search-button" type="button" onClick={() => setCommandOpen(true)}>
             <FontAwesomeIcon icon="search" />
-            <span>Search</span>
+            <span>搜索</span>
             <kbd>Ctrl K</kbd>
           </button>
         )}

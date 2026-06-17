@@ -32,7 +32,7 @@ const UsersDeleteDialog = ({ open, onOpenChange, currentRow }: UsersDeleteDialog
       }}
       form="ec-users-delete-form"
       disabled={value.trim() !== currentRow.username}
-      title="Delete User"
+      title="删除用户"
       desc={
         <form
           id="ec-users-delete-form"
@@ -43,24 +43,19 @@ const UsersDeleteDialog = ({ open, onOpenChange, currentRow }: UsersDeleteDialog
           }}
         >
           <p>
-            You are about to delete <strong>{currentRow.username}</strong>. This action cannot be undone.
+            你即将删除 <strong>{currentRow.username}</strong>。此操作无法撤销。
           </p>
           <label className="ec-field">
-            <span>Username</span>
-            <input
-              value={value}
-              onChange={event => setValue(event.target.value)}
-              placeholder="Enter username to confirm deletion."
-              autoFocus
-            />
+            <span>用户名</span>
+            <input value={value} onChange={event => setValue(event.target.value)} placeholder="输入用户名以确认删除。" autoFocus />
           </label>
           <div className="ec-alert ec-alert--danger">
-            <strong>Warning</strong>
-            <span>Please be careful. This operation cannot be rolled back.</span>
+            <strong>警告</strong>
+            <span>请谨慎操作，此操作无法回滚。</span>
           </div>
         </form>
       }
-      confirmText="Delete"
+      confirmText="删除"
       destructive
     />
   );

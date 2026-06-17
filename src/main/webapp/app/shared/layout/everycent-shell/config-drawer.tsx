@@ -12,9 +12,9 @@ type ConfigDrawerProps = {
 };
 
 const themeOptions: { label: string; value: EveryCentTheme }[] = [
-  { value: 'light', label: 'light' },
-  { value: 'dark', label: 'dark' },
-  { value: 'system', label: 'system' },
+  { value: 'light', label: '浅色' },
+  { value: 'dark', label: '深色' },
+  { value: 'system', label: '跟随系统' },
 ];
 
 const ConfigDrawer = ({ open, onOpenChange, collapsed, onToggleSidebar }: ConfigDrawerProps) => {
@@ -31,19 +31,19 @@ const ConfigDrawer = ({ open, onOpenChange, collapsed, onToggleSidebar }: Config
 
   return (
     <div className="everycent-topbar__menu-wrap">
-      <button className="everycent-icon-button" type="button" aria-label="Open layout settings" onClick={openDrawer}>
+      <button className="everycent-icon-button" type="button" aria-label="打开布局设置" onClick={openDrawer}>
         <FontAwesomeIcon icon="cogs" />
       </button>
       {open && (
-        <div className="everycent-drawer" role="dialog" aria-modal="true" aria-label="Theme settings">
-          <button className="everycent-drawer__backdrop" type="button" aria-label="Close settings" onClick={closeDrawer} />
+        <div className="everycent-drawer" role="dialog" aria-modal="true" aria-label="主题设置">
+          <button className="everycent-drawer__backdrop" type="button" aria-label="关闭设置" onClick={closeDrawer} />
           <aside className="everycent-drawer__panel">
             <header>
-              <h2>Theme Settings</h2>
-              <p>Adjust the appearance and layout to suit your workflow.</p>
+              <h2>主题设置</h2>
+              <p>调整外观和布局以适配你的工作流。</p>
             </header>
             <section>
-              <h3>Theme</h3>
+              <h3>主题</h3>
               <div className="everycent-drawer__options">
                 {themeOptions.map(option => (
                   <button
@@ -58,14 +58,14 @@ const ConfigDrawer = ({ open, onOpenChange, collapsed, onToggleSidebar }: Config
               </div>
             </section>
             <section>
-              <h3>Sidebar</h3>
+              <h3>侧边栏</h3>
               <button className="everycent-drawer__wide-button" type="button" onClick={onToggleSidebar}>
-                {collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                {collapsed ? '展开侧边栏' : '收起侧边栏'}
               </button>
             </section>
             <footer>
               <button type="button" onClick={resetSettings}>
-                Reset
+                重置
               </button>
             </footer>
           </aside>

@@ -43,67 +43,67 @@ export type EveryCentSidebarData = {
 
 export const everyCentSidebarData: EveryCentSidebarData = {
   user: {
-    name: 'EveryCent User',
+    name: 'EveryCent 用户',
     email: 'user@everycent.local',
     initials: 'EC',
   },
   teams: [
     {
-      name: 'Personal Ledger',
-      description: 'Default ledger',
+      name: 'EveryCent',
+      description: 'Vite + EveryCent',
       initials: 'PL',
     },
     {
-      name: 'Family Ledger',
-      description: 'Shared ledger',
+      name: 'EveryCent Pro',
+      description: '共享工作区',
       initials: 'FL',
     },
     {
-      name: 'Travel Budget',
-      description: 'Budget planning',
+      name: 'EveryCent Lite',
+      description: '入门工作区',
       initials: 'TB',
     },
   ],
   navGroups: [
     {
-      title: 'General',
+      title: '通用',
       items: [
-        { title: 'AI Record', url: '/everycent/ai', icon: 'pencil-alt' },
-        { title: 'Dashboard', url: '/everycent/dashboard', icon: 'tachometer-alt' },
-        { title: 'Ledgers', url: '/everycent/ledgers', icon: 'book' },
-        { title: 'Transactions', url: '/everycent/transactions', icon: 'list' },
-        { title: 'Budgets', url: '/everycent/budgets', icon: 'tasks' },
-        { title: 'Members', url: '/everycent/members', icon: 'users' },
+        { title: 'AI 记账', url: '/everycent/ai', icon: 'pencil-alt' },
+        { title: '仪表盘', url: '/everycent/dashboard', icon: 'tachometer-alt' },
+        { title: '账本', url: '/everycent/ledgers', icon: 'book' },
+        { title: '收支记录', url: '/everycent/transactions', icon: 'list' },
+        { title: '预算', url: '/everycent/budgets', icon: 'tasks' },
+        { title: '成员', url: '/everycent/members', icon: 'users' },
       ],
     },
     {
-      title: 'Insights',
+      title: '洞察',
       items: [
-        { title: 'Analytics', url: '/everycent/analytics', icon: 'database' },
-        { title: 'Notifications', url: '/everycent/notifications', badge: '3', icon: 'bell' },
-        { title: 'Export Excel', url: '/everycent/export', icon: 'save' },
+        { title: '数据分析', url: '/everycent/analytics', icon: 'database' },
+        { title: '消息提醒', url: '/everycent/notifications', badge: '3', icon: 'bell' },
+        { title: '导出 Excel', url: '/everycent/export', icon: 'save' },
       ],
     },
     {
-      title: 'Other',
+      title: '其他',
       items: [
         {
-          title: 'Tags',
+          title: '标签',
           icon: 'flag',
           items: [
-            { title: 'Behavior Tags', url: '/everycent/tags', icon: 'flag' },
-            { title: 'Emotion Tags', url: '/everycent/tags', icon: 'heart' },
+            { title: '行为标签', url: '/everycent/tags', icon: 'flag' },
+            { title: '情绪标签', url: '/everycent/tags', icon: 'heart' },
           ],
         },
         {
-          title: 'Settings',
-          icon: 'user',
+          title: '设置',
+          icon: 'cog',
           items: [
-            { title: 'Profile', url: '/everycent/settings', icon: 'user' },
-            { title: 'Account', url: '/everycent/settings', icon: 'lock' },
+            { title: '个人资料', url: '/everycent/settings', icon: 'user' },
+            { title: '账户设置', url: '/everycent/settings', icon: 'lock' },
           ],
         },
-        { title: 'Help Center', url: '/everycent/help', icon: 'wrench' },
+        { title: '帮助中心', url: '/everycent/help', icon: 'wrench' },
       ],
     },
   ],
