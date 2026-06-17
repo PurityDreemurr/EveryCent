@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260617000100-1" author="everycent">
+        <createTable tableName="ai_conversation">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ai_conversation"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(200)"/>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_message_date" type="${datetimeType}"/>
+            <column name="archived" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="ai_role_profile">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ai_role_profile"/>
+            </column>
+            <column name="code" type="varchar(80)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(500)"/>
+            <column name="base_persona" type="text"/>
+            <column name="communication_style" type="text"/>
+            <column name="behavior_boundaries" type="text"/>
+            <column name="default_profile" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="${datetimeType}"/>
+        </createTable>
+
+        <createTable tableName="ai_emotion_state">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ai_emotion_state"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_emotion" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valence" type="decimal(8,5)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="arousal" type="decimal(8,5)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="personality_weights_json" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transition_matrix_json" type="longtext"/>
+            <column name="last_user_emotion_tag_id" type="bigint"/>
+            <column name="updated_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="ai_message">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ai_message"/>
+            </column>
+            <column name="conversation_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_emotion_tag_id" type="bigint"/>
+            <column name="user_emotion_confidence" type="decimal(5,4)"/>
+            <column name="ai_emotion_before" type="varchar(50)"/>
+            <column name="ai_emotion_after" type="varchar(50)"/>
+            <column name="extracted_transaction_id" type="bigint"/>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="ai_memory">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ai_memory"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="conversation_id" type="bigint"/>
+            <column name="message_id" type="bigint"/>
+            <column name="memory_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_text" type="text"/>
+            <column name="user_emotion_tag_id" type="bigint"/>
+            <column name="user_emotion_confidence" type="decimal(5,4)"/>
+            <column name="behavior_tag_id" type="bigint"/>
+            <column name="vector_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="importance_score" type="decimal(5,4)" defaultValueNumeric="0.0000">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_accessed_date" type="${datetimeType}"/>
+            <column name="access_count" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="ai_role_knowledge">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ai_role_knowledge"/>
+            </column>
+            <column name="role_profile_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="knowledge_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vector_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="int" defaultValueNumeric="50">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="${datetimeType}"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260617000100-2" author="everycent">
+        <addUniqueConstraint tableName="ai_emotion_state" columnNames="user_id" constraintName="uk_ai_emotion_state_user"/>
+        <addUniqueConstraint tableName="ai_role_profile" columnNames="code" constraintName="uk_ai_role_profile_code"/>
+        <addUniqueConstraint tableName="ai_memory" columnNames="vector_id" constraintName="uk_ai_memory_vector_id"/>
+        <addUniqueConstraint tableName="ai_role_knowledge" columnNames="vector_id" constraintName="uk_ai_role_knowledge_vector_id"/>
+
+        <createIndex tableName="ai_conversation" indexName="idx_ai_conversation_user_last_message">
+            <column name="user_id"/>
+            <column name="last_message_date"/>
+        </createIndex>
+        <createIndex tableName="ai_message" indexName="idx_ai_message_conversation_created">
+            <column name="conversation_id"/>
+            <column name="created_date"/>
+        </createIndex>
+        <createIndex tableName="ai_message" indexName="idx_ai_message_user_created">
+            <column name="user_id"/>
+            <column name="created_date"/>
+        </createIndex>
+        <createIndex tableName="ai_memory" indexName="idx_ai_memory_user_type">
+            <column name="user_id"/>
+            <column name="memory_type"/>
+        </createIndex>
+        <createIndex tableName="ai_memory" indexName="idx_ai_memory_user_emotion">
+            <column name="user_id"/>
+            <column name="user_emotion_tag_id"/>
+        </createIndex>
+        <createIndex tableName="ai_memory" indexName="idx_ai_memory_importance">
+            <column name="user_id"/>
+            <column name="importance_score"/>
+        </createIndex>
+        <createIndex tableName="ai_role_knowledge" indexName="idx_ai_role_knowledge_role_type">
+            <column name="role_profile_id"/>
+            <column name="knowledge_type"/>
+        </createIndex>
+        <createIndex tableName="ai_role_knowledge" indexName="idx_ai_role_knowledge_enabled">
+            <column name="role_profile_id"/>
+            <column name="enabled"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260617000100-3" author="everycent">
+        <addForeignKeyConstraint baseTableName="ai_conversation" baseColumnNames="user_id"
+                                 constraintName="fk_ai_conversation_user_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_emotion_state" baseColumnNames="user_id"
+                                 constraintName="fk_ai_emotion_state_user_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_emotion_state" baseColumnNames="last_user_emotion_tag_id"
+                                 constraintName="fk_ai_emotion_state_last_user_emotion_tag_id"
+                                 referencedTableName="emotion_tag" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_message" baseColumnNames="conversation_id"
+                                 constraintName="fk_ai_message_conversation_id"
+                                 referencedTableName="ai_conversation" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_message" baseColumnNames="user_id"
+                                 constraintName="fk_ai_message_user_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_message" baseColumnNames="user_emotion_tag_id"
+                                 constraintName="fk_ai_message_user_emotion_tag_id"
+                                 referencedTableName="emotion_tag" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_message" baseColumnNames="extracted_transaction_id"
+                                 constraintName="fk_ai_message_extracted_transaction_id"
+                                 referencedTableName="transaction_record" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_memory" baseColumnNames="user_id"
+                                 constraintName="fk_ai_memory_user_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_memory" baseColumnNames="conversation_id"
+                                 constraintName="fk_ai_memory_conversation_id"
+                                 referencedTableName="ai_conversation" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_memory" baseColumnNames="message_id"
+                                 constraintName="fk_ai_memory_message_id"
+                                 referencedTableName="ai_message" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_memory" baseColumnNames="user_emotion_tag_id"
+                                 constraintName="fk_ai_memory_user_emotion_tag_id"
+                                 referencedTableName="emotion_tag" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_memory" baseColumnNames="behavior_tag_id"
+                                 constraintName="fk_ai_memory_behavior_tag_id"
+                                 referencedTableName="behavior_tag" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="ai_role_knowledge" baseColumnNames="role_profile_id"
+                                 constraintName="fk_ai_role_knowledge_role_profile_id"
+                                 referencedTableName="ai_role_profile" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260617000100-4" author="everycent" dbms="mysql">
+        <sql>ALTER TABLE ai_message ADD CONSTRAINT ck_ai_message_role CHECK (role IN ('USER', 'ASSISTANT', 'SYSTEM'))</sql>
+        <sql>ALTER TABLE ai_message ADD CONSTRAINT ck_ai_message_user_emotion_confidence CHECK (user_emotion_confidence IS NULL OR (user_emotion_confidence &gt;= 0 AND user_emotion_confidence &lt;= 1))</sql>
+        <sql>ALTER TABLE ai_message ADD CONSTRAINT ck_ai_message_ai_emotion_before CHECK (ai_emotion_before IS NULL OR ai_emotion_before IN ('surprised', 'happy', 'pleased', 'fearful', 'angry', 'grieved', 'sad', 'disgusted', 'depressed', 'tired', 'calm', 'relieved'))</sql>
+        <sql>ALTER TABLE ai_message ADD CONSTRAINT ck_ai_message_ai_emotion_after CHECK (ai_emotion_after IS NULL OR ai_emotion_after IN ('surprised', 'happy', 'pleased', 'fearful', 'angry', 'grieved', 'sad', 'disgusted', 'depressed', 'tired', 'calm', 'relieved'))</sql>
+        <sql>ALTER TABLE ai_memory ADD CONSTRAINT ck_ai_memory_type CHECK (memory_type IN ('MESSAGE', 'SUMMARY', 'USER_PREFERENCE', 'FINANCIAL_PATTERN', 'FACT'))</sql>
+        <sql>ALTER TABLE ai_memory ADD CONSTRAINT ck_ai_memory_user_emotion_confidence CHECK (user_emotion_confidence IS NULL OR (user_emotion_confidence &gt;= 0 AND user_emotion_confidence &lt;= 1))</sql>
+        <sql>ALTER TABLE ai_memory ADD CONSTRAINT ck_ai_memory_importance_score CHECK (importance_score &gt;= 0 AND importance_score &lt;= 1)</sql>
+        <sql>ALTER TABLE ai_memory ADD CONSTRAINT ck_ai_memory_access_count CHECK (access_count &gt;= 0)</sql>
+        <sql>ALTER TABLE ai_emotion_state ADD CONSTRAINT ck_ai_emotion_state_current_emotion CHECK (current_emotion IN ('surprised', 'happy', 'pleased', 'fearful', 'angry', 'grieved', 'sad', 'disgusted', 'depressed', 'tired', 'calm', 'relieved'))</sql>
+        <sql>ALTER TABLE ai_emotion_state ADD CONSTRAINT ck_ai_emotion_state_valence CHECK (valence &gt;= -1 AND valence &lt;= 1)</sql>
+        <sql>ALTER TABLE ai_emotion_state ADD CONSTRAINT ck_ai_emotion_state_arousal CHECK (arousal &gt;= -1 AND arousal &lt;= 1)</sql>
+        <sql>ALTER TABLE ai_role_knowledge ADD CONSTRAINT ck_ai_role_knowledge_type CHECK (knowledge_type IN ('BACKGROUND', 'PERSONALITY', 'STYLE', 'BOUNDARY', 'DOMAIN_SKILL'))</sql>
+        <sql>ALTER TABLE ai_role_knowledge ADD CONSTRAINT ck_ai_role_knowledge_priority CHECK (priority &gt;= 0 AND priority &lt;= 100)</sql>
+    </changeSet>
+</databaseChangeLog>
