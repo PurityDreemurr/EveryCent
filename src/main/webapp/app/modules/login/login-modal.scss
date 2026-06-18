@@ -23,8 +23,8 @@
 
 .everycent-login-hero {
   display: grid;
-  align-content: start;
-  gap: 1.6rem;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 2rem;
   min-height: 560px;
   padding: 1.5rem;
   background: linear-gradient(150deg, #0f172a 0%, #162337 58%, #17394a 100%);
@@ -75,9 +75,11 @@
 
 .everycent-login-hero__copy {
   display: grid;
-  gap: 0.35rem;
-  max-width: 430px;
-  margin-top: 4.2rem;
+  align-content: center;
+  align-self: stretch;
+  gap: 0.9rem;
+  max-width: 460px;
+  padding-bottom: 3.5rem;
 }
 
 .everycent-login-hero__eyebrow {
@@ -87,11 +89,12 @@
 }
 
 .everycent-login-hero__copy h1 {
-  margin: 0.65rem 0 0.8rem;
-  font-size: clamp(2rem, 4vw, 3rem);
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
   font-weight: 900;
   line-height: 1.05;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .everycent-login-hero__copy p {
@@ -227,6 +230,14 @@
 
   .everycent-login-hero {
     min-height: auto;
+  }
+
+  .everycent-login-hero__copy {
+    padding-bottom: 0;
+  }
+
+  .everycent-login-hero__copy h1 {
+    white-space: normal;
   }
 }
 

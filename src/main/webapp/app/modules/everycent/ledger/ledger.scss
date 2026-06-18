@@ -1,0 +1,201 @@
+.everycent-ledger-page {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.everycent-ledger-page__primary,
+.everycent-ledger-page__actions button,
+.everycent-ledger-page__form-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 38px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+  font-weight: 800;
+}
+
+.everycent-ledger-page__primary,
+.everycent-ledger-page__form-actions .primary {
+  border-color: var(--ec-primary);
+  color: var(--ec-primary-foreground);
+  background: var(--ec-primary);
+}
+
+.everycent-ledger-page__actions .danger {
+  color: var(--ec-danger);
+}
+
+.everycent-ledger-page__alert {
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--ec-danger) 28%, var(--ec-border));
+  border-radius: 8px;
+  color: var(--ec-danger);
+  background: color-mix(in srgb, var(--ec-danger) 8%, var(--ec-panel));
+  font-weight: 750;
+}
+
+.everycent-ledger-page__grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.25fr);
+  gap: 1rem;
+}
+
+.everycent-ledger-page__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.everycent-ledger-page__section-header h2 {
+  margin: 0;
+  color: var(--ec-text);
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.everycent-ledger-page__section-header span {
+  color: var(--ec-muted);
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.everycent-ledger-page__items {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.everycent-ledger-page__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 70px;
+  padding: 0.75rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+  text-align: left;
+}
+
+.everycent-ledger-page__item.active,
+.everycent-ledger-page__item:hover {
+  background: var(--ec-soft);
+}
+
+.everycent-ledger-page__item span {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.everycent-ledger-page__item strong,
+.everycent-ledger-page__item small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.everycent-ledger-page__item strong {
+  font-weight: 850;
+}
+
+.everycent-ledger-page__item small,
+.everycent-ledger-page__detail-grid span {
+  color: var(--ec-muted);
+}
+
+.everycent-ledger-page__item em {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  color: var(--ec-text);
+  background: var(--ec-soft);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.everycent-ledger-page__detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.everycent-ledger-page__detail-grid div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  background: var(--ec-soft);
+}
+
+.everycent-ledger-page__detail-grid strong {
+  color: var(--ec-text);
+  font-size: 1rem;
+}
+
+.everycent-ledger-page__form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.everycent-ledger-page__form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ec-text);
+  font-weight: 800;
+}
+
+.everycent-ledger-page__form input,
+.everycent-ledger-page__form textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+}
+
+.everycent-ledger-page__form textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.everycent-ledger-page__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.everycent-ledger-dialog {
+  width: min(520px, calc(100vw - 2rem));
+}
+
+.everycent-ledger-page__empty {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  color: var(--ec-muted);
+  border: 1px dashed var(--ec-border);
+  border-radius: 8px;
+  background: var(--ec-soft);
+  font-weight: 750;
+}
+
+@media (max-width: 960px) {
+  .everycent-ledger-page__grid,
+  .everycent-ledger-page__detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

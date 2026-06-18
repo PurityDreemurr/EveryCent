@@ -6,7 +6,10 @@ import ErrorBoundaryRoutes from 'app/shared/error/error-boundary-routes';
 
 import AiHomePage from './ai-record/ai-home-page';
 import Dashboard from './dashboard/dashboard';
+import LedgerPage from './ledger/ledger';
 import Settings from './settings/settings';
+import MembersPage from './shared-ledger/members';
+import TransactionsPage from './transaction/transactions';
 
 const ComingSoon = ({ title }: { title: string }) => (
   <div className="everycent-page">
@@ -26,10 +29,10 @@ const EveryCentRoutes = () => (
       <Route index element={<Navigate to="/everycent/ai" replace />} />
       <Route path="ai" element={<AiHomePage />} />
       <Route path="dashboard" element={<Dashboard />} />
-      <Route path="ledgers" element={<ComingSoon title="账本" />} />
-      <Route path="transactions" element={<ComingSoon title="收支记录" />} />
+      <Route path="ledgers" element={<LedgerPage />} />
+      <Route path="transactions" element={<TransactionsPage />} />
       <Route path="budgets" element={<ComingSoon title="预算" />} />
-      <Route path="members" element={<ComingSoon title="成员" />} />
+      <Route path="members" element={<MembersPage />} />
       <Route path="analytics" element={<ComingSoon title="数据分析" />} />
       <Route path="notifications" element={<ComingSoon title="消息提醒" />} />
       <Route path="export" element={<ComingSoon title="导出 Excel" />} />

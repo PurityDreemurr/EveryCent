@@ -1,9 +1,11 @@
 import './dashboard.scss';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
+
+import { getLedgers, Ledger } from '../ledger/ledger-api';
 
 type TabKey = 'overview' | 'analytics';
 
@@ -14,13 +16,6 @@ type SummaryCard = {
   icon: IconProp;
   tone: string;
 };
-
-const summaryCards: SummaryCard[] = [
-  { label: '总收入', value: '$45,231.89', change: '较上月 +20.1%', icon: 'dollar-sign', tone: 'neutral' },
-  { label: '订阅数', value: '+2350', change: '较上月 +180.1%', icon: 'users', tone: 'neutral' },
-  { label: '销售额', value: '+12,234', change: '较上月 +19%', icon: 'save', tone: 'neutral' },
-  { label: '当前活跃', value: '+573', change: '较上小时 +201', icon: 'wave-square', tone: 'neutral' },
-];
 
 const overviewData = [
   { name: '1月', total: 3650 },
@@ -160,6 +155,74 @@ const SimpleBarList = ({
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [ledgers, setLedgers] = useState<Ledger[]>([]);
+  const [ledgerLoading, setLedgerLoading] = useState(true);
+  const [ledgerError, setLedgerError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadLedgers = async () => {
+      setLedgerLoading(true);
+      setLedgerError(null);
+      try {
+        const data = await getLedgers();
+        if (mounted) {
+          setLedgers(data);
+        }
+      } catch (error) {
+        if (mounted) {
+          setLedgerError('账本数据加载失败');
+        }
+      } finally {
+        if (mounted) {
+          setLedgerLoading(false);
+        }
+      }
+    };
+
+    loadLedgers();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const dashboardSummaryCards = useMemo<SummaryCard[]>(() => {
+    const totalBalance = ledgers.reduce((sum, ledger) => sum + (ledger.currentMonthBalance || 0), 0);
+    const primaryLedger = ledgers[0];
+
+    return [
+      {
+        label: '账本数量',
+        value: ledgerLoading ? '加载中' : `${ledgers.length}`,
+        change: ledgerError || '来自 /api/ledgers',
+        icon: 'book' as IconProp,
+        tone: 'neutral',
+      },
+      {
+        label: '本月结余',
+        value: ledgerLoading ? '加载中' : `¥${totalBalance.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`,
+        change: '按当前可访问账本汇总',
+        icon: 'database' as IconProp,
+        tone: 'neutral',
+      },
+      {
+        label: '当前账本',
+        value: ledgerLoading ? '加载中' : primaryLedger?.name || '暂无账本',
+        change: primaryLedger?.description || '可在账本管理中创建',
+        icon: 'list' as IconProp,
+        tone: 'neutral',
+      },
+      {
+        label: '当前权限',
+        value: ledgerLoading ? '加载中' : primaryLedger?.permissionLevel || primaryLedger?.permissionType || '暂无',
+        change: primaryLedger?.creatorLogin ? `创建人 ${primaryLedger.creatorLogin}` : '等待账本数据',
+        icon: 'users-cog' as IconProp,
+        tone: 'neutral',
+      },
+    ];
+  }, [ledgerError, ledgerLoading, ledgers]);
 
   return (
     <div className="everycent-page everycent-dashboard">
@@ -192,7 +255,7 @@ const Dashboard = () => {
       {activeTab === 'overview' && (
         <div className="everycent-dashboard__tab-panel">
           <section className="everycent-dashboard__summary" aria-label="账户摘要">
-            {summaryCards.map(card => (
+            {dashboardSummaryCards.map(card => (
               <article key={card.label} className={`everycent-summary-card everycent-summary-card--${card.tone}`}>
                 <header>
                   <span>{card.label}</span>
