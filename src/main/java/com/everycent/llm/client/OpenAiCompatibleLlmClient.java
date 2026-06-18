@@ -52,22 +52,30 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
         this.apiKey = trimToEmpty(properties.getApiKey());
         this.model = trimToEmpty(properties.getModel());
         this.timeout = Duration.ofSeconds(properties.getTimeoutSeconds() == null ? 0 : properties.getTimeoutSeconds());
-        this.temperature = defaultDouble(properties.getTemperature(), 0.7);
-        this.topP = defaultDouble(properties.getTopP(), 0.9);
+        this.temperature = defaultDouble(properties.getTemperature(), 0.75);
+        this.topP = defaultDouble(properties.getTopP(), 0.85);
         this.maxTokens = properties.getMaxTokens() == null ? 180 : properties.getMaxTokens();
         this.randomizeSampling = Boolean.TRUE.equals(properties.getRandomizeSampling());
-        this.minTemperature = defaultDouble(properties.getMinTemperature(), 0.7);
-        this.maxTemperature = defaultDouble(properties.getMaxTemperature(), 1.1);
+        this.minTemperature = defaultDouble(properties.getMinTemperature(), 0.75);
+        this.maxTemperature = defaultDouble(properties.getMaxTemperature(), 0.75);
         this.minTopP = defaultDouble(properties.getMinTopP(), 0.85);
-        this.maxTopP = defaultDouble(properties.getMaxTopP(), 0.98);
+        this.maxTopP = defaultDouble(properties.getMaxTopP(), 0.85);
         this.restTemplate = buildRestTemplate(timeout);
         this.objectMapper = objectMapper;
     }
 
     @Override
     public String complete(String prompt) {
+        return completeWithMessages(List.of(Map.of("role", "system", "content", TEST_SYSTEM_PROMPT), Map.of("role", "user", "content", prompt)));
+    }
+
+    public String completeRaw(String prompt) {
+        return completeWithMessages(List.of(Map.of("role", "user", "content", prompt)));
+    }
+
+    private String completeWithMessages(List<Map<String, String>> messages) {
         validateConfiguration();
-        if (!StringUtils.hasText(prompt)) {
+        if (messages == null || messages.isEmpty() || messages.stream().noneMatch(message -> StringUtils.hasText(message.get("content")))) {
             throw new LlmClientException("LLM prompt 不能为空，请使用手动记账");
         }
 
@@ -75,7 +83,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
             ResponseEntity<String> response = restTemplate.exchange(
                 resolveChatCompletionsUrl(),
                 HttpMethod.POST,
-                new HttpEntity<>(buildRequestBody(prompt), buildHeaders()),
+                new HttpEntity<>(buildRequestBody(messages), buildHeaders()),
                 String.class
             );
             return extractContent(response.getBody());
@@ -129,14 +137,14 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
         return headers;
     }
 
-    private Map<String, Object> buildRequestBody(String prompt) {
+    private Map<String, Object> buildRequestBody(List<Map<String, String>> messages) {
         double resolvedTemperature = randomizeSampling ? randomDouble(minTemperature, maxTemperature) : temperature;
         double resolvedTopP = randomizeSampling ? randomDouble(minTopP, maxTopP) : topP;
         log.info("LLM sampling parameters model={}, temperature={}, topP={}", model, resolvedTemperature, resolvedTopP);
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model);
-        body.put("messages", List.of(Map.of("role", "system", "content", TEST_SYSTEM_PROMPT), Map.of("role", "user", "content", prompt)));
+        body.put("messages", messages);
         body.put("temperature", resolvedTemperature);
         body.put("top_p", resolvedTopP);
         body.put("max_tokens", maxTokens);

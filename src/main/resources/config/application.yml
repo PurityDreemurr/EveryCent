@@ -237,13 +237,13 @@ app:
     min-confidence: 0.70
     max-input-length: 500
     max-tokens: ${APP_LLM_MAX_TOKENS:180}
-    temperature: ${APP_LLM_TEMPERATURE:0.7}
-    top-p: ${APP_LLM_TOP_P:0.9}
+    temperature: ${APP_LLM_TEMPERATURE:0.75}
+    top-p: ${APP_LLM_TOP_P:0.85}
     randomize-sampling: ${APP_LLM_RANDOMIZE_SAMPLING:false}
-    min-temperature: ${APP_LLM_MIN_TEMPERATURE:0.7}
-    max-temperature: ${APP_LLM_MAX_TEMPERATURE:1.1}
+    min-temperature: ${APP_LLM_MIN_TEMPERATURE:0.75}
+    max-temperature: ${APP_LLM_MAX_TEMPERATURE:0.75}
     min-top-p: ${APP_LLM_MIN_TOP_P:0.85}
-    max-top-p: ${APP_LLM_MAX_TOP_P:0.98}
+    max-top-p: ${APP_LLM_MAX_TOP_P:0.85}
   vector-store:
     provider: qdrant
     base-url: ${APP_VECTOR_STORE_BASE_URL:http://127.0.0.1:6333}

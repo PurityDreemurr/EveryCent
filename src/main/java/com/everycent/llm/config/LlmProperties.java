@@ -37,21 +37,21 @@ public class LlmProperties {
 
     @DecimalMin("0.00")
     @DecimalMax("2.00")
-    private Double temperature = 0.7;
+    private Double temperature = 0.75;
 
     @DecimalMin("0.00")
     @DecimalMax("1.00")
-    private Double topP = 0.9;
+    private Double topP = 0.85;
 
     private Boolean randomizeSampling = false;
 
     @DecimalMin("0.00")
     @DecimalMax("2.00")
-    private Double minTemperature = 0.7;
+    private Double minTemperature = 0.75;
 
     @DecimalMin("0.00")
     @DecimalMax("2.00")
-    private Double maxTemperature = 1.1;
+    private Double maxTemperature = 0.75;
 
     @DecimalMin("0.00")
     @DecimalMax("1.00")
@@ -59,7 +59,7 @@ public class LlmProperties {
 
     @DecimalMin("0.00")
     @DecimalMax("1.00")
-    private Double maxTopP = 0.98;
+    private Double maxTopP = 0.85;
 
     public Boolean getEnabled() {
         return enabled;
