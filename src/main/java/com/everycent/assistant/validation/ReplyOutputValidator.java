@@ -96,6 +96,45 @@ public class ReplyOutputValidator {
 
     private static final List<String> ROLE_OVERLOAD_WORDS = List.of("翅膀", "尾巴", "龙宫", "换羽期", "逆潮", "小海兽", "龙息", "鳞片");
 
+    private static final List<String> INVALIDATE_FEELING_PHRASES = List.of(
+        "这理由本龙可不信",
+        "这理由我可不信",
+        "本龙可不信",
+        "这有什么累的",
+        "没干活还累",
+        "别想太多",
+        "空就对了",
+        "你就是想太多",
+        "有什么好烦的"
+    );
+
+    private static final List<String> USER_BELITTLING_PHRASES = List.of(
+        "你自己戏多",
+        "有事说事",
+        "哦什么哦",
+        "你自己看着办",
+        "不想看你犯蠢",
+        "你少来",
+        "别矫情"
+    );
+
+    private static final List<String> SELF_CENTERED_PHRASES = List.of(
+        "本龙平时不也",
+        "本龙都没",
+        "本龙比你还",
+        "本龙先去忙我的事"
+    );
+
+    private static final List<String> THIRD_PARTY_MOCKING_PHRASES = List.of(
+        "路痴转世",
+        "搞的鬼",
+        "真是服了",
+        "脑子不好",
+        "离谱到家"
+    );
+
+    private static final List<String> COMMANDING_TONE_PHRASES = List.of("有事说事", "别废话", "赶紧说", "少来这套", "老实说");
+
     private final ObjectMapper objectMapper;
 
     public ReplyOutputValidator(ObjectMapper objectMapper) {
@@ -119,6 +158,7 @@ public class ReplyOutputValidator {
         validateAccountingLeak(reply, resolvedScene, violations);
         validateAdviceOveruse(reply, resolvedScene, violations);
         validateRoleOverload(reply, violations);
+        validateSemanticRisks(reply, resolvedScene, violations);
 
         return violations.isEmpty() ? ReplyValidationResult.pass() : ReplyValidationResult.fail(violations);
     }
@@ -229,6 +269,35 @@ public class ReplyOutputValidator {
     }
 
     private boolean isEmotionScene(DialogueScene scene) {
-        return scene == DialogueScene.EMOTION_LIGHT || scene == DialogueScene.EMOTION_HEAVY || scene == DialogueScene.COLD_REPLY;
+        return scene == DialogueScene.EMOTION_LIGHT
+            || scene == DialogueScene.EMOTION_HEAVY
+            || scene == DialogueScene.FATIGUE
+            || scene == DialogueScene.FRUSTRATION
+            || scene == DialogueScene.SELF_BLAME
+            || scene == DialogueScene.LONELINESS
+            || scene == DialogueScene.COLD_REPLY;
+    }
+
+    private void validateSemanticRisks(String reply, DialogueScene scene, List<String> violations) {
+        boolean emotionScene = isEmotionScene(scene);
+        addViolationOnAny(reply, USER_BELITTLING_PHRASES, "USER_BELITTLING", violations);
+        if (emotionScene) {
+            addViolationOnAny(reply, INVALIDATE_FEELING_PHRASES, "INVALIDATE_USER_FEELING", violations);
+            addViolationOnAny(reply, SELF_CENTERED_PHRASES, "SELF_CENTERED_REPLY", violations);
+        }
+        if (scene == DialogueScene.LONELINESS) {
+            addViolationOnAny(reply, INVALIDATE_FEELING_PHRASES, "INVALIDATE_LONELINESS", violations);
+            addViolationOnAny(reply, SELF_CENTERED_PHRASES, "SELF_CENTERED_REPLY", violations);
+        }
+        addViolationOnAny(reply, THIRD_PARTY_MOCKING_PHRASES, "THIRD_PARTY_MOCKING", violations);
+        addViolationOnAny(reply, COMMANDING_TONE_PHRASES, "COMMANDING_TONE", violations);
+    }
+
+    private void addViolationOnAny(String reply, List<String> phrases, String violation, List<String> violations) {
+        for (String phrase : phrases) {
+            if (reply.contains(phrase)) {
+                violations.add(violation + ":" + phrase);
+            }
+        }
     }
 }

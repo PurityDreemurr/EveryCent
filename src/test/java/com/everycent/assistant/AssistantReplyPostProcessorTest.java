@@ -40,10 +40,25 @@ class AssistantReplyPostProcessorTest {
         when(rewriteService.rewrite(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
             .thenReturn(rewritten);
 
-        String result = processor.process("全错。", "啧，你自己看着办。", DialogueScene.EMOTION_LIGHT);
+        String result = processor.process("我有点难受", "我会一直听，你可以慢慢来。{\"mood\":45,\"emoji\":\"peace\"}", DialogueScene.EMOTION_LIGHT);
 
         assertThat(result).isEqualTo(rewritten);
-        verify(rewriteService).rewrite(org.mockito.ArgumentMatchers.eq("全错。"), org.mockito.ArgumentMatchers.eq("啧，你自己看着办。"), org.mockito.ArgumentMatchers.eq(DialogueScene.EMOTION_LIGHT), org.mockito.ArgumentMatchers.any());
+        verify(rewriteService).rewrite(
+            org.mockito.ArgumentMatchers.eq("我有点难受"),
+            org.mockito.ArgumentMatchers.eq("我会一直听，你可以慢慢来。{\"mood\":45,\"emoji\":\"peace\"}"),
+            org.mockito.ArgumentMatchers.eq(DialogueScene.EMOTION_LIGHT),
+            org.mockito.ArgumentMatchers.any()
+        );
+    }
+
+    @Test
+    void shouldFallbackDirectlyOnHighRiskReply() {
+        AssistantReplyPostProcessor processor = new AssistantReplyPostProcessor(validator, rewriteService);
+
+        String result = processor.process("我今天好累", "没干活还累？这理由本龙可不信。{\"mood\":40,\"emoji\":\"speechless\"}", DialogueScene.FATIGUE);
+
+        assertThat(result).contains("累就先别硬撑");
+        verify(rewriteService, never()).rewrite(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -52,9 +67,9 @@ class AssistantReplyPostProcessorTest {
         when(rewriteService.rewrite(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
             .thenReturn("啧，还是不行。");
 
-        String result = processor.process("随便", "啧，你随意。", DialogueScene.COLD_REPLY);
+        String result = processor.process("我有点难受", "我会一直听，你可以慢慢来。{\"mood\":45,\"emoji\":\"peace\"}", DialogueScene.EMOTION_LIGHT);
 
-        assertThat(result).contains("本龙先不追问");
-        assertThat(result).contains("{\"mood\":40,\"emoji\":\"speechless\"}");
+        assertThat(result).contains("本龙听见了");
+        assertThat(result).contains("{\"mood\":45,\"emoji\":\"peace\"}");
     }
 }

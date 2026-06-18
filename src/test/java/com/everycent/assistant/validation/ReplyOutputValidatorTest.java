@@ -32,8 +32,25 @@ class ReplyOutputValidatorTest {
     }
 
     @Test
+    void shouldFailOnSemanticRiskPhrases() {
+        assertThat(validator.validate("没干活还累？这理由本龙可不信。{\"mood\":40,\"emoji\":\"speechless\"}", DialogueScene.FATIGUE).getViolations())
+            .anyMatch(violation -> violation.startsWith("INVALIDATE_USER_FEELING"));
+        assertThat(validator.validate("本龙才没有装成熟，是你自己戏多。{\"mood\":50,\"emoji\":\"shy\"}", DialogueScene.JOKE).getViolations())
+            .contains("USER_BELITTLING:你自己戏多");
+        assertThat(validator.validate("哦什么哦。本龙看着呢，有事说事。{\"mood\":45,\"emoji\":\"speechless\"}", DialogueScene.COLD_REPLY).getViolations())
+            .contains("USER_BELITTLING:哦什么哦", "COMMANDING_TONE:有事说事");
+        assertThat(validator.validate("空就对了，本龙平时不也一个人待着？{\"mood\":42,\"emoji\":\"peace\"}", DialogueScene.LONELINESS).getViolations())
+            .anyMatch(violation -> violation.startsWith("INVALIDATE"));
+        assertThat(validator.validate("这外卖小哥是路痴转世吗。{\"mood\":48,\"emoji\":\"speechless\"}", DialogueScene.FRUSTRATION).getViolations())
+            .contains("THIRD_PARTY_MOCKING:路痴转世");
+    }
+
+    @Test
     void shouldClassifyScenesSimply() {
         assertThat(classifier.classify("我今天花了28买午饭")).isEqualTo(DialogueScene.ACCOUNTING);
+        assertThat(classifier.classify("外卖又送错了，真的无语")).isEqualTo(DialogueScene.FRUSTRATION);
+        assertThat(classifier.classify("外卖花了 28，结果还送错了")).isEqualTo(DialogueScene.ACCOUNTING);
+        assertThat(classifier.classify("帮我记一下外卖 28")).isEqualTo(DialogueScene.ACCOUNTING);
         assertThat(classifier.classify("我做完了")).isEqualTo(DialogueScene.ACHIEVEMENT_SHARE);
         assertThat(classifier.classify("嗯")).isEqualTo(DialogueScene.COLD_REPLY);
     }
