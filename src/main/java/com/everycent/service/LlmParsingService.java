@@ -238,13 +238,66 @@ public class LlmParsingService {
         result.setTransactionId(record.getId());
         result.setAmount(record.getAmount());
         result.setType(record.getType());
+        String behaviorTagName = null;
+        String emotionTagName = null;
         if (record.getBehaviorTag() != null) {
-            result.setBehaviorTagName(record.getBehaviorTag().getName());
+            behaviorTagName = record.getBehaviorTag().getName();
+            result.setBehaviorTagName(behaviorTagName);
         }
         if (record.getEmotionTag() != null) {
-            result.setEmotionTagName(record.getEmotionTag().getName());
+            emotionTagName = record.getEmotionTag().getName();
+            result.setEmotionTagName(emotionTagName);
         }
+        NaturalLanguageTransactionCreateResultDTO.ParsedResultDTO parsedResult = new NaturalLanguageTransactionCreateResultDTO.ParsedResultDTO();
+        parsedResult.setAmount(record.getAmount());
+        parsedResult.setType(record.getType());
+        parsedResult.setBehaviorTag(behaviorTagName);
+        parsedResult.setEmotionTag(emotionTagName);
+        result.setParsedResult(parsedResult);
+        result.setBudgetWarning(buildBudgetWarning(record));
         return result;
+    }
+
+    private NaturalLanguageTransactionCreateResultDTO.BudgetWarningDTO buildBudgetWarning(TransactionRecord record) {
+        NaturalLanguageTransactionCreateResultDTO.BudgetWarningDTO warning = new NaturalLanguageTransactionCreateResultDTO.BudgetWarningDTO();
+        if (record == null || record.getLedger() == null || record.getTransactionDate() == null) {
+            warning.setOverBudget(false);
+            warning.setUsedRatio(BigDecimal.ZERO);
+            warning.setMessage("暂无预算信息");
+            return warning;
+        }
+        List<Budget> matchedBudgets = budgetRepository
+            .findAllByLedgerAndEnabledTrue(record.getLedger())
+            .stream()
+            .filter(budget ->
+                budget.getPeriodStart() != null &&
+                budget.getPeriodEnd() != null &&
+                !record.getTransactionDate().isBefore(budget.getPeriodStart()) &&
+                !record.getTransactionDate().isAfter(budget.getPeriodEnd())
+            )
+            .toList();
+        if (matchedBudgets.isEmpty()) {
+            warning.setOverBudget(false);
+            warning.setUsedRatio(BigDecimal.ZERO);
+            warning.setMessage("暂无启用预算");
+            return warning;
+        }
+        Budget budget = matchedBudgets.get(0);
+        BigDecimal usedAmount = transactionRecordRepository
+            .findAllByLedgerAndTransactionDateBetween(record.getLedger(), budget.getPeriodStart(), budget.getPeriodEnd())
+            .stream()
+            .filter(candidate -> candidate.getType() == TransactionType.EXPENSE)
+            .map(TransactionRecord::getAmount)
+            .filter(Objects::nonNull)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal usedRatio = budget.getLimitAmount().compareTo(BigDecimal.ZERO) == 0
+            ? BigDecimal.ZERO
+            : usedAmount.divide(budget.getLimitAmount(), 4, RoundingMode.HALF_UP);
+        boolean overBudget = usedAmount.compareTo(budget.getLimitAmount()) > 0;
+        warning.setOverBudget(overBudget);
+        warning.setUsedRatio(usedRatio);
+        warning.setMessage(overBudget ? "本期预算已超出，请留意后续支出" : "本期预算使用正常");
+        return warning;
     }
 
     private NotificationMessage toNotification(AiAlertResultDTO result, User currentUser, Ledger ledger, Budget budget) {

@@ -175,6 +175,17 @@ class LlmParsingServiceTest {
             record.setId(101L);
             return record;
         });
+        Budget budget = new Budget()
+            .ledger(ledger)
+            .cycle(BudgetCycle.MONTHLY)
+            .periodStart(LocalDate.of(2026, 6, 1))
+            .periodEnd(LocalDate.of(2026, 6, 30))
+            .limitAmount(new BigDecimal("1000.00"))
+            .alertThreshold(new BigDecimal("0.80"))
+            .enabled(true);
+        when(budgetRepository.findAllByLedgerAndEnabledTrue(ledger)).thenReturn(List.of(budget));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodStart(), budget.getPeriodEnd()))
+            .thenReturn(List.of(new TransactionRecord().amount(new BigDecimal("50.00")).type(TransactionType.EXPENSE)));
 
         NaturalLanguageTransactionCreateResultDTO result = service.parseAndCreateTransaction(10L, request, currentUser);
 
@@ -187,8 +198,19 @@ class LlmParsingServiceTest {
         assertThat(savedRecord.getBehaviorTag()).isSameAs(behaviorTag);
         assertThat(savedRecord.getEmotionTag()).isSameAs(emotionTag);
         assertThat(result.getTransactionId()).isEqualTo(101L);
+        assertThat(result.getAmount()).isEqualByComparingTo("50.00");
+        assertThat(result.getType()).isEqualTo(TransactionType.EXPENSE);
         assertThat(result.getBehaviorTagName()).isEqualTo("餐饮");
         assertThat(result.getEmotionTagName()).isEqualTo("开心");
+        assertThat(result.getParsedResult()).isNotNull();
+        assertThat(result.getParsedResult().getAmount()).isEqualByComparingTo("50.00");
+        assertThat(result.getParsedResult().getType()).isEqualTo(TransactionType.EXPENSE);
+        assertThat(result.getParsedResult().getBehaviorTag()).isEqualTo("餐饮");
+        assertThat(result.getParsedResult().getEmotionTag()).isEqualTo("开心");
+        assertThat(result.getBudgetWarning()).isNotNull();
+        assertThat(result.getBudgetWarning().getOverBudget()).isFalse();
+        assertThat(result.getBudgetWarning().getUsedRatio()).isEqualByComparingTo("0.0500");
+        assertThat(result.getBudgetWarning().getMessage()).isEqualTo("本期预算使用正常");
     }
 
     @Test
