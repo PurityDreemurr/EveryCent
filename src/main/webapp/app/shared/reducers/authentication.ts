@@ -51,8 +51,9 @@ export const login: (username: string, password: string, rememberMe?: boolean) =
     const result = await dispatch(authenticate({ username, password, rememberMe }));
     const response = result.payload as AxiosResponse;
     const bearerToken = response?.headers?.authorization;
-    if (bearerToken && bearerToken.slice(0, 7) === 'Bearer ') {
-      const jwt = bearerToken.slice(7, bearerToken.length);
+    const jwtFromHeader = bearerToken && bearerToken.slice(0, 7) === 'Bearer ' ? bearerToken.slice(7, bearerToken.length) : undefined;
+    const jwt = jwtFromHeader || response?.data?.id_token;
+    if (jwt) {
       if (rememberMe) {
         Storage.local.set(AUTH_TOKEN_KEY, jwt);
       } else {
@@ -132,13 +133,14 @@ export const AuthenticationSlice = createSlice({
         errorMessage: action.error.message,
       }))
       .addCase(getAccount.fulfilled, (state, action) => {
-        const isAuthenticated = action.payload && action.payload.data && action.payload.data.activated;
+        const account = action.payload?.data;
+        const isAuthenticated = !!account && (account.activated === undefined || account.activated);
         return {
           ...state,
           isAuthenticated,
           loading: false,
           sessionHasBeenFetched: true,
-          account: action.payload.data,
+          account,
         };
       })
       .addCase(authenticate.pending, state => {

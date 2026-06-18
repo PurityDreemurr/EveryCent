@@ -1,0 +1,216 @@
+.everycent-members-page {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.everycent-members-page__primary,
+.everycent-members-page__actions button,
+.everycent-members-page__form-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 38px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+  font-weight: 800;
+}
+
+.everycent-members-page__primary,
+.everycent-members-page__form-actions .primary {
+  border-color: var(--ec-primary);
+  color: var(--ec-primary-foreground);
+  background: var(--ec-primary);
+}
+
+.everycent-members-page__primary:disabled,
+.everycent-members-page__form-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.everycent-members-page__actions .danger {
+  color: var(--ec-danger);
+}
+
+.everycent-members-page__alert {
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--ec-danger) 28%, var(--ec-border));
+  border-radius: 8px;
+  color: var(--ec-danger);
+  background: color-mix(in srgb, var(--ec-danger) 8%, var(--ec-panel));
+  font-weight: 750;
+}
+
+.everycent-members-page__toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.2fr) repeat(2, minmax(160px, 0.8fr));
+  gap: 0.85rem;
+  align-items: end;
+}
+
+.everycent-members-page__toolbar label,
+.everycent-members-page__toolbar div,
+.everycent-members-page__form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.everycent-members-page__toolbar span,
+.everycent-members-page__form span {
+  color: var(--ec-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.everycent-members-page__toolbar strong {
+  overflow: hidden;
+  color: var(--ec-text);
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.everycent-members-page__toolbar select,
+.everycent-members-page__form input,
+.everycent-members-page__form select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+  font-weight: 750;
+}
+
+.everycent-members-page__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.everycent-members-page__section-header h2 {
+  margin: 0;
+  color: var(--ec-text);
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.everycent-members-page__section-header span {
+  color: var(--ec-muted);
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.everycent-members-page__table-wrap {
+  overflow-x: auto;
+}
+
+.everycent-members-page__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.everycent-members-page__table th,
+.everycent-members-page__table td {
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid var(--ec-border);
+  color: var(--ec-text);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.everycent-members-page__table th {
+  color: var(--ec-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.everycent-members-page__table td {
+  font-weight: 700;
+}
+
+.everycent-members-page__table em {
+  display: inline-flex;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  color: var(--ec-text);
+  background: var(--ec-soft);
+  font-style: normal;
+  font-weight: 850;
+}
+
+.everycent-members-page__user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.everycent-members-page__user span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  color: var(--ec-text);
+  background: var(--ec-soft);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.everycent-members-page__actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.everycent-members-page__empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--ec-muted);
+  border: 1px dashed var(--ec-border);
+  border-radius: 8px;
+  background: var(--ec-soft);
+  font-weight: 750;
+}
+
+.everycent-member-dialog {
+  width: min(520px, calc(100vw - 2rem));
+}
+
+.everycent-members-page__form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.everycent-members-page__dialog-note {
+  padding: 0.75rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-muted);
+  background: var(--ec-soft);
+  font-weight: 750;
+}
+
+.everycent-members-page__dialog-note strong {
+  color: var(--ec-text);
+}
+
+.everycent-members-page__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .everycent-members-page__toolbar {
+    grid-template-columns: 1fr;
+  }
+}

@@ -442,6 +442,28 @@
   min-width: 0;
 }
 
+.everycent-topbar__ledger-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  margin: 0;
+  color: var(--ec-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.everycent-topbar__ledger-select select {
+  max-width: 150px;
+  height: 36px;
+  padding: 0 1.8rem 0 0.65rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+  font-weight: 800;
+}
+
 .everycent-topbar__label {
   color: var(--ec-muted);
   font-size: 0.76rem;
@@ -899,7 +921,12 @@
   }
 
   .everycent-search-button span,
-  .everycent-search-button kbd {
+  .everycent-search-button kbd,
+  .everycent-topbar__ledger-select span {
     display: none;
+  }
+
+  .everycent-topbar__ledger-select select {
+    max-width: 112px;
   }
 }

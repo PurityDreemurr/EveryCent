@@ -9,7 +9,7 @@ import Activate from 'app/modules/account/activate/activate';
 import PasswordResetInit from 'app/modules/account/password-reset/init/password-reset-init';
 import PasswordResetFinish from 'app/modules/account/password-reset/finish/password-reset-finish';
 import Logout from 'app/modules/login/logout';
-import RootRedirect from 'app/modules/home/root-redirect';
+import RootRedirect from './modules/home/root-redirect';
 import EntitiesRoutes from 'app/entities/routes';
 import PrivateRoute from 'app/shared/auth/private-route';
 import ErrorBoundaryRoutes from 'app/shared/error/error-boundary-routes';
@@ -29,7 +29,7 @@ const Admin = Loadable({
 });
 
 const EveryCent = Loadable({
-  loader: () => import(/* webpackChunkName: "everycent" */ 'app/modules/everycent/routes'),
+  loader: () => import(/* webpackChunkName: "everycent" */ './modules/everycent/routes'),
   loading: () => loading,
 });
 
