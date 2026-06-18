@@ -6,6 +6,9 @@ import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.assistant.memory.AiMemoryService;
 import com.everycent.assistant.memory.MemoryRetrievalService;
 import com.everycent.assistant.prompt.AssistantPromptBuilder;
+import com.everycent.assistant.validation.DialogueScene;
+import com.everycent.assistant.validation.DialogueSceneClassifier;
+import com.everycent.assistant.AssistantReplyPostProcessor;
 import com.everycent.domain.User;
 import com.everycent.llm.client.LlmClient;
 import java.util.List;
@@ -23,17 +26,23 @@ public class AiAssistantOrchestrator {
     private final MemoryRetrievalService memoryRetrievalService;
     private final AiMemoryService aiMemoryService;
     private final AssistantPromptBuilder assistantPromptBuilder;
+    private final DialogueSceneClassifier dialogueSceneClassifier;
+    private final AssistantReplyPostProcessor replyPostProcessor;
     private final LlmClient llmClient;
 
     public AiAssistantOrchestrator(
         MemoryRetrievalService memoryRetrievalService,
         AiMemoryService aiMemoryService,
         AssistantPromptBuilder assistantPromptBuilder,
+        DialogueSceneClassifier dialogueSceneClassifier,
+        AssistantReplyPostProcessor replyPostProcessor,
         LlmClient llmClient
     ) {
         this.memoryRetrievalService = memoryRetrievalService;
         this.aiMemoryService = aiMemoryService;
         this.assistantPromptBuilder = assistantPromptBuilder;
+        this.dialogueSceneClassifier = dialogueSceneClassifier;
+        this.replyPostProcessor = replyPostProcessor;
         this.llmClient = llmClient;
     }
 
@@ -46,7 +55,9 @@ public class AiAssistantOrchestrator {
         String prompt = assistantPromptBuilder.buildSingleTurnPrompt(userMessage, INITIAL_USER_EMOTION_STATE, List.of());
         LOG.info("Assistant prompt built for userId={}, conversationId={}, rag=false, memoryPersist=false, mecot=false", userId, conversationId);
 
-        String assistantMessage = llmClient.complete(prompt);
+        String rawReply = llmClient.complete(prompt);
+        DialogueScene scene = dialogueSceneClassifier.classify(userMessage);
+        String assistantMessage = replyPostProcessor.process(userMessage, rawReply, scene);
 
         ChatResponseDTO response = new ChatResponseDTO();
         response.setConversationId(conversationId);

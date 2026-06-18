@@ -7,6 +7,10 @@ import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.assistant.memory.AiMemoryService;
 import com.everycent.assistant.memory.MemoryRetrievalService;
 import com.everycent.assistant.prompt.AssistantPromptBuilder;
+import com.everycent.assistant.rewrite.LlmRewriteService;
+import com.everycent.assistant.rewrite.RewritePromptBuilder;
+import com.everycent.assistant.validation.DialogueSceneClassifier;
+import com.everycent.assistant.validation.ReplyOutputValidator;
 import com.everycent.domain.User;
 import com.everycent.llm.client.OpenAiCompatibleLlmClient;
 import com.everycent.llm.config.LlmProperties;
@@ -27,11 +31,14 @@ class AiAssistantSingleTurnIT {
     @Test
     @Timeout(120)
     void shouldReplyAsHaoweiWithoutRagMecotOrMemoryPersistence() {
+        OpenAiCompatibleLlmClient client = llmClient();
         AiAssistantOrchestrator orchestrator = new AiAssistantOrchestrator(
             null,
             null,
             new AssistantPromptBuilder(),
-            llmClient()
+            new DialogueSceneClassifier(),
+            new AssistantReplyPostProcessor(new ReplyOutputValidator(OBJECT_MAPPER), new LlmRewriteService(new RewritePromptBuilder(), client)),
+            client
         );
         User user = new User();
         user.setId(1L);
@@ -71,6 +78,8 @@ class AiAssistantSingleTurnIT {
         properties.setMaxTemperature(Double.parseDouble(env("APP_LLM_MAX_TEMPERATURE", "0.75")));
         properties.setMinTopP(Double.parseDouble(env("APP_LLM_MIN_TOP_P", "0.85")));
         properties.setMaxTopP(Double.parseDouble(env("APP_LLM_MAX_TOP_P", "0.85")));
+        properties.setEnableThinking(Boolean.parseBoolean(env("APP_LLM_ENABLE_THINKING", "false")));
+        properties.setEnableSearch(Boolean.parseBoolean(env("APP_LLM_ENABLE_SEARCH", "false")));
         return new OpenAiCompatibleLlmClient(properties, OBJECT_MAPPER);
     }
 

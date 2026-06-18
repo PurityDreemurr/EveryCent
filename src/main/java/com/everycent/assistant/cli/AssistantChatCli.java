@@ -1,5 +1,6 @@
 package com.everycent.assistant.cli;
 
+import com.everycent.assistant.AssistantReplyPostProcessor;
 import com.everycent.assistant.dto.MemoryContextDTO;
 import com.everycent.assistant.emotion.AiEmotionPromptAdapter;
 import com.everycent.assistant.emotion.AiEmotionStateModel;
@@ -9,6 +10,12 @@ import com.everycent.assistant.emotion.MecotEmotionService;
 import com.everycent.assistant.emotion.MecotRationalEmotionVector;
 import com.everycent.assistant.prompt.AssistantPromptBuilder;
 import com.everycent.assistant.prompt.MecotEmotionReasoningPromptBuilder;
+import com.everycent.assistant.rewrite.LlmRewriteService;
+import com.everycent.assistant.rewrite.RewritePromptBuilder;
+import com.everycent.assistant.validation.DialogueScene;
+import com.everycent.assistant.validation.DialogueSceneClassifier;
+import com.everycent.assistant.validation.ReplyOutputValidator;
+import com.everycent.assistant.validation.ReplyValidationResult;
 import com.everycent.domain.AiEmotionState;
 import com.everycent.domain.EmotionTag;
 import com.everycent.domain.enumeration.EmotionValence;
@@ -42,6 +49,9 @@ public final class AssistantChatCli {
     private final AiEmotionPromptAdapter emotionPromptAdapter = new AiEmotionPromptAdapter();
     private final MecotEmotionReasoningResponseParser emotionReasoningResponseParser = new MecotEmotionReasoningResponseParser(OBJECT_MAPPER);
     private final OpenAiCompatibleLlmClient llmClient;
+    private final DialogueSceneClassifier dialogueSceneClassifier = new DialogueSceneClassifier();
+    private final ReplyOutputValidator replyOutputValidator = new ReplyOutputValidator(OBJECT_MAPPER);
+    private final AssistantReplyPostProcessor replyPostProcessor;
     private final ArrayDeque<String> dialogueHistory = new ArrayDeque<>();
 
     private AiEmotionState aiEmotionState = AiEmotionStateModel.defaultState();
@@ -49,6 +59,11 @@ public final class AssistantChatCli {
 
     private AssistantChatCli(OpenAiCompatibleLlmClient llmClient, boolean debug) {
         this.llmClient = llmClient;
+        this.replyPostProcessor =
+            new AssistantReplyPostProcessor(
+                new ReplyOutputValidator(OBJECT_MAPPER),
+                new LlmRewriteService(new RewritePromptBuilder(), llmClient)
+            );
         this.debug = debug;
     }
 
@@ -88,7 +103,12 @@ public final class AssistantChatCli {
         }
 
         try {
-            String answer = llmClient.complete(prompt);
+            String rawAnswer = llmClient.complete(prompt);
+            DialogueScene scene = dialogueSceneClassifier.classify(userInput);
+            String answer = replyPostProcessor.process(userInput, rawAnswer, scene);
+            if (debug) {
+                printDebugPostProcess(scene, rawAnswer, answer);
+            }
             System.out.println("\n皓尾> " + answer.strip());
         } catch (LlmClientException e) {
             System.out.println("\n[LLM 调用失败] " + e.getMessage());
@@ -129,7 +149,21 @@ public final class AssistantChatCli {
             printHelp();
             return true;
         }
+        if (command.startsWith("/validate")) {
+            validateReply(input.substring("/validate".length()).trim());
+            return true;
+        }
         return false;
+    }
+
+    private void validateReply(String reply) {
+        if (!StringUtils.hasText(reply)) {
+            System.out.println("用法：/validate 回复内容{\"mood\":40,\"emoji\":\"peace\"}");
+            return;
+        }
+        ReplyValidationResult result = replyOutputValidator.validate(reply, DialogueScene.DAILY_CHAT);
+        System.out.println("passed=" + result.isPassed());
+        System.out.println("violations=" + result.getViolations());
     }
 
     private List<MemoryContextDTO> historyMemories() {
@@ -218,9 +252,18 @@ public final class AssistantChatCli {
 
     private void printDebugPrompt(String prompt) {
         System.out.println("\n--- DEBUG ---");
-        System.out.println("rag=false, memoryPersist=false, mecot=false");
+        System.out.println("rag=false, memoryPersist=false, mecot=false, postProcess=true");
         System.out.println("prompt:\n" + prompt);
         System.out.println("--- DEBUG END ---");
+    }
+
+    private void printDebugPostProcess(DialogueScene scene, String rawAnswer, String finalAnswer) {
+        System.out.println("\n--- POST PROCESS DEBUG ---");
+        System.out.println("scene=" + scene);
+        System.out.println("raw:\n" + rawAnswer);
+        System.out.println("final:\n" + finalAnswer);
+        System.out.println("rewritten=" + !rawAnswer.equals(finalAnswer));
+        System.out.println("--- POST PROCESS DEBUG END ---");
     }
 
     private static LlmProperties llmProperties(Map<String, String> localEnv) {
@@ -313,7 +356,7 @@ public final class AssistantChatCli {
     }
 
     private static void printHelp() {
-        System.out.println("命令：/state 查看模式，/debug 切换提示词调试，/reset 重置，/exit 退出。");
+        System.out.println("命令：/state 查看模式，/debug 切换调试，/validate <回复> 校验回复，/reset 重置，/exit 退出。");
     }
 
     private AssistantChatCli() {
