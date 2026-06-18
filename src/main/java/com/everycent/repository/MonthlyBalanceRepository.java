@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MonthlyBalanceRepository extends JpaRepository<MonthlyBalance, Long> {
     Optional<MonthlyBalance> findOneByLedgerAndYearAndMonth(Ledger ledger, Integer year, Integer month);
+
+    void deleteAllByLedger(Ledger ledger);
 }

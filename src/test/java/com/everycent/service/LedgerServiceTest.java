@@ -11,7 +11,11 @@ import com.everycent.domain.User;
 import com.everycent.domain.UserLedgerPermission;
 import com.everycent.domain.enumeration.PermissionLevel;
 import com.everycent.domain.enumeration.PermissionStatus;
+import com.everycent.repository.BudgetRepository;
 import com.everycent.repository.LedgerRepository;
+import com.everycent.repository.MonthlyBalanceRepository;
+import com.everycent.repository.NotificationMessageRepository;
+import com.everycent.repository.TransactionRecordRepository;
 import com.everycent.repository.UserLedgerPermissionRepository;
 import com.everycent.repository.UserRepository;
 import com.everycent.service.dto.LedgerCreateDTO;
@@ -36,6 +40,14 @@ class LedgerServiceTest {
 
     private LedgerPermissionService permissionService;
 
+    private TransactionRecordRepository transactionRecordRepository;
+
+    private BudgetRepository budgetRepository;
+
+    private MonthlyBalanceRepository monthlyBalanceRepository;
+
+    private NotificationMessageRepository notificationMessageRepository;
+
     private LedgerService service;
 
     private User owner;
@@ -50,7 +62,21 @@ class LedgerServiceTest {
         permissionRepository = org.mockito.Mockito.mock(UserLedgerPermissionRepository.class);
         userRepository = org.mockito.Mockito.mock(UserRepository.class);
         permissionService = org.mockito.Mockito.mock(LedgerPermissionService.class);
-        service = new LedgerService(ledgerRepository, permissionRepository, userRepository, permissionService);
+        transactionRecordRepository = org.mockito.Mockito.mock(TransactionRecordRepository.class);
+        budgetRepository = org.mockito.Mockito.mock(BudgetRepository.class);
+        monthlyBalanceRepository = org.mockito.Mockito.mock(MonthlyBalanceRepository.class);
+        notificationMessageRepository = org.mockito.Mockito.mock(NotificationMessageRepository.class);
+        service =
+            new LedgerService(
+                ledgerRepository,
+                permissionRepository,
+                userRepository,
+                permissionService,
+                transactionRecordRepository,
+                budgetRepository,
+                monthlyBalanceRepository,
+                notificationMessageRepository
+            );
 
         owner = user(1L, "admin", "admin@localhost");
         member = user(2L, "user", "user@localhost");
@@ -181,6 +207,10 @@ class LedgerServiceTest {
 
         service.deleteLedger(owner, 10L);
 
+        verify(notificationMessageRepository).deleteAllByLedger(ledger);
+        verify(transactionRecordRepository).deleteAllByLedger(ledger);
+        verify(monthlyBalanceRepository).deleteAllByLedger(ledger);
+        verify(budgetRepository).deleteAllByLedger(ledger);
         verify(permissionRepository).deleteAllByLedger(ledger);
         verify(permissionRepository).flush();
         verify(ledgerRepository).delete(ledger);

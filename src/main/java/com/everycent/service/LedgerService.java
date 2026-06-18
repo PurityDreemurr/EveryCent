@@ -5,7 +5,11 @@ import com.everycent.domain.User;
 import com.everycent.domain.UserLedgerPermission;
 import com.everycent.domain.enumeration.PermissionLevel;
 import com.everycent.domain.enumeration.PermissionStatus;
+import com.everycent.repository.BudgetRepository;
 import com.everycent.repository.LedgerRepository;
+import com.everycent.repository.MonthlyBalanceRepository;
+import com.everycent.repository.NotificationMessageRepository;
+import com.everycent.repository.TransactionRecordRepository;
 import com.everycent.repository.UserLedgerPermissionRepository;
 import com.everycent.repository.UserRepository;
 import com.everycent.service.dto.*;
@@ -29,16 +33,32 @@ public class LedgerService {
 
     private final LedgerPermissionService permissionService;
 
+    private final TransactionRecordRepository transactionRecordRepository;
+
+    private final BudgetRepository budgetRepository;
+
+    private final MonthlyBalanceRepository monthlyBalanceRepository;
+
+    private final NotificationMessageRepository notificationMessageRepository;
+
     public LedgerService(
         LedgerRepository ledgerRepository,
         UserLedgerPermissionRepository permissionRepository,
         UserRepository userRepository,
-        LedgerPermissionService permissionService
+        LedgerPermissionService permissionService,
+        TransactionRecordRepository transactionRecordRepository,
+        BudgetRepository budgetRepository,
+        MonthlyBalanceRepository monthlyBalanceRepository,
+        NotificationMessageRepository notificationMessageRepository
     ) {
         this.ledgerRepository = ledgerRepository;
         this.permissionRepository = permissionRepository;
         this.userRepository = userRepository;
         this.permissionService = permissionService;
+        this.transactionRecordRepository = transactionRecordRepository;
+        this.budgetRepository = budgetRepository;
+        this.monthlyBalanceRepository = monthlyBalanceRepository;
+        this.notificationMessageRepository = notificationMessageRepository;
     }
 
     @Transactional(readOnly = true)
@@ -88,7 +108,11 @@ public class LedgerService {
     public void deleteLedger(User user, Long ledgerId) {
         permissionService.checkOwner(user, ledgerId);
         Ledger ledger = permissionService.getLedgerOrThrow(ledgerId);
-        // Remove member links first; otherwise Hibernate/MySQL still sees rows pointing at the ledger.
+        // Clear dependent ledger data first; the database keeps strict foreign keys.
+        notificationMessageRepository.deleteAllByLedger(ledger);
+        transactionRecordRepository.deleteAllByLedger(ledger);
+        monthlyBalanceRepository.deleteAllByLedger(ledger);
+        budgetRepository.deleteAllByLedger(ledger);
         permissionRepository.deleteAllByLedger(ledger);
         permissionRepository.flush();
         ledgerRepository.delete(ledger);
