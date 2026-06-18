@@ -23,18 +23,19 @@ class TransactionPromptBuilderTest {
 
         String prompt = builder.build("今天午饭 50 元，很开心", ledger, List.of(food, other), List.of(happy), LocalDate.of(2026, 6, 15));
 
-        assertThat(prompt).contains("自然语言记账解析器");
+        assertThat(prompt).contains("记账解析器");
         assertThat(prompt).contains("用户输入：今天午饭 50 元，很开心");
         assertThat(prompt).contains("账本名称：日常账本");
         assertThat(prompt).contains("默认日期：2026-06-15");
         assertThat(prompt).contains("FOOD(餐饮)", "OTHER(其他)", "HAPPY(开心)");
         assertThat(prompt).contains("\"amount\": \"50.00\"");
         assertThat(prompt).contains("\"type\": \"EXPENSE\"");
-        assertThat(prompt).contains("type 只能为 INCOME 或 EXPENSE");
-        assertThat(prompt).contains("behaviorTagCode 必须来自 behavior_tag.code 白名单");
-        assertThat(prompt).contains("emotionTagCode 必须来自 emotion_tag.code 白名单");
+        assertThat(prompt).contains("\"needUserConfirm\": false");
+        assertThat(prompt).contains("type 只能是 INCOME 或 EXPENSE");
+        assertThat(prompt).contains("标签只能从白名单中选");
         assertThat(prompt).contains("amount 必须为正数");
-        assertThat(prompt).contains("不允许输出解释性文本");
-        assertThat(prompt).contains("不允许输出 Markdown");
+        assertThat(prompt).contains("needUserConfirm=true");
+        assertThat(prompt).contains("兼容旧字段");
+        assertThat(prompt).contains("不要输出解释、Markdown 或多余文本");
     }
 }

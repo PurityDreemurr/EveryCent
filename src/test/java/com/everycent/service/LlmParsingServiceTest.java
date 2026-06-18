@@ -2,6 +2,7 @@ package com.everycent.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -175,6 +176,17 @@ class LlmParsingServiceTest {
             record.setId(101L);
             return record;
         });
+        Budget budget = new Budget()
+            .ledger(ledger)
+            .cycle(BudgetCycle.MONTHLY)
+            .periodStart(LocalDate.of(2026, 6, 1))
+            .periodEnd(LocalDate.of(2026, 6, 30))
+            .limitAmount(new BigDecimal("1000.00"))
+            .alertThreshold(new BigDecimal("0.80"))
+            .enabled(true);
+        when(budgetRepository.findAllByLedgerAndEnabledTrue(ledger)).thenReturn(List.of(budget));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodStart(), budget.getPeriodEnd()))
+            .thenReturn(List.of(new TransactionRecord().amount(new BigDecimal("50.00")).type(TransactionType.EXPENSE)));
 
         NaturalLanguageTransactionCreateResultDTO result = service.parseAndCreateTransaction(10L, request, currentUser);
 
@@ -187,8 +199,19 @@ class LlmParsingServiceTest {
         assertThat(savedRecord.getBehaviorTag()).isSameAs(behaviorTag);
         assertThat(savedRecord.getEmotionTag()).isSameAs(emotionTag);
         assertThat(result.getTransactionId()).isEqualTo(101L);
+        assertThat(result.getAmount()).isEqualByComparingTo("50.00");
+        assertThat(result.getType()).isEqualTo(TransactionType.EXPENSE);
         assertThat(result.getBehaviorTagName()).isEqualTo("餐饮");
         assertThat(result.getEmotionTagName()).isEqualTo("开心");
+        assertThat(result.getParsedResult()).isNotNull();
+        assertThat(result.getParsedResult().getAmount()).isEqualByComparingTo("50.00");
+        assertThat(result.getParsedResult().getType()).isEqualTo(TransactionType.EXPENSE);
+        assertThat(result.getParsedResult().getBehaviorTag()).isEqualTo("餐饮");
+        assertThat(result.getParsedResult().getEmotionTag()).isEqualTo("开心");
+        assertThat(result.getBudgetWarning()).isNotNull();
+        assertThat(result.getBudgetWarning().getOverBudget()).isFalse();
+        assertThat(result.getBudgetWarning().getUsedRatio()).isEqualByComparingTo("0.0500");
+        assertThat(result.getBudgetWarning().getMessage()).isEqualTo("本期预算使用正常");
     }
 
     @Test
@@ -297,5 +320,91 @@ class LlmParsingServiceTest {
         assertThat(notification.getLedger()).isSameAs(ledger);
         assertThat(notification.getBudget()).isSameAs(budget);
         assertThat(result.getNotificationId()).isEqualTo(99L);
+    }
+
+    @Test
+    void generateBudgetAlertShouldFallbackWhenLlmFails() {
+        AiAlertRequestDTO request = new AiAlertRequestDTO();
+        request.setLedgerId(10L);
+        request.setBudgetId(20L);
+        Budget budget = new Budget()
+            .cycle(BudgetCycle.MONTHLY)
+            .periodStart(LocalDate.of(2026, 6, 1))
+            .periodEnd(LocalDate.of(2026, 6, 30))
+            .limitAmount(new BigDecimal("1000.00"))
+            .alertThreshold(new BigDecimal("0.80"))
+            .enabled(true)
+            .ledger(ledger);
+        budget.setId(20L);
+        TransactionRecord expense = new TransactionRecord()
+            .ledger(ledger)
+            .type(TransactionType.EXPENSE)
+            .amount(new BigDecimal("810.00"))
+            .transactionDate(LocalDate.of(2026, 6, 15));
+
+        when(ledgerRepository.findById(10L)).thenReturn(Optional.of(ledger));
+        when(budgetRepository.findById(20L)).thenReturn(Optional.of(budget));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodStart(), budget.getPeriodEnd()))
+            .thenReturn(List.of(expense));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodEnd().minusDays(14), budget.getPeriodEnd()))
+            .thenReturn(List.of(expense));
+        when(alertPromptBuilder.build(any(), any(), any(), any())).thenReturn("alert-prompt");
+        when(llmClient.complete("alert-prompt")).thenThrow(new RuntimeException("timeout"));
+        when(guardService.validateAlertResult(any(AiAlertResultDTO.class))).then(returnsFirstArg());
+
+        AiAlertResultDTO result = service.generateBudgetAlert(request, currentUser);
+
+        assertThat(result.getTitle()).isEqualTo("预算提醒");
+        assertThat(result.getContent()).isEqualTo("当前预算已使用 81%，剩余 190.00 元，请注意控制支出。");
+        assertThat(result.getLevel()).isEqualTo(AiAlertResultDTO.AlertLevel.WARNING);
+        assertThat(result.getOverBudget()).isFalse();
+        assertThat(result.getUsedAmount()).isEqualByComparingTo("810.00");
+        assertThat(result.getLimitAmount()).isEqualByComparingTo("1000.00");
+        assertThat(result.getUsedRatio()).isEqualByComparingTo("0.8100");
+        assertThat(result.getNeedNotification()).isTrue();
+    }
+
+    @Test
+    void generateBudgetAlertShouldPersistFallbackNotificationWhenRequestedAndReached() {
+        AiAlertRequestDTO request = new AiAlertRequestDTO();
+        request.setLedgerId(10L);
+        request.setBudgetId(20L);
+        request.setSaveAsNotification(true);
+        Budget budget = new Budget()
+            .cycle(BudgetCycle.MONTHLY)
+            .periodStart(LocalDate.of(2026, 6, 1))
+            .periodEnd(LocalDate.of(2026, 6, 30))
+            .limitAmount(new BigDecimal("1000.00"))
+            .alertThreshold(new BigDecimal("0.80"))
+            .enabled(true)
+            .ledger(ledger);
+        budget.setId(20L);
+        TransactionRecord expense = new TransactionRecord()
+            .ledger(ledger)
+            .type(TransactionType.EXPENSE)
+            .amount(new BigDecimal("1200.00"))
+            .transactionDate(LocalDate.of(2026, 6, 15));
+        NotificationMessage savedNotification = new NotificationMessage();
+        savedNotification.setId(100L);
+
+        when(ledgerRepository.findById(10L)).thenReturn(Optional.of(ledger));
+        when(budgetRepository.findById(20L)).thenReturn(Optional.of(budget));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodStart(), budget.getPeriodEnd()))
+            .thenReturn(List.of(expense));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodEnd().minusDays(14), budget.getPeriodEnd()))
+            .thenReturn(List.of(expense));
+        when(alertPromptBuilder.build(any(), any(), any(), any())).thenReturn("alert-prompt");
+        when(llmClient.complete("alert-prompt")).thenThrow(new RuntimeException("timeout"));
+        when(guardService.validateAlertResult(any(AiAlertResultDTO.class))).then(returnsFirstArg());
+        when(notificationMessageRepository.save(any(NotificationMessage.class))).thenReturn(savedNotification);
+
+        AiAlertResultDTO result = service.generateBudgetAlert(request, currentUser);
+
+        ArgumentCaptor<NotificationMessage> notificationCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+        verify(notificationMessageRepository).save(notificationCaptor.capture());
+        NotificationMessage notification = notificationCaptor.getValue();
+        assertThat(notification.getTitle()).isEqualTo("预算已超支");
+        assertThat(notification.getLevel()).isEqualTo(NotificationLevel.DANGER);
+        assertThat(result.getNotificationId()).isEqualTo(100L);
     }
 }

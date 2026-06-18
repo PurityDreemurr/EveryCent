@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -92,6 +93,35 @@ class LlmClientVisualManualTest {
         assertThat(results).hasSize(11);
     }
 
+    @Test
+    void shouldDisableThinkingAndSearchInRequestBodyByDefault() throws Exception {
+        AtomicReference<String> capturedBody = new AtomicReference<>();
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext(
+            "/chat/completions",
+            exchange -> {
+                capturedBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+                writeResponse(exchange, 200, "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}");
+            }
+        );
+        server.start();
+        try {
+            LlmProperties properties = new LlmProperties();
+            properties.setBaseUrl("http://127.0.0.1:" + server.getAddress().getPort());
+            properties.setApiKey("test-key");
+            properties.setModel("test-model");
+            properties.setTimeoutSeconds(5);
+
+            String output = createClient(properties).completeRaw("测试");
+
+            assertThat(output).isEqualTo("ok");
+            assertThat(OBJECT_MAPPER.readTree(capturedBody.get()).path("enable_thinking").asBoolean()).isFalse();
+            assertThat(OBJECT_MAPPER.readTree(capturedBody.get()).path("enable_search").asBoolean()).isFalse();
+        } finally {
+            server.stop(0);
+        }
+    }
+
     private static TestCaseResult runHttpCase(String name, int status, String body, String expected) {
         HttpServer server = null;
         try {
@@ -156,6 +186,16 @@ class LlmClientVisualManualTest {
         copy.setTimeoutSeconds(timeoutSeconds);
         copy.setMinConfidence(source.getMinConfidence());
         copy.setMaxInputLength(source.getMaxInputLength());
+        copy.setMaxTokens(source.getMaxTokens());
+        copy.setTemperature(source.getTemperature());
+        copy.setTopP(source.getTopP());
+        copy.setRandomizeSampling(source.getRandomizeSampling());
+        copy.setMinTemperature(source.getMinTemperature());
+        copy.setMaxTemperature(source.getMaxTemperature());
+        copy.setMinTopP(source.getMinTopP());
+        copy.setMaxTopP(source.getMaxTopP());
+        copy.setEnableThinking(source.getEnableThinking());
+        copy.setEnableSearch(source.getEnableSearch());
         return copy;
     }
 

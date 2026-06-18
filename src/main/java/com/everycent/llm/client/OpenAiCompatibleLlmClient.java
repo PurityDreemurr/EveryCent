@@ -44,6 +44,8 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
     private final double maxTemperature;
     private final double minTopP;
     private final double maxTopP;
+    private final boolean enableThinking;
+    private final boolean enableSearch;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
@@ -60,6 +62,8 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
         this.maxTemperature = defaultDouble(properties.getMaxTemperature(), 0.75);
         this.minTopP = defaultDouble(properties.getMinTopP(), 0.85);
         this.maxTopP = defaultDouble(properties.getMaxTopP(), 0.85);
+        this.enableThinking = Boolean.TRUE.equals(properties.getEnableThinking());
+        this.enableSearch = Boolean.TRUE.equals(properties.getEnableSearch());
         this.restTemplate = buildRestTemplate(timeout);
         this.objectMapper = objectMapper;
     }
@@ -140,7 +144,14 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
     private Map<String, Object> buildRequestBody(List<Map<String, String>> messages) {
         double resolvedTemperature = randomizeSampling ? randomDouble(minTemperature, maxTemperature) : temperature;
         double resolvedTopP = randomizeSampling ? randomDouble(minTopP, maxTopP) : topP;
-        log.info("LLM sampling parameters model={}, temperature={}, topP={}", model, resolvedTemperature, resolvedTopP);
+        log.info(
+            "LLM request parameters model={}, temperature={}, topP={}, enableThinking={}, enableSearch={}",
+            model,
+            resolvedTemperature,
+            resolvedTopP,
+            enableThinking,
+            enableSearch
+        );
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model);
@@ -149,6 +160,8 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
         body.put("top_p", resolvedTopP);
         body.put("max_tokens", maxTokens);
         body.put("stream", false);
+        body.put("enable_thinking", enableThinking);
+        body.put("enable_search", enableSearch);
         return body;
     }
 

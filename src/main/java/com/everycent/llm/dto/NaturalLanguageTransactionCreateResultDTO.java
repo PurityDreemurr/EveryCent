@@ -1,12 +1,14 @@
 package com.everycent.llm.dto;
 
 import com.everycent.domain.enumeration.TransactionType;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.math.BigDecimal;
 
 public class NaturalLanguageTransactionCreateResultDTO {
 
     private Long transactionId;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private BigDecimal amount;
 
     private TransactionType type;
@@ -14,6 +16,8 @@ public class NaturalLanguageTransactionCreateResultDTO {
     private String behaviorTagName;
 
     private String emotionTagName;
+
+    private ParsedResultDTO parsedResult;
 
     private BudgetWarningDTO budgetWarning;
 
@@ -57,12 +61,64 @@ public class NaturalLanguageTransactionCreateResultDTO {
         this.emotionTagName = emotionTagName;
     }
 
+    public ParsedResultDTO getParsedResult() {
+        return parsedResult;
+    }
+
+    public void setParsedResult(ParsedResultDTO parsedResult) {
+        this.parsedResult = parsedResult;
+    }
+
     public BudgetWarningDTO getBudgetWarning() {
         return budgetWarning;
     }
 
     public void setBudgetWarning(BudgetWarningDTO budgetWarning) {
         this.budgetWarning = budgetWarning;
+    }
+
+    public static class ParsedResultDTO {
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING)
+        private BigDecimal amount;
+
+        private TransactionType type;
+
+        private String behaviorTag;
+
+        private String emotionTag;
+
+        public BigDecimal getAmount() {
+            return amount;
+        }
+
+        public void setAmount(BigDecimal amount) {
+            this.amount = amount;
+        }
+
+        public TransactionType getType() {
+            return type;
+        }
+
+        public void setType(TransactionType type) {
+            this.type = type;
+        }
+
+        public String getBehaviorTag() {
+            return behaviorTag;
+        }
+
+        public void setBehaviorTag(String behaviorTag) {
+            this.behaviorTag = behaviorTag;
+        }
+
+        public String getEmotionTag() {
+            return emotionTag;
+        }
+
+        public void setEmotionTag(String emotionTag) {
+            this.emotionTag = emotionTag;
+        }
     }
 
     public static class BudgetWarningDTO {

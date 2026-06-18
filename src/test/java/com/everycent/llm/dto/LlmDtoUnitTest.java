@@ -113,7 +113,7 @@ class LlmDtoUnitTest {
 
         String json = objectMapper.writeValueAsString(dto);
 
-        assertThat(json).contains("\"amount\":25.50", "\"type\":\"EXPENSE\"", "\"transactionDate\":\"2026-06-16\"", "\"needUserConfirm\":false");
+        assertThat(json).contains("\"amount\":\"25.50\"", "\"type\":\"EXPENSE\"", "\"transactionDate\":\"2026-06-16\"", "\"needUserConfirm\":false");
     }
 
     @Test

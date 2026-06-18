@@ -25,7 +25,8 @@ class LlmJsonResponseParserTest {
               "emotionTagCode": "HAPPY",
               "transactionDate": "2026-06-15",
               "description": "中午吃饭",
-              "confidence": 0.92
+              "confidence": 0.92,
+              "needUserConfirm": false
             }
             ```
             """;
@@ -39,6 +40,34 @@ class LlmJsonResponseParserTest {
         assertThat(result.getTransactionDate()).isEqualTo(LocalDate.of(2026, 6, 15));
         assertThat(result.getDescription()).isEqualTo("中午吃饭");
         assertThat(result.getConfidence()).isEqualTo(0.92);
+        assertThat(result.getNeedUserConfirm()).isFalse();
+    }
+
+    @Test
+    void shouldParseDocumentCompatibleTransactionFieldNames() {
+        String aiResponse = """
+            {
+              "amount": 36.5,
+              "type": "EXPENSE",
+              "behaviorTag": "FOOD",
+              "moodTag": "HAPPY",
+              "transactionDate": "2026-06-15",
+              "remark": "午餐",
+              "confidence": 0.86,
+              "needsManualReview": true
+            }
+            """;
+
+        TransactionParseResultDTO result = parser.parseTransaction(aiResponse);
+
+        assertThat(result.getAmount()).isEqualByComparingTo("36.5");
+        assertThat(result.getType()).isEqualTo(TransactionType.EXPENSE);
+        assertThat(result.getBehaviorTagCode()).isEqualTo("FOOD");
+        assertThat(result.getEmotionTagCode()).isEqualTo("HAPPY");
+        assertThat(result.getTransactionDate()).isEqualTo(LocalDate.of(2026, 6, 15));
+        assertThat(result.getDescription()).isEqualTo("午餐");
+        assertThat(result.getConfidence()).isEqualTo(0.86);
+        assertThat(result.getNeedUserConfirm()).isTrue();
     }
 
     @Test
@@ -56,7 +85,7 @@ class LlmJsonResponseParserTest {
 
         assertThatThrownBy(() -> parser.parseTransaction(aiResponse))
             .isInstanceOf(LlmParseException.class)
-            .hasMessageContaining("description");
+            .hasMessageContaining("description/remark");
     }
 
     @Test
