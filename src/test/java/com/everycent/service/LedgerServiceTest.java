@@ -11,6 +11,8 @@ import com.everycent.domain.User;
 import com.everycent.domain.UserLedgerPermission;
 import com.everycent.domain.enumeration.PermissionLevel;
 import com.everycent.domain.enumeration.PermissionStatus;
+import com.everycent.domain.enumeration.NotificationLevel;
+import com.everycent.domain.enumeration.NotificationType;
 import com.everycent.repository.BudgetRepository;
 import com.everycent.repository.LedgerRepository;
 import com.everycent.repository.MonthlyBalanceRepository;
@@ -23,6 +25,7 @@ import com.everycent.service.dto.LedgerDTO;
 import com.everycent.service.dto.LedgerMemberDTO;
 import com.everycent.service.dto.LedgerMemberRequestDTO;
 import com.everycent.service.dto.LedgerMemberUpdateDTO;
+import com.everycent.service.dto.LedgerUpdateDTO;
 import com.everycent.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
 import java.util.List;
@@ -48,6 +51,8 @@ class LedgerServiceTest {
 
     private NotificationMessageRepository notificationMessageRepository;
 
+    private NotificationService notificationService;
+
     private LedgerService service;
 
     private User owner;
@@ -66,6 +71,7 @@ class LedgerServiceTest {
         budgetRepository = org.mockito.Mockito.mock(BudgetRepository.class);
         monthlyBalanceRepository = org.mockito.Mockito.mock(MonthlyBalanceRepository.class);
         notificationMessageRepository = org.mockito.Mockito.mock(NotificationMessageRepository.class);
+        notificationService = org.mockito.Mockito.mock(NotificationService.class);
         service =
             new LedgerService(
                 ledgerRepository,
@@ -75,7 +81,8 @@ class LedgerServiceTest {
                 transactionRecordRepository,
                 budgetRepository,
                 monthlyBalanceRepository,
-                notificationMessageRepository
+                notificationMessageRepository,
+                notificationService
             );
 
         owner = user(1L, "admin", "admin@localhost");
@@ -89,6 +96,7 @@ class LedgerServiceTest {
         createDTO.setName("My ledger");
         createDTO.setDescription("Daily bookkeeping");
 
+        when(ledgerRepository.findFirstByNameIgnoreCase("My ledger")).thenReturn(Optional.empty());
         when(ledgerRepository.save(any(Ledger.class))).thenAnswer(invocation -> {
             Ledger saved = invocation.getArgument(0);
             saved.setId(10L);
@@ -112,6 +120,18 @@ class LedgerServiceTest {
     }
 
     @Test
+    void createLedgerShouldRejectDuplicateName() {
+        LedgerCreateDTO createDTO = new LedgerCreateDTO();
+        createDTO.setName("My ledger");
+        Ledger existing = ledger(99L, owner);
+        existing.setName("My ledger");
+
+        when(ledgerRepository.findFirstByNameIgnoreCase("My ledger")).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> service.createLedger(owner, createDTO)).isInstanceOf(BadRequestAlertException.class);
+    }
+
+    @Test
     void findLedgersForUserShouldMapActivePermission() {
         when(ledgerRepository.findAllActiveLedgersForUser(owner)).thenReturn(List.of(ledger));
         when(permissionService.getActivePermission(owner, ledger)).thenReturn(permission(owner, PermissionLevel.OWNER));
@@ -121,6 +141,20 @@ class LedgerServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(10L);
         assertThat(result.get(0).getPermissionLevel()).isEqualTo(PermissionLevel.OWNER);
+    }
+
+    @Test
+    void updateLedgerShouldRejectDuplicateName() {
+        LedgerUpdateDTO updateDTO = new LedgerUpdateDTO();
+        updateDTO.setName("Family");
+        updateDTO.setDescription("Updated");
+        Ledger existing = ledger(99L, owner);
+        existing.setName("Family");
+
+        when(permissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
+        when(ledgerRepository.findFirstByNameIgnoreCase("Family")).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> service.updateLedger(owner, 10L, updateDTO)).isInstanceOf(BadRequestAlertException.class);
     }
 
     @Test
@@ -154,6 +188,7 @@ class LedgerServiceTest {
         assertThat(result.getPermissionLevel()).isEqualTo(PermissionLevel.READ_WRITE);
         assertThat(result.getStatus()).isEqualTo(PermissionStatus.ACTIVE);
         assertThat(revokedPermission.getInvitedBy()).isEqualTo(owner);
+        verifyShareInviteNotificationCreated();
     }
 
     @Test
@@ -173,6 +208,7 @@ class LedgerServiceTest {
         assertThat(result.getUserId()).isEqualTo(2L);
         assertThat(result.getPermissionLevel()).isEqualTo(PermissionLevel.READ_WRITE);
         assertThat(result.getStatus()).isEqualTo(PermissionStatus.ACTIVE);
+        verifyShareInviteNotificationCreated();
     }
 
     @Test
@@ -244,5 +280,18 @@ class LedgerServiceTest {
         permission.setStatus(PermissionStatus.ACTIVE);
         permission.setCreatedDate(Instant.now());
         return permission;
+    }
+
+    private void verifyShareInviteNotificationCreated() {
+        verify(notificationService)
+            .create(
+                org.mockito.Mockito.eq(member),
+                org.mockito.Mockito.eq(ledger),
+                org.mockito.Mockito.isNull(),
+                org.mockito.Mockito.eq("账本共享邀请"),
+                org.mockito.Mockito.contains("admin 邀请你加入账本"),
+                org.mockito.Mockito.eq(NotificationType.SHARE_INVITE),
+                org.mockito.Mockito.eq(NotificationLevel.INFO)
+            );
     }
 }

@@ -41,6 +41,10 @@ class TransactionRecordServiceTest {
 
     private LedgerPermissionService ledgerPermissionService;
 
+    private MonthlyBalanceService monthlyBalanceService;
+
+    private BudgetAlertService budgetAlertService;
+
     private TransactionRecordService service;
 
     private User user;
@@ -53,11 +57,15 @@ class TransactionRecordServiceTest {
         behaviorTagRepository = org.mockito.Mockito.mock(BehaviorTagRepository.class);
         emotionTagRepository = org.mockito.Mockito.mock(EmotionTagRepository.class);
         ledgerPermissionService = org.mockito.Mockito.mock(LedgerPermissionService.class);
+        monthlyBalanceService = org.mockito.Mockito.mock(MonthlyBalanceService.class);
+        budgetAlertService = org.mockito.Mockito.mock(BudgetAlertService.class);
         service = new TransactionRecordService(
             transactionRecordRepository,
             behaviorTagRepository,
             emotionTagRepository,
-            ledgerPermissionService
+            ledgerPermissionService,
+            monthlyBalanceService,
+            budgetAlertService
         );
 
         user = user(1L, "admin");
@@ -82,6 +90,8 @@ class TransactionRecordServiceTest {
         assertThat(result.getCreatorId()).isEqualTo(1L);
         assertThat(result.getType()).isEqualTo(TransactionType.EXPENSE);
         verify(ledgerPermissionService).checkWritePermission(user, 10L);
+        verify(monthlyBalanceService).recalculate(ledger, LocalDate.of(2026, 6, 17));
+        verify(budgetAlertService).checkBudgetAlerts(user, ledger, LocalDate.of(2026, 6, 17));
     }
 
     @Test
@@ -155,6 +165,23 @@ class TransactionRecordServiceTest {
     }
 
     @Test
+    void updateShouldRecalculateOriginalAndNewMonthWhenDateChanged() {
+        TransactionRecord transaction = transaction(100L);
+        TransactionRecordDTO requestDTO = transactionDTO();
+        requestDTO.setTransactionDate(LocalDate.of(2026, 7, 1));
+
+        when(transactionRecordRepository.findById(100L)).thenReturn(Optional.of(transaction));
+        when(transactionRecordRepository.save(transaction)).thenReturn(transaction);
+
+        service.update(user, 100L, requestDTO);
+
+        verify(monthlyBalanceService).recalculate(ledger, LocalDate.of(2026, 6, 17));
+        verify(monthlyBalanceService).recalculate(ledger, LocalDate.of(2026, 7, 1));
+        verify(budgetAlertService).checkBudgetAlerts(user, ledger, LocalDate.of(2026, 6, 17));
+        verify(budgetAlertService).checkBudgetAlerts(user, ledger, LocalDate.of(2026, 7, 1));
+    }
+
+    @Test
     void deleteShouldCheckWritePermissionBeforeDeleting() {
         TransactionRecord transaction = transaction(100L);
         when(transactionRecordRepository.findById(100L)).thenReturn(Optional.of(transaction));
@@ -163,6 +190,8 @@ class TransactionRecordServiceTest {
 
         verify(ledgerPermissionService).checkWritePermission(user, 10L);
         verify(transactionRecordRepository).delete(transaction);
+        verify(monthlyBalanceService).recalculate(ledger, LocalDate.of(2026, 6, 17));
+        verify(budgetAlertService).checkBudgetAlerts(user, ledger, LocalDate.of(2026, 6, 17));
     }
 
     private TransactionRecordDTO transactionDTO() {

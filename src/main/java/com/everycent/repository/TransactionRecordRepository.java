@@ -19,6 +19,12 @@ import org.springframework.stereotype.Repository;
 public interface TransactionRecordRepository extends JpaRepository<TransactionRecord, Long>, JpaSpecificationExecutor<TransactionRecord> {
     List<TransactionRecord> findAllByLedgerAndTransactionDateBetween(Ledger ledger, LocalDate start, LocalDate end);
 
+    List<TransactionRecord> findAllByLedgerAndTransactionDateBetweenOrderByTransactionDateAscIdAsc(
+        Ledger ledger,
+        LocalDate start,
+        LocalDate end
+    );
+
     List<TransactionRecord> findAllByCreatorAndTransactionDateBetween(User creator, LocalDate start, LocalDate end);
 
     List<TransactionRecord> findAllByLedgerAndTypeAndTransactionDateBetween(
