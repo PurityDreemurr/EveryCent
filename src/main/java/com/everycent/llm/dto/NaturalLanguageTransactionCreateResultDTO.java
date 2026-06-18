@@ -1,12 +1,14 @@
 package com.everycent.llm.dto;
 
 import com.everycent.domain.enumeration.TransactionType;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.math.BigDecimal;
 
 public class NaturalLanguageTransactionCreateResultDTO {
 
     private Long transactionId;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private BigDecimal amount;
 
     private TransactionType type;

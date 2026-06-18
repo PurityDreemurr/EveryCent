@@ -39,7 +39,8 @@ public class TransactionPromptBuilder {
               "emotionTagCode": "HAPPY",
               "transactionDate": "2026-06-15",
               "description": "中午吃饭",
-              "confidence": 0.92
+              "confidence": 0.92,
+              "needUserConfirm": false
             }
 
             规则：
@@ -49,8 +50,10 @@ public class TransactionPromptBuilder {
             4. amount 必须为正数。
             5. 如果无法确定日期，使用默认日期。
             6. 如果无法确定行为标签，使用 OTHER 或系统设计中的默认标签。
-            7. 不允许输出解释性文本。
-            8. 不允许输出 Markdown。
+            7. 如果金额、类型、日期或标签需要用户确认，将 needUserConfirm 设为 true，并降低 confidence。
+            8. 不允许输出解释性文本。
+            9. 不允许输出 Markdown。
+            10. 兼容旧字段含义：behaviorTag 等同 behaviorTagCode，moodTag 等同 emotionTagCode，remark 等同 description，needsManualReview 等同 needUserConfirm；但你必须优先输出上方标准字段名。
             """.formatted(
                 sanitize(userInput),
                 ledger == null ? "" : sanitize(ledger.getName()),

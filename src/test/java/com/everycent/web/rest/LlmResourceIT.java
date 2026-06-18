@@ -6,9 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.everycent.EveryCentApp;
-import com.everycent.config.AsyncSyncConfiguration;
-import com.everycent.config.JacksonConfiguration;
+import com.everycent.IntegrationTest;
 import com.everycent.domain.BehaviorTag;
 import com.everycent.domain.Budget;
 import com.everycent.domain.EmotionTag;
@@ -44,7 +42,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -56,9 +53,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc
-@SpringBootTest(classes = { EveryCentApp.class, JacksonConfiguration.class, AsyncSyncConfiguration.class })
 @Transactional
 @WithMockUser("llm-it-user")
+@IntegrationTest
 class LlmResourceIT {
 
     private static final String PASSWORD_HASH = "$2a$10$L7T44Yo4U6V3uTjwm2vXFeXfzx1Nr4iS7M0iDU1pmf.8uVvDy.7Wq";
@@ -142,7 +139,7 @@ class LlmResourceIT {
         mockMvc
             .perform(post("/api/ai/transaction/parse").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsBytes(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.amount").value(50.00))
+            .andExpect(jsonPath("$.amount").value("50.00"))
             .andExpect(jsonPath("$.type").value("EXPENSE"))
             .andExpect(jsonPath("$.behaviorTagName").value("餐饮"))
             .andExpect(jsonPath("$.emotionTagName").value("开心"))
@@ -249,7 +246,7 @@ class LlmResourceIT {
             )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.transactionId").isNumber())
-            .andExpect(jsonPath("$.amount").value(50.00))
+            .andExpect(jsonPath("$.amount").value("50.00"))
             .andExpect(jsonPath("$.behaviorTagName").value("餐饮"));
 
         assertThat(transactionRecordRepository.count()).isEqualTo(recordCountBefore + 1);

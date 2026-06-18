@@ -51,7 +51,9 @@ public class AiResultGuardService {
         result.setEmotionTagName(emotionTag.getName());
         result.setDescription(sanitizeText(result.getDescription(), DESCRIPTION_MAX_LENGTH));
         result.setRawInput(sanitizeText(result.getRawInput(), rawInputMaxLength()));
-        result.setNeedUserConfirm(result.getConfidence() == null || result.getConfidence() < llmProperties.getMinConfidence());
+        result.setNeedUserConfirm(
+            Boolean.TRUE.equals(result.getNeedUserConfirm()) || result.getConfidence() == null || result.getConfidence() < llmProperties.getMinConfidence()
+        );
         return result;
     }
 

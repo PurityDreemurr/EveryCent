@@ -24,20 +24,25 @@ public class LlmJsonResponseParser {
             JsonNode root = objectMapper.readTree(extractJson(jsonText));
             require(root, "amount");
             require(root, "type");
-            require(root, "behaviorTagCode");
-            require(root, "emotionTagCode");
+            requireAny(root, "behaviorTagCode", "behaviorTag");
+            requireAny(root, "emotionTagCode", "moodTag", "emotionTag");
             require(root, "transactionDate");
-            require(root, "description");
+            requireAny(root, "description", "remark");
             require(root, "confidence");
 
             TransactionParseResultDTO dto = new TransactionParseResultDTO();
             dto.setAmount(new BigDecimal(root.path("amount").asText()));
             dto.setType(TransactionType.valueOf(root.path("type").asText()));
-            dto.setBehaviorTagCode(root.path("behaviorTagCode").asText());
-            dto.setEmotionTagCode(root.path("emotionTagCode").asText());
+            dto.setBehaviorTagCode(text(root, "behaviorTagCode", "behaviorTag"));
+            dto.setEmotionTagCode(text(root, "emotionTagCode", "moodTag", "emotionTag"));
             dto.setTransactionDate(LocalDate.parse(root.path("transactionDate").asText()));
-            dto.setDescription(root.path("description").asText());
+            dto.setDescription(text(root, "description", "remark"));
             dto.setConfidence(root.path("confidence").asDouble());
+            if (hasValue(root, "needUserConfirm")) {
+                dto.setNeedUserConfirm(root.path("needUserConfirm").asBoolean());
+            } else if (hasValue(root, "needsManualReview")) {
+                dto.setNeedUserConfirm(root.path("needsManualReview").asBoolean());
+            }
             return dto;
         } catch (LlmParseException e) {
             throw e;
@@ -72,6 +77,29 @@ public class LlmJsonResponseParser {
         if (node.isMissingNode() || node.isNull() || (node.isTextual() && !StringUtils.hasText(node.asText()))) {
             throw new LlmParseException("LLM 返回缺少必填字段：" + fieldName);
         }
+    }
+
+    private void requireAny(JsonNode root, String... fieldNames) {
+        for (String fieldName : fieldNames) {
+            if (hasValue(root, fieldName)) {
+                return;
+            }
+        }
+        throw new LlmParseException("LLM 返回缺少必填字段：" + String.join("/", fieldNames));
+    }
+
+    private boolean hasValue(JsonNode root, String fieldName) {
+        JsonNode node = root.path(fieldName);
+        return !node.isMissingNode() && !node.isNull() && (!node.isTextual() || StringUtils.hasText(node.asText()));
+    }
+
+    private String text(JsonNode root, String... fieldNames) {
+        for (String fieldName : fieldNames) {
+            if (hasValue(root, fieldName)) {
+                return root.path(fieldName).asText();
+            }
+        }
+        return null;
     }
 
     private String extractJson(String jsonText) {

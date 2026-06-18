@@ -30,10 +30,13 @@ class TransactionPromptBuilderTest {
         assertThat(prompt).contains("FOOD(餐饮)", "OTHER(其他)", "HAPPY(开心)");
         assertThat(prompt).contains("\"amount\": \"50.00\"");
         assertThat(prompt).contains("\"type\": \"EXPENSE\"");
+        assertThat(prompt).contains("\"needUserConfirm\": false");
         assertThat(prompt).contains("type 只能为 INCOME 或 EXPENSE");
         assertThat(prompt).contains("behaviorTagCode 必须来自 behavior_tag.code 白名单");
         assertThat(prompt).contains("emotionTagCode 必须来自 emotion_tag.code 白名单");
         assertThat(prompt).contains("amount 必须为正数");
+        assertThat(prompt).contains("needUserConfirm 设为 true");
+        assertThat(prompt).contains("兼容旧字段含义");
         assertThat(prompt).contains("不允许输出解释性文本");
         assertThat(prompt).contains("不允许输出 Markdown");
     }
