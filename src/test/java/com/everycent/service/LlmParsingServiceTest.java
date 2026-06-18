@@ -2,6 +2,7 @@ package com.everycent.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -319,5 +320,91 @@ class LlmParsingServiceTest {
         assertThat(notification.getLedger()).isSameAs(ledger);
         assertThat(notification.getBudget()).isSameAs(budget);
         assertThat(result.getNotificationId()).isEqualTo(99L);
+    }
+
+    @Test
+    void generateBudgetAlertShouldFallbackWhenLlmFails() {
+        AiAlertRequestDTO request = new AiAlertRequestDTO();
+        request.setLedgerId(10L);
+        request.setBudgetId(20L);
+        Budget budget = new Budget()
+            .cycle(BudgetCycle.MONTHLY)
+            .periodStart(LocalDate.of(2026, 6, 1))
+            .periodEnd(LocalDate.of(2026, 6, 30))
+            .limitAmount(new BigDecimal("1000.00"))
+            .alertThreshold(new BigDecimal("0.80"))
+            .enabled(true)
+            .ledger(ledger);
+        budget.setId(20L);
+        TransactionRecord expense = new TransactionRecord()
+            .ledger(ledger)
+            .type(TransactionType.EXPENSE)
+            .amount(new BigDecimal("810.00"))
+            .transactionDate(LocalDate.of(2026, 6, 15));
+
+        when(ledgerRepository.findById(10L)).thenReturn(Optional.of(ledger));
+        when(budgetRepository.findById(20L)).thenReturn(Optional.of(budget));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodStart(), budget.getPeriodEnd()))
+            .thenReturn(List.of(expense));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodEnd().minusDays(14), budget.getPeriodEnd()))
+            .thenReturn(List.of(expense));
+        when(alertPromptBuilder.build(any(), any(), any(), any())).thenReturn("alert-prompt");
+        when(llmClient.complete("alert-prompt")).thenThrow(new RuntimeException("timeout"));
+        when(guardService.validateAlertResult(any(AiAlertResultDTO.class))).then(returnsFirstArg());
+
+        AiAlertResultDTO result = service.generateBudgetAlert(request, currentUser);
+
+        assertThat(result.getTitle()).isEqualTo("预算提醒");
+        assertThat(result.getContent()).isEqualTo("当前预算已使用 81%，剩余 190.00 元，请注意控制支出。");
+        assertThat(result.getLevel()).isEqualTo(AiAlertResultDTO.AlertLevel.WARNING);
+        assertThat(result.getOverBudget()).isFalse();
+        assertThat(result.getUsedAmount()).isEqualByComparingTo("810.00");
+        assertThat(result.getLimitAmount()).isEqualByComparingTo("1000.00");
+        assertThat(result.getUsedRatio()).isEqualByComparingTo("0.8100");
+        assertThat(result.getNeedNotification()).isTrue();
+    }
+
+    @Test
+    void generateBudgetAlertShouldPersistFallbackNotificationWhenRequestedAndReached() {
+        AiAlertRequestDTO request = new AiAlertRequestDTO();
+        request.setLedgerId(10L);
+        request.setBudgetId(20L);
+        request.setSaveAsNotification(true);
+        Budget budget = new Budget()
+            .cycle(BudgetCycle.MONTHLY)
+            .periodStart(LocalDate.of(2026, 6, 1))
+            .periodEnd(LocalDate.of(2026, 6, 30))
+            .limitAmount(new BigDecimal("1000.00"))
+            .alertThreshold(new BigDecimal("0.80"))
+            .enabled(true)
+            .ledger(ledger);
+        budget.setId(20L);
+        TransactionRecord expense = new TransactionRecord()
+            .ledger(ledger)
+            .type(TransactionType.EXPENSE)
+            .amount(new BigDecimal("1200.00"))
+            .transactionDate(LocalDate.of(2026, 6, 15));
+        NotificationMessage savedNotification = new NotificationMessage();
+        savedNotification.setId(100L);
+
+        when(ledgerRepository.findById(10L)).thenReturn(Optional.of(ledger));
+        when(budgetRepository.findById(20L)).thenReturn(Optional.of(budget));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodStart(), budget.getPeriodEnd()))
+            .thenReturn(List.of(expense));
+        when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodEnd().minusDays(14), budget.getPeriodEnd()))
+            .thenReturn(List.of(expense));
+        when(alertPromptBuilder.build(any(), any(), any(), any())).thenReturn("alert-prompt");
+        when(llmClient.complete("alert-prompt")).thenThrow(new RuntimeException("timeout"));
+        when(guardService.validateAlertResult(any(AiAlertResultDTO.class))).then(returnsFirstArg());
+        when(notificationMessageRepository.save(any(NotificationMessage.class))).thenReturn(savedNotification);
+
+        AiAlertResultDTO result = service.generateBudgetAlert(request, currentUser);
+
+        ArgumentCaptor<NotificationMessage> notificationCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+        verify(notificationMessageRepository).save(notificationCaptor.capture());
+        NotificationMessage notification = notificationCaptor.getValue();
+        assertThat(notification.getTitle()).isEqualTo("预算已超支");
+        assertThat(notification.getLevel()).isEqualTo(NotificationLevel.DANGER);
+        assertThat(result.getNotificationId()).isEqualTo(100L);
     }
 }

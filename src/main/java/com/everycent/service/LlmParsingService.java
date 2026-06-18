@@ -41,12 +41,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
 public class LlmParsingService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LlmParsingService.class);
 
     private final LedgerRepository ledgerRepository;
     private final BehaviorTagRepository behaviorTagRepository;
@@ -142,6 +146,7 @@ public class LlmParsingService {
         Budget budget = budgetRepository
             .findById(request.getBudgetId())
             .filter(candidate -> candidate.getLedger() != null && Objects.equals(candidate.getLedger().getId(), ledger.getId()))
+            .filter(candidate -> Boolean.TRUE.equals(candidate.getEnabled()))
             .orElseThrow(() -> new InvalidAiResultException("预算不存在或不属于当前账本"));
 
         List<TransactionRecord> periodRecords = transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(
@@ -174,18 +179,67 @@ public class LlmParsingService {
         );
         List<EmotionStatDTO> emotionStats = buildEmotionStats(periodRecords);
         String prompt = alertPromptBuilder.build(ledger, budgetStatus, recentRecords, emotionStats);
-        AiAlertResultDTO result = parser.parseAlert(llmClient.complete(prompt));
+        AiAlertResultDTO result;
+        boolean alertReached = usedRatio.compareTo(budget.getAlertThreshold()) >= 0;
+        try {
+            result = parser.parseAlert(llmClient.complete(prompt));
+        } catch (RuntimeException e) {
+            LOG.warn(
+                "LLM budget alert generation failed, fallback to default alert. budgetId={}, error={}: {}",
+                budget.getId(),
+                e.getClass().getSimpleName(),
+                e.getMessage()
+            );
+            result = buildFallbackAlert(remainingAmount, usedRatio, overBudget, alertReached);
+        }
         result.setOverBudget(overBudget);
         result.setUsedAmount(usedAmount);
         result.setLimitAmount(budget.getLimitAmount());
         result.setUsedRatio(usedRatio);
-        result.setNeedNotification(Boolean.TRUE.equals(result.getNeedNotification()) && usedRatio.compareTo(budget.getAlertThreshold()) >= 0);
-        AiAlertResultDTO validated = guardService.validateAlertResult(result);
+        result.setNeedNotification(Boolean.TRUE.equals(result.getNeedNotification()) && alertReached);
+        AiAlertResultDTO validated;
+        try {
+            validated = guardService.validateAlertResult(result);
+        } catch (RuntimeException e) {
+            LOG.warn(
+                "LLM budget alert validation failed, fallback to default alert. budgetId={}, error={}: {}",
+                budget.getId(),
+                e.getClass().getSimpleName(),
+                e.getMessage()
+            );
+            result = buildFallbackAlert(remainingAmount, usedRatio, overBudget, alertReached);
+            result.setOverBudget(overBudget);
+            result.setUsedAmount(usedAmount);
+            result.setLimitAmount(budget.getLimitAmount());
+            result.setUsedRatio(usedRatio);
+            result.setNeedNotification(alertReached);
+            validated = guardService.validateAlertResult(result);
+        }
         if (Boolean.TRUE.equals(request.getSaveAsNotification()) && Boolean.TRUE.equals(validated.getNeedNotification())) {
             NotificationMessage notification = notificationMessageRepository.save(toNotification(validated, currentUser, ledger, budget));
             validated.setNotificationId(notification.getId());
         }
         return validated;
+    }
+
+    private AiAlertResultDTO buildFallbackAlert(
+        BigDecimal remainingAmount,
+        BigDecimal usedRatio,
+        boolean overBudget,
+        boolean alertReached
+    ) {
+        AiAlertResultDTO result = new AiAlertResultDTO();
+        result.setTitle(overBudget ? "预算已超支" : "预算提醒");
+        result.setContent(
+            "当前预算已使用 %s，剩余 %s 元，请注意控制支出。".formatted(formatPercent(usedRatio), remainingAmount.setScale(2, RoundingMode.HALF_UP))
+        );
+        result.setLevel(overBudget ? AiAlertResultDTO.AlertLevel.DANGER : alertReached ? AiAlertResultDTO.AlertLevel.WARNING : AiAlertResultDTO.AlertLevel.INFO);
+        result.setNeedNotification(alertReached);
+        return result;
+    }
+
+    private String formatPercent(BigDecimal ratio) {
+        return ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString() + "%";
     }
 
     private Ledger getLedger(Long ledgerId) {

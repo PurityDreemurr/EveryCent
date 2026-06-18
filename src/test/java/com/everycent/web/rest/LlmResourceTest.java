@@ -119,4 +119,38 @@ class LlmResourceTest {
         assertThat(response.getBody()).isSameAs(serviceResult);
         verify(llmParsingService).generateBudgetAlert(request, currentUser);
     }
+
+    @Test
+    void generateBudgetAlertApiShouldAcceptJsonAndReturnAlertResult() throws Exception {
+        AiAlertRequestDTO request = new AiAlertRequestDTO();
+        request.setLedgerId(10L);
+        request.setBudgetId(20L);
+        request.setSaveAsNotification(true);
+
+        AiAlertResultDTO serviceResult = new AiAlertResultDTO();
+        serviceResult.setTitle("预算提醒");
+        serviceResult.setContent("当前预算已使用 82%，剩余 180.00 元，请注意控制支出。");
+        serviceResult.setLevel(AiAlertResultDTO.AlertLevel.WARNING);
+        serviceResult.setOverBudget(false);
+        serviceResult.setUsedAmount(new BigDecimal("820.00"));
+        serviceResult.setLimitAmount(new BigDecimal("1000.00"));
+        serviceResult.setUsedRatio(new BigDecimal("0.8200"));
+        serviceResult.setNeedNotification(true);
+        serviceResult.setNotificationId(99L);
+        when(llmParsingService.generateBudgetAlert(org.mockito.ArgumentMatchers.any(AiAlertRequestDTO.class), org.mockito.ArgumentMatchers.same(currentUser)))
+            .thenReturn(serviceResult);
+
+        mockMvc
+            .perform(post("/api/ai/budget-alert/generate").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsBytes(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("预算提醒"))
+            .andExpect(jsonPath("$.content").value("当前预算已使用 82%，剩余 180.00 元，请注意控制支出。"))
+            .andExpect(jsonPath("$.level").value("WARNING"))
+            .andExpect(jsonPath("$.overBudget").value(false))
+            .andExpect(jsonPath("$.usedAmount").value(820.00))
+            .andExpect(jsonPath("$.limitAmount").value(1000.00))
+            .andExpect(jsonPath("$.usedRatio").value(0.8200))
+            .andExpect(jsonPath("$.needNotification").value(true))
+            .andExpect(jsonPath("$.notificationId").value(99));
+    }
 }
