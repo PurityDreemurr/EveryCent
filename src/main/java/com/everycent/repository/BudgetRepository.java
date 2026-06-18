@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
+    List<Budget> findAllByLedgerOrderByPeriodStartDesc(Ledger ledger);
+
     List<Budget> findAllByLedgerAndEnabledTrue(Ledger ledger);
 
     Optional<Budget> findOneByLedgerAndCycleAndPeriodStartAndPeriodEnd(
@@ -19,4 +21,6 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
         LocalDate periodStart,
         LocalDate periodEnd
     );
+
+    void deleteAllByLedger(Ledger ledger);
 }
