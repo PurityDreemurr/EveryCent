@@ -1,0 +1,248 @@
+.everycent-login-page {
+  min-height: calc(100vh - 124px);
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  color: oklch(0.129 0.042 264.695);
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.82), rgba(255, 255, 255, 0.96)),
+    radial-gradient(circle at 18% 18%, rgba(22, 111, 134, 0.1), transparent 30%),
+    #ffffff;
+}
+
+.everycent-login-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 430px);
+  width: min(980px, 100%);
+  overflow: hidden;
+  border: 1px solid oklch(0.929 0.013 255.508);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 20px 70px rgba(15, 23, 42, 0.1);
+}
+
+.everycent-login-hero {
+  display: grid;
+  align-content: start;
+  gap: 1.6rem;
+  min-height: 560px;
+  padding: 1.5rem;
+  background: linear-gradient(150deg, #0f172a 0%, #162337 58%, #17394a 100%);
+  color: #ffffff;
+}
+
+.everycent-login-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: fit-content;
+  color: inherit;
+  text-decoration: none;
+}
+
+.everycent-login-brand:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+.everycent-login-brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: #0f172a;
+  background: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.everycent-login-brand span:last-child {
+  display: grid;
+  gap: 0.05rem;
+}
+
+.everycent-login-brand strong {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.everycent-login-brand small {
+  color: rgba(255, 255, 255, 0.68);
+  font-weight: 750;
+}
+
+.everycent-login-hero__copy {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 430px;
+  margin-top: 4.2rem;
+}
+
+.everycent-login-hero__eyebrow {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.everycent-login-hero__copy h1 {
+  margin: 0.65rem 0 0.8rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.everycent-login-hero__copy p {
+  max-width: 360px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+.everycent-login-card {
+  display: grid;
+  align-content: center;
+  gap: 1.1rem;
+  padding: 2rem;
+  background: #ffffff;
+}
+
+.everycent-login-card header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.everycent-login-card h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.65rem;
+  font-weight: 900;
+}
+
+.everycent-login-card p {
+  margin: 0;
+  color: #657386;
+}
+
+.everycent-login-alert {
+  margin: 0;
+  border: 1px solid rgba(185, 28, 28, 0.16);
+  border-radius: 8px;
+  color: #991b1b;
+  background: #fff1f2;
+  font-size: 0.9rem;
+}
+
+.everycent-login-form {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.everycent-login-form .form-group,
+.everycent-login-form .mb-3 {
+  margin-bottom: 0;
+}
+
+.everycent-login-form label {
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 820;
+}
+
+.everycent-login-form input.form-control {
+  min-height: 42px;
+  border: 1px solid oklch(0.929 0.013 255.508);
+  border-radius: 8px;
+  color: #0f172a;
+  background: #f8fafc;
+  font-weight: 650;
+}
+
+.everycent-login-form input.form-control:focus {
+  border-color: #166f86;
+  box-shadow: 0 0 0 3px rgba(22, 111, 134, 0.12);
+}
+
+.everycent-login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.88rem;
+}
+
+.everycent-login-options .form-check {
+  margin: 0;
+}
+
+.everycent-login-options .form-check-label {
+  color: #657386;
+  font-weight: 750;
+}
+
+.everycent-login-options a,
+.everycent-login-card__footer a {
+  color: #166f86;
+  font-weight: 820;
+  text-decoration: none;
+}
+
+.everycent-login-options a:hover,
+.everycent-login-card__footer a:hover {
+  color: #0f4f61;
+  text-decoration: none;
+}
+
+.everycent-login-submit {
+  min-height: 42px;
+  border: 1px solid #0f172a;
+  border-radius: 8px;
+  background: #0f172a;
+  font-weight: 850;
+}
+
+.everycent-login-submit:hover,
+.everycent-login-submit:focus {
+  border-color: #162337;
+  background: #162337;
+}
+
+.everycent-login-card__footer {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid oklch(0.929 0.013 255.508);
+  color: #657386;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 860px) {
+  .everycent-login-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .everycent-login-hero {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .everycent-login-page {
+    padding: 0;
+  }
+
+  .everycent-login-shell {
+    min-height: calc(100vh - 124px);
+    border-radius: 0;
+  }
+
+  .everycent-login-card,
+  .everycent-login-hero {
+    padding: 1.25rem;
+  }
+
+}
