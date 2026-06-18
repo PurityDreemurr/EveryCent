@@ -5,6 +5,8 @@ import com.everycent.domain.User;
 import com.everycent.domain.UserLedgerPermission;
 import com.everycent.domain.enumeration.PermissionLevel;
 import com.everycent.domain.enumeration.PermissionStatus;
+import com.everycent.domain.enumeration.NotificationLevel;
+import com.everycent.domain.enumeration.NotificationType;
 import com.everycent.repository.BudgetRepository;
 import com.everycent.repository.LedgerRepository;
 import com.everycent.repository.MonthlyBalanceRepository;
@@ -16,6 +18,7 @@ import com.everycent.service.dto.*;
 import com.everycent.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,8 @@ public class LedgerService {
 
     private final NotificationMessageRepository notificationMessageRepository;
 
+    private final NotificationService notificationService;
+
     public LedgerService(
         LedgerRepository ledgerRepository,
         UserLedgerPermissionRepository permissionRepository,
@@ -49,7 +54,8 @@ public class LedgerService {
         TransactionRecordRepository transactionRecordRepository,
         BudgetRepository budgetRepository,
         MonthlyBalanceRepository monthlyBalanceRepository,
-        NotificationMessageRepository notificationMessageRepository
+        NotificationMessageRepository notificationMessageRepository,
+        NotificationService notificationService
     ) {
         this.ledgerRepository = ledgerRepository;
         this.permissionRepository = permissionRepository;
@@ -59,6 +65,7 @@ public class LedgerService {
         this.budgetRepository = budgetRepository;
         this.monthlyBalanceRepository = monthlyBalanceRepository;
         this.notificationMessageRepository = notificationMessageRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -67,9 +74,12 @@ public class LedgerService {
     }
 
     public LedgerDTO createLedger(User user, LedgerCreateDTO createDTO) {
+        String ledgerName = normalizeLedgerName(createDTO.getName());
+        rejectDuplicateLedgerName(ledgerName, null);
+
         Instant now = Instant.now();
         Ledger ledger = new Ledger()
-            .name(createDTO.getName())
+            .name(ledgerName)
             .description(createDTO.getDescription())
             .creator(user)
             .createdDate(now)
@@ -98,7 +108,9 @@ public class LedgerService {
     public LedgerDTO updateLedger(User user, Long ledgerId, LedgerUpdateDTO updateDTO) {
         permissionService.checkOwner(user, ledgerId);
         Ledger ledger = permissionService.getLedgerOrThrow(ledgerId);
-        ledger.setName(updateDTO.getName());
+        String ledgerName = normalizeLedgerName(updateDTO.getName());
+        rejectDuplicateLedgerName(ledgerName, ledgerId);
+        ledger.setName(ledgerName);
         ledger.setDescription(updateDTO.getDescription());
         ledger.setLastModifiedDate(Instant.now());
         Ledger savedLedger = ledgerRepository.save(ledger);
@@ -143,7 +155,9 @@ public class LedgerService {
             existingPermission.setPermissionLevel(requestDTO.getPermissionLevel());
             existingPermission.setStatus(PermissionStatus.ACTIVE);
             existingPermission.setCreatedDate(Instant.now());
-            return toMemberDTO(permissionRepository.save(existingPermission));
+            UserLedgerPermission savedPermission = permissionRepository.save(existingPermission);
+            createShareInviteNotification(owner, member, ledger);
+            return toMemberDTO(savedPermission);
         }
 
         UserLedgerPermission permission = new UserLedgerPermission()
@@ -153,7 +167,9 @@ public class LedgerService {
             .permissionLevel(requestDTO.getPermissionLevel())
             .status(PermissionStatus.ACTIVE)
             .createdDate(Instant.now());
-        return toMemberDTO(permissionRepository.save(permission));
+        UserLedgerPermission savedPermission = permissionRepository.save(permission);
+        createShareInviteNotification(owner, member, ledger);
+        return toMemberDTO(savedPermission);
     }
 
     public LedgerMemberDTO updateMember(User owner, Long ledgerId, Long userId, LedgerMemberUpdateDTO updateDTO) {
@@ -183,6 +199,31 @@ public class LedgerService {
         }
         permission.setStatus(PermissionStatus.REVOKED);
         permissionRepository.save(permission);
+    }
+
+    private void createShareInviteNotification(User owner, User member, Ledger ledger) {
+        notificationService.create(
+            member,
+            ledger,
+            null,
+            "账本共享邀请",
+            owner.getLogin() + " 邀请你加入账本「" + ledger.getName() + "」。",
+            NotificationType.SHARE_INVITE,
+            NotificationLevel.INFO
+        );
+    }
+
+    private String normalizeLedgerName(String name) {
+        return name == null ? null : name.trim();
+    }
+
+    private void rejectDuplicateLedgerName(String name, Long currentLedgerId) {
+        ledgerRepository
+            .findFirstByNameIgnoreCase(name)
+            .filter(existing -> !Objects.equals(existing.getId(), currentLedgerId))
+            .ifPresent(existing -> {
+                throw new BadRequestAlertException("Ledger name already exists", ENTITY_NAME, "ledgernameexists");
+            });
     }
 
     private LedgerDTO toLedgerDTO(Ledger ledger, User user) {
