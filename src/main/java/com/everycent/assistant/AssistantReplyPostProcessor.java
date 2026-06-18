@@ -54,16 +54,16 @@ public class AssistantReplyPostProcessor {
 
     private String fallback(DialogueScene scene) {
         return switch (scene == null ? DialogueScene.UNKNOWN : scene) {
-            case ACHIEVEMENT_SHARE -> "这个确实不容易。该夸。 {\"mood\":55,\"emoji\":\"happy\"}";
-            case JOKE -> "本龙才没装成熟，这叫偶尔靠谱。 {\"mood\":52,\"emoji\":\"shy\"}";
-            case COLD_REPLY -> "行吧，本龙先不追问。 {\"mood\":40,\"emoji\":\"speechless\"}";
+            case ACHIEVEMENT_SHARE -> "这个确实不容易，做得不错。 {\"mood\":55,\"emoji\":\"happy\"}";
+            case JOKE -> "行，先当作玩笑处理。 {\"mood\":52,\"emoji\":\"shy\"}";
+            case COLD_REPLY -> "好，先不追问。 {\"mood\":40,\"emoji\":\"speechless\"}";
             case SELF_BLAME -> "别这么判自己。今天状态差，不等于你这个人差。 {\"mood\":55,\"emoji\":\"sad\"}";
-            case LONELINESS -> "一个人待着是会突然发空。先让屋里有点声音吧。 {\"mood\":50,\"emoji\":\"sad\"}";
-            case FATIGUE -> "累就先别硬撑。今天到这一步也算撑住了。 {\"mood\":48,\"emoji\":\"peace\"}";
-            case FRUSTRATION -> "这事确实烦。本龙先站你这边。 {\"mood\":58,\"emoji\":\"speechless\"}";
-            case EMOTION_HEAVY, EMOTION_LIGHT -> "先别急着压自己。本龙听见了。 {\"mood\":45,\"emoji\":\"peace\"}";
-            case ACCOUNTING -> "这条本龙先没说准，等确认后再记。 {\"mood\":45,\"emoji\":\"peace\"}";
-            default -> "行，那就先这样。 {\"mood\":40,\"emoji\":\"peace\"}";
+            case LONELINESS -> "一个人待着会有点发空。先让环境里有点声音吧。 {\"mood\":50,\"emoji\":\"sad\"}";
+            case FATIGUE -> "累就先别硬撑。今天先到这里也可以。 {\"mood\":48,\"emoji\":\"peace\"}";
+            case FRUSTRATION -> "这事确实烦。先把最关键的一步处理掉。 {\"mood\":58,\"emoji\":\"speechless\"}";
+            case EMOTION_HEAVY, EMOTION_LIGHT -> "先别急着压自己。我看到了。 {\"mood\":45,\"emoji\":\"peace\"}";
+            case ACCOUNTING -> "这条信息还不完整，先别记错。请确认金额。 {\"mood\":45,\"emoji\":\"peace\"}";
+            default -> "好，那就先这样。 {\"mood\":40,\"emoji\":\"peace\"}";
         };
     }
 }

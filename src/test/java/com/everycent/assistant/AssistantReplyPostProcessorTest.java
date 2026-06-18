@@ -25,7 +25,7 @@ class AssistantReplyPostProcessorTest {
     @Test
     void shouldReturnRawReplyWhenValid() {
         AssistantReplyPostProcessor processor = new AssistantReplyPostProcessor(validator, rewriteService);
-        String rawReply = "行吧，这个确实可以。{\"mood\":55,\"emoji\":\"happy\"}";
+        String rawReply = "这个确实可以。{\"mood\":55,\"emoji\":\"happy\"}";
 
         String result = processor.process("我做完了", rawReply, DialogueScene.ACHIEVEMENT_SHARE);
 
@@ -36,7 +36,7 @@ class AssistantReplyPostProcessorTest {
     @Test
     void shouldRewriteInvalidReply() {
         AssistantReplyPostProcessor processor = new AssistantReplyPostProcessor(validator, rewriteService);
-        String rewritten = "这话本龙听着有点不舒服。你可以说哪里不对。{\"mood\":72,\"emoji\":\"angry\"}";
+        String rewritten = "这句话听起来不太准确。你可以指出具体哪里不对。{\"mood\":45,\"emoji\":\"peace\"}";
         when(rewriteService.rewrite(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
             .thenReturn(rewritten);
 
@@ -58,6 +58,7 @@ class AssistantReplyPostProcessorTest {
         String result = processor.process("我今天好累", "没干活还累？这理由本龙可不信。{\"mood\":40,\"emoji\":\"speechless\"}", DialogueScene.FATIGUE);
 
         assertThat(result).contains("累就先别硬撑");
+        assertThat(result).doesNotContain("本龙", "皓尾", "龙");
         verify(rewriteService, never()).rewrite(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
@@ -69,7 +70,7 @@ class AssistantReplyPostProcessorTest {
 
         String result = processor.process("我有点难受", "我会一直听，你可以慢慢来。{\"mood\":45,\"emoji\":\"peace\"}", DialogueScene.EMOTION_LIGHT);
 
-        assertThat(result).contains("本龙听见了");
+        assertThat(result).contains("我看到了");
         assertThat(result).contains("{\"mood\":45,\"emoji\":\"peace\"}");
     }
 }

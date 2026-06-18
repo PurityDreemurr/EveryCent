@@ -81,7 +81,7 @@ public final class AssistantChatCli {
                 System.out.print("\n你> ");
                 String input = reader.readLine();
                 if (input == null || isExit(input)) {
-                    System.out.println("皓尾> 好，本龙先收好尾巴。下次继续。");
+                    System.out.println("EveryCent> 已退出。");
                     return;
                 }
                 if (handleCommand(input)) {
@@ -109,7 +109,7 @@ public final class AssistantChatCli {
             if (debug) {
                 printDebugPostProcess(scene, rawAnswer, answer);
             }
-            System.out.println("\n皓尾> " + answer.strip());
+            System.out.println("\nEveryCent> " + answer.strip());
         } catch (LlmClientException e) {
             System.out.println("\n[LLM 调用失败] " + e.getMessage());
             if (e.getCause() != null && StringUtils.hasText(e.getCause().getMessage())) {
@@ -182,7 +182,7 @@ public final class AssistantChatCli {
     }
 
     private void remember(String userInput, String answer) {
-        dialogueHistory.addLast("用户：" + userInput + "\n皓尾：" + answer);
+        dialogueHistory.addLast("用户：" + userInput + "\nEveryCent：" + answer);
         while (dialogueHistory.size() > HISTORY_LIMIT) {
             dialogueHistory.removeFirst();
         }
@@ -351,7 +351,7 @@ public final class AssistantChatCli {
     }
 
     private static void printBanner() {
-        System.out.println("EveryCent 皓尾 CLI 对话（纯系统提示词模式）");
+            System.out.println("EveryCent 财务助手 CLI 对话（功能型提示词模式）");
         printHelp();
     }
 

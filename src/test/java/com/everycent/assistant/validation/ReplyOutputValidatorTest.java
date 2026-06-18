@@ -33,16 +33,24 @@ class ReplyOutputValidatorTest {
 
     @Test
     void shouldFailOnSemanticRiskPhrases() {
-        assertThat(validator.validate("没干活还累？这理由本龙可不信。{\"mood\":40,\"emoji\":\"speechless\"}", DialogueScene.FATIGUE).getViolations())
+        assertThat(validator.validate("没干活还累？这理由我可不信。{\"mood\":40,\"emoji\":\"speechless\"}", DialogueScene.FATIGUE).getViolations())
             .anyMatch(violation -> violation.startsWith("INVALIDATE_USER_FEELING"));
-        assertThat(validator.validate("本龙才没有装成熟，是你自己戏多。{\"mood\":50,\"emoji\":\"shy\"}", DialogueScene.JOKE).getViolations())
+        assertThat(validator.validate("不是装成熟，是你自己戏多。{\"mood\":50,\"emoji\":\"shy\"}", DialogueScene.JOKE).getViolations())
             .contains("USER_BELITTLING:你自己戏多");
-        assertThat(validator.validate("哦什么哦。本龙看着呢，有事说事。{\"mood\":45,\"emoji\":\"speechless\"}", DialogueScene.COLD_REPLY).getViolations())
+        assertThat(validator.validate("哦什么哦。我看着呢，有事说事。{\"mood\":45,\"emoji\":\"speechless\"}", DialogueScene.COLD_REPLY).getViolations())
             .contains("USER_BELITTLING:哦什么哦", "COMMANDING_TONE:有事说事");
-        assertThat(validator.validate("空就对了，本龙平时不也一个人待着？{\"mood\":42,\"emoji\":\"peace\"}", DialogueScene.LONELINESS).getViolations())
+        assertThat(validator.validate("空就对了，我平时不也一个人待着？{\"mood\":42,\"emoji\":\"peace\"}", DialogueScene.LONELINESS).getViolations())
             .anyMatch(violation -> violation.startsWith("INVALIDATE"));
         assertThat(validator.validate("这外卖小哥是路痴转世吗。{\"mood\":48,\"emoji\":\"speechless\"}", DialogueScene.FRUSTRATION).getViolations())
             .contains("THIRD_PARTY_MOCKING:路痴转世");
+    }
+
+    @Test
+    void shouldFailOnRoleplayLeak() {
+        ReplyValidationResult result = validator.validate("本龙先按这条记下来了。{\"mood\":45,\"emoji\":\"peace\"}", DialogueScene.ACCOUNTING);
+        assertThat(result.isPassed()).isFalse();
+        assertThat(result.getViolations()).contains("ROLEPLAY_LEAK:本龙");
+        assertThat(result.getSeverity()).isEqualTo(ReplyValidationResult.Severity.HIGH);
     }
 
     @Test

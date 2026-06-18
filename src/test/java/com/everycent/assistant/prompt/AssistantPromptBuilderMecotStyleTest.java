@@ -63,61 +63,21 @@ class AssistantPromptBuilderMecotStyleTest {
     }
 
     @Test
-    void shouldIncludeAntiTemplateRealismRulesForHaowei() {
+    void shouldBuildFunctionalEveryCentAssistantPrompt() {
         String prompt = new AssistantPromptBuilder().buildSingleTurnPrompt("嗯。", "中立", List.of());
 
-        assertThat(prompt).contains("皓尾活泼、认真、嘴硬心软");
-        assertThat(prompt).contains("不能向用户索取安慰、不能情绪绑架");
-        assertThat(prompt).contains("【最高优先级：场景路由】");
-        assertThat(prompt).contains("账单/消费/收入场景");
-        assertThat(prompt).contains("沉默、冷淡、简短回复场景");
-        assertThat(prompt).contains("但不是无条件安慰机器");
-        assertThat(prompt).contains("心理咨询师、客服、护理机器人");
-        assertThat(prompt).contains("【反豆包化真实感规则】");
-        assertThat(prompt).contains("不要每轮都安排用户休息、喝水、盖毯子");
-        assertThat(prompt).contains("除非用户明确疲惫、生病、崩溃、强烈焦虑");
-        assertThat(prompt).contains("“慢慢讲”");
-        assertThat(prompt).contains("“我会一直听”");
-        assertThat(prompt).contains("“本龙会乖乖陪你”");
-        assertThat(prompt).contains("“盖上毯子”");
-        assertThat(prompt).contains("每次回复最多使用一个龙族元素");
-        assertThat(prompt).contains("“本龙”本身已经算一个龙族元素");
-        assertThat(prompt).contains("不要先傲娇一句，再接一整段标准温柔安慰");
-        assertThat(prompt).contains("“这话本龙听着有点不舒服。”");
-        assertThat(prompt).contains("【收尾语限制】");
-        assertThat(prompt).contains("“有事随时叫我”");
-        assertThat(prompt).contains("这些表达容易像客服结束语");
-        assertThat(prompt).contains("不必每次补一个服务式收尾");
-        assertThat(prompt).contains("【自然度优先】");
-        assertThat(prompt).contains("优先输出一句有反应的话");
-        assertThat(prompt).contains("而不是“回应 + 建议 + 收尾”三段式");
-        assertThat(prompt).contains("可以只接梗、只确认、只轻轻回应");
-        assertThat(prompt).contains("【嘴硬夸奖限制】");
-        assertThat(prompt).contains("不能用贬低式夸奖");
-        assertThat(prompt).contains("“没掉链子”");
-        assertThat(prompt).contains("“本龙勉强承认你有点厉害”");
-        assertThat(prompt).contains("【退场感限制】");
-        assertThat(prompt).contains("不要频繁让皓尾主动离开对话");
-        assertThat(prompt).contains("“本龙先去忙了”");
-        assertThat(prompt).contains("不需要安排皓尾离场");
-        assertThat(prompt).contains("【建议数量限制】");
-        assertThat(prompt).contains("最多给一个小建议");
-        assertThat(prompt).contains("避免变成“安慰 + 建议清单”");
-        assertThat(prompt).contains("【情绪多样性】");
-        assertThat(prompt).contains("不要默认使用 peace");
-        assertThat(prompt).contains("轻松开心场景优先 happy");
-        assertThat(prompt).contains("调侃场景优先 shy 或 speechless");
-        assertThat(prompt).contains("emoji 要随场景变化");
-        assertThat(prompt).contains("【陪伴残留限制】");
-        assertThat(prompt).contains("少用“守着你”“陪着你”“在旁边看着你”“按你的节奏来”");
-        assertThat(prompt).contains("连续出现会像陪伴模板或客服收尾");
-        assertThat(prompt).contains("【玩笑场景优先接梗】");
-        assertThat(prompt).contains("用户调侃皓尾时，默认理解为玩笑");
-        assertThat(prompt).contains("不要立刻理解成嫌弃、否定或冷落");
-        assertThat(prompt).contains("mood 表示皓尾当前情绪强度，不表示开心程度");
-        assertThat(prompt).contains("不要因为语气温柔就默认 happy");
-        assertThat(prompt).contains("不要虚假承诺可以处理现实中尚未给出的具体事务");
-        assertThat(prompt).doesNotContain("体现“幼年、龙、有点小情绪、平等朋友、关心用户”");
+        assertThat(prompt).contains("你是 EveryCent 财务助手");
+        assertThat(prompt).contains("功能型记账与预算辅助 AI");
+        assertThat(prompt).contains("优先帮助用户记录账单、识别收支、整理备注、提醒预算风险");
+        assertThat(prompt).contains("不要角色扮演，不要拟人化表演");
+        assertThat(prompt).contains("当用户输入包含明确账单信息时，优先处理记账");
+        assertThat(prompt).contains("如果用户只是日常聊天或抱怨，且没有金额或明确记账意图，不要主动记账");
+        assertThat(prompt).contains("不要出现“皓尾”“本龙”“龙”“龙宫”“翅膀”“尾巴”等角色扮演内容");
+        assertThat(prompt).contains("{\"mood\": 数字, \"emoji\": \"枚举值\"}");
+        assertThat(prompt).doesNotContain("皓尾活泼、认真、嘴硬心软");
+        assertThat(prompt).doesNotContain("幼年蓝色羽龙");
+        assertThat(prompt).doesNotContain("皓尾可以自称");
+        assertThat(prompt).doesNotContain("每次回复最多使用一个龙族元素");
     }
 
     private EmotionTag emotionTag(String code) {

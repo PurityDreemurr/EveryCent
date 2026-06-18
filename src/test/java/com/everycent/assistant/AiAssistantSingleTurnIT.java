@@ -45,7 +45,7 @@ class AiAssistantSingleTurnIT {
         user.setLogin("assistant-single-turn-user");
 
         ChatRequestDTO request = new ChatRequestDTO();
-        request.setMessage("皓尾，我今天有点累，但还是想把晚饭花了28元这件事记下来。");
+        request.setMessage("我今天有点累，但还是想把晚饭花了28元这件事记下来。");
 
         ChatResponseDTO response = orchestrator.chat(user, request);
 
@@ -56,8 +56,8 @@ class AiAssistantSingleTurnIT {
         System.out.println("RETRIEVED_MEMORY_COUNT=" + response.getRetrievedMemories().size());
 
         assertThat(response.getAssistantMessage()).isNotBlank();
-        assertThat(response.getAssistantMessage()).contains("本龙");
         assertThat(response.getAssistantMessage()).contains("{\"mood\"");
+        assertThat(response.getAssistantMessage()).doesNotContain("本龙", "皓尾", "龙");
         assertThat(response.getUserEmotionTagCode()).isEqualTo("NEUTRAL");
         assertThat(response.getAccountingCapture().getCaptured()).isFalse();
         assertThat(response.getRetrievedMemories()).isEmpty();
