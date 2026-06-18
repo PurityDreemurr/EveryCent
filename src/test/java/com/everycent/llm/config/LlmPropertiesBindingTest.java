@@ -30,5 +30,7 @@ class LlmPropertiesBindingTest {
         assertThat(properties.getTimeoutSeconds()).isEqualTo(20);
         assertThat(properties.getMinConfidence()).isEqualTo(0.70);
         assertThat(properties.getMaxInputLength()).isEqualTo(500);
+        assertThat(properties.getEnableThinking()).isFalse();
+        assertThat(properties.getEnableSearch()).isFalse();
     }
 }

@@ -61,6 +61,10 @@ public class LlmProperties {
     @DecimalMax("1.00")
     private Double maxTopP = 0.85;
 
+    private Boolean enableThinking = false;
+
+    private Boolean enableSearch = false;
+
     public Boolean getEnabled() {
         return enabled;
     }
@@ -187,5 +191,21 @@ public class LlmProperties {
 
     public void setMaxTopP(Double maxTopP) {
         this.maxTopP = maxTopP;
+    }
+
+    public Boolean getEnableThinking() {
+        return enableThinking;
+    }
+
+    public void setEnableThinking(Boolean enableThinking) {
+        this.enableThinking = enableThinking;
+    }
+
+    public Boolean getEnableSearch() {
+        return enableSearch;
+    }
+
+    public void setEnableSearch(Boolean enableSearch) {
+        this.enableSearch = enableSearch;
     }
 }

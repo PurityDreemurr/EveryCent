@@ -244,6 +244,8 @@ app:
     max-temperature: ${APP_LLM_MAX_TEMPERATURE:0.75}
     min-top-p: ${APP_LLM_MIN_TOP_P:0.85}
     max-top-p: ${APP_LLM_MAX_TOP_P:0.85}
+    enable-thinking: ${APP_LLM_ENABLE_THINKING:false}
+    enable-search: ${APP_LLM_ENABLE_SEARCH:false}
   vector-store:
     provider: qdrant
     base-url: ${APP_VECTOR_STORE_BASE_URL:http://127.0.0.1:6333}

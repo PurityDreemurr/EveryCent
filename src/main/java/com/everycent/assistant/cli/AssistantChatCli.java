@@ -238,6 +238,8 @@ public final class AssistantChatCli {
         properties.setMaxTemperature(parseDouble(env("APP_LLM_MAX_TEMPERATURE", "0.75", localEnv), 0.75));
         properties.setMinTopP(parseDouble(env("APP_LLM_MIN_TOP_P", "0.85", localEnv), 0.85));
         properties.setMaxTopP(parseDouble(env("APP_LLM_MAX_TOP_P", "0.85", localEnv), 0.85));
+        properties.setEnableThinking(Boolean.parseBoolean(env("APP_LLM_ENABLE_THINKING", "false", localEnv)));
+        properties.setEnableSearch(Boolean.parseBoolean(env("APP_LLM_ENABLE_SEARCH", "false", localEnv)));
         return properties;
     }
 
