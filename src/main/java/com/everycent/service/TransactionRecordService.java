@@ -36,16 +36,24 @@ public class TransactionRecordService {
 
     private final LedgerPermissionService ledgerPermissionService;
 
+    private final MonthlyBalanceService monthlyBalanceService;
+
+    private final BudgetAlertService budgetAlertService;
+
     public TransactionRecordService(
         TransactionRecordRepository transactionRecordRepository,
         BehaviorTagRepository behaviorTagRepository,
         EmotionTagRepository emotionTagRepository,
-        LedgerPermissionService ledgerPermissionService
+        LedgerPermissionService ledgerPermissionService,
+        MonthlyBalanceService monthlyBalanceService,
+        BudgetAlertService budgetAlertService
     ) {
         this.transactionRecordRepository = transactionRecordRepository;
         this.behaviorTagRepository = behaviorTagRepository;
         this.emotionTagRepository = emotionTagRepository;
         this.ledgerPermissionService = ledgerPermissionService;
+        this.monthlyBalanceService = monthlyBalanceService;
+        this.budgetAlertService = budgetAlertService;
     }
 
     @Transactional(readOnly = true)
@@ -88,7 +96,10 @@ public class TransactionRecordService {
         transaction.setCreatedDate(now);
         transaction.setLastModifiedDate(now);
 
-        return toDTO(transactionRecordRepository.save(transaction));
+        TransactionRecord saved = transactionRecordRepository.save(transaction);
+        monthlyBalanceService.recalculate(saved.getLedger(), saved.getTransactionDate());
+        budgetAlertService.checkBudgetAlerts(currentUser, saved.getLedger(), saved.getTransactionDate());
+        return toDTO(saved);
     }
 
     @Transactional(readOnly = true)
@@ -105,16 +116,28 @@ public class TransactionRecordService {
             throw new BadRequestAlertException("Transaction ledger cannot be changed", ENTITY_NAME, "ledgercannotchange");
         }
 
+        java.time.LocalDate originalDate = transaction.getTransactionDate();
         applyEditableFields(transaction, transactionDTO);
         transaction.setLastModifiedDate(Instant.now());
 
-        return toDTO(transactionRecordRepository.save(transaction));
+        TransactionRecord saved = transactionRecordRepository.save(transaction);
+        monthlyBalanceService.recalculate(saved.getLedger(), originalDate);
+        budgetAlertService.checkBudgetAlerts(currentUser, saved.getLedger(), originalDate);
+        if (!Objects.equals(originalDate, saved.getTransactionDate())) {
+            monthlyBalanceService.recalculate(saved.getLedger(), saved.getTransactionDate());
+            budgetAlertService.checkBudgetAlerts(currentUser, saved.getLedger(), saved.getTransactionDate());
+        }
+        return toDTO(saved);
     }
 
     public void delete(User currentUser, Long transactionId) {
         TransactionRecord transaction = getTransactionOrThrow(transactionId);
         ledgerPermissionService.checkWritePermission(currentUser, transaction.getLedger().getId());
+        Ledger ledger = transaction.getLedger();
+        java.time.LocalDate transactionDate = transaction.getTransactionDate();
         transactionRecordRepository.delete(transaction);
+        monthlyBalanceService.recalculate(ledger, transactionDate);
+        budgetAlertService.checkBudgetAlerts(currentUser, ledger, transactionDate);
     }
 
     private TransactionRecord getTransactionOrThrow(Long transactionId) {
