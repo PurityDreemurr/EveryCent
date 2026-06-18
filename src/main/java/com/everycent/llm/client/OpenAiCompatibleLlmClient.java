@@ -4,8 +4,10 @@ import com.everycent.llm.config.LlmProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -34,6 +36,14 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
     private final String apiKey;
     private final String model;
     private final Duration timeout;
+    private final double temperature;
+    private final double topP;
+    private final int maxTokens;
+    private final boolean randomizeSampling;
+    private final double minTemperature;
+    private final double maxTemperature;
+    private final double minTopP;
+    private final double maxTopP;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
@@ -42,6 +52,14 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
         this.apiKey = trimToEmpty(properties.getApiKey());
         this.model = trimToEmpty(properties.getModel());
         this.timeout = Duration.ofSeconds(properties.getTimeoutSeconds() == null ? 0 : properties.getTimeoutSeconds());
+        this.temperature = defaultDouble(properties.getTemperature(), 0.7);
+        this.topP = defaultDouble(properties.getTopP(), 0.9);
+        this.maxTokens = properties.getMaxTokens() == null ? 180 : properties.getMaxTokens();
+        this.randomizeSampling = Boolean.TRUE.equals(properties.getRandomizeSampling());
+        this.minTemperature = defaultDouble(properties.getMinTemperature(), 0.7);
+        this.maxTemperature = defaultDouble(properties.getMaxTemperature(), 1.1);
+        this.minTopP = defaultDouble(properties.getMinTopP(), 0.85);
+        this.maxTopP = defaultDouble(properties.getMaxTopP(), 0.98);
         this.restTemplate = buildRestTemplate(timeout);
         this.objectMapper = objectMapper;
     }
@@ -95,6 +113,12 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
         if (timeout.isZero() || timeout.isNegative()) {
             throw new LlmClientException("LLM timeout 配置无效，请使用手动记账");
         }
+        if (randomizeSampling && (minTemperature > maxTemperature || minTopP > maxTopP)) {
+            throw new LlmClientException("LLM 随机采样范围配置无效，请使用手动记账");
+        }
+        if (maxTokens <= 0) {
+            throw new LlmClientException("LLM maxTokens 配置无效，请使用手动记账");
+        }
     }
 
     private HttpHeaders buildHeaders() {
@@ -106,16 +130,18 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
     }
 
     private Map<String, Object> buildRequestBody(String prompt) {
-        return Map.of(
-            "model",
-            model,
-            "messages",
-            List.of(Map.of("role", "system", "content", TEST_SYSTEM_PROMPT), Map.of("role", "user", "content", prompt)),
-            "temperature",
-            0.2,
-            "stream",
-            false
-        );
+        double resolvedTemperature = randomizeSampling ? randomDouble(minTemperature, maxTemperature) : temperature;
+        double resolvedTopP = randomizeSampling ? randomDouble(minTopP, maxTopP) : topP;
+        log.info("LLM sampling parameters model={}, temperature={}, topP={}", model, resolvedTemperature, resolvedTopP);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", model);
+        body.put("messages", List.of(Map.of("role", "system", "content", TEST_SYSTEM_PROMPT), Map.of("role", "user", "content", prompt)));
+        body.put("temperature", resolvedTemperature);
+        body.put("top_p", resolvedTopP);
+        body.put("max_tokens", maxTokens);
+        body.put("stream", false);
+        return body;
     }
 
     private String extractContent(String responseBody) {
@@ -152,5 +178,16 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
 
     private static String trimToEmpty(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private static double defaultDouble(Double value, double defaultValue) {
+        return value == null ? defaultValue : value;
+    }
+
+    private static double randomDouble(double min, double max) {
+        if (Double.compare(min, max) == 0) {
+            return min;
+        }
+        return Math.round(ThreadLocalRandom.current().nextDouble(min, max) * 100.0) / 100.0;
     }
 }

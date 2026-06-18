@@ -32,6 +32,35 @@ public class LlmProperties {
     @Min(1)
     private Integer maxInputLength = 500;
 
+    @Min(1)
+    private Integer maxTokens = 180;
+
+    @DecimalMin("0.00")
+    @DecimalMax("2.00")
+    private Double temperature = 0.7;
+
+    @DecimalMin("0.00")
+    @DecimalMax("1.00")
+    private Double topP = 0.9;
+
+    private Boolean randomizeSampling = false;
+
+    @DecimalMin("0.00")
+    @DecimalMax("2.00")
+    private Double minTemperature = 0.7;
+
+    @DecimalMin("0.00")
+    @DecimalMax("2.00")
+    private Double maxTemperature = 1.1;
+
+    @DecimalMin("0.00")
+    @DecimalMax("1.00")
+    private Double minTopP = 0.85;
+
+    @DecimalMin("0.00")
+    @DecimalMax("1.00")
+    private Double maxTopP = 0.98;
+
     public Boolean getEnabled() {
         return enabled;
     }
@@ -94,5 +123,69 @@ public class LlmProperties {
 
     public void setMaxInputLength(Integer maxInputLength) {
         this.maxInputLength = maxInputLength;
+    }
+
+    public Integer getMaxTokens() {
+        return maxTokens;
+    }
+
+    public void setMaxTokens(Integer maxTokens) {
+        this.maxTokens = maxTokens;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public Double getTopP() {
+        return topP;
+    }
+
+    public void setTopP(Double topP) {
+        this.topP = topP;
+    }
+
+    public Boolean getRandomizeSampling() {
+        return randomizeSampling;
+    }
+
+    public void setRandomizeSampling(Boolean randomizeSampling) {
+        this.randomizeSampling = randomizeSampling;
+    }
+
+    public Double getMinTemperature() {
+        return minTemperature;
+    }
+
+    public void setMinTemperature(Double minTemperature) {
+        this.minTemperature = minTemperature;
+    }
+
+    public Double getMaxTemperature() {
+        return maxTemperature;
+    }
+
+    public void setMaxTemperature(Double maxTemperature) {
+        this.maxTemperature = maxTemperature;
+    }
+
+    public Double getMinTopP() {
+        return minTopP;
+    }
+
+    public void setMinTopP(Double minTopP) {
+        this.minTopP = minTopP;
+    }
+
+    public Double getMaxTopP() {
+        return maxTopP;
+    }
+
+    public void setMaxTopP(Double maxTopP) {
+        this.maxTopP = maxTopP;
     }
 }
