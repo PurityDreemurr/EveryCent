@@ -1,6 +1,7 @@
 import './login-modal.scss';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
 import { type FieldError, useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { Alert, Button, Form } from 'reactstrap';
@@ -14,6 +15,8 @@ export interface ILoginModalProps {
 }
 
 const LoginModal = (props: ILoginModalProps) => {
+  const pageRef = useRef<HTMLElement>(null);
+
   const {
     handleSubmit,
     register,
@@ -28,12 +31,61 @@ const LoginModal = (props: ILoginModalProps) => {
     handleSubmit(login)(event);
   };
 
+  useEffect(() => {
+    if (!props.showModal || !pageRef.current) {
+      return undefined;
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = gsap.context(() => {
+      if (reduceMotion) {
+        gsap.set('.everycent-login-shell, .everycent-login-brand, .everycent-login-hero__copy > *, .everycent-login-card > *', {
+          autoAlpha: 1,
+          clearProps: 'transform',
+        });
+        return;
+      }
+
+      const intro = gsap.timeline({
+        defaults: {
+          duration: 0.58,
+          ease: 'power3.out',
+        },
+      });
+
+      intro
+        .from('.everycent-login-shell', { autoAlpha: 0, y: 18, scale: 0.985 })
+        .from('.everycent-login-brand', { autoAlpha: 0, y: -12 }, '<0.12')
+        .from('.everycent-login-hero__copy > *', { autoAlpha: 0, y: 18, stagger: 0.08 }, '<0.08')
+        .from('.everycent-login-card > *', { autoAlpha: 0, y: 14, stagger: 0.07 }, '<0.12');
+    }, pageRef);
+
+    return () => ctx.revert();
+  }, [props.showModal]);
+
+  useEffect(() => {
+    if (!props.loginError || !pageRef.current) {
+      return undefined;
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.everycent-login-alert',
+        { autoAlpha: 0, y: reduceMotion ? 0 : -6 },
+        { autoAlpha: 1, y: 0, duration: reduceMotion ? 0 : 0.28, ease: 'power2.out' },
+      );
+    }, pageRef);
+
+    return () => ctx.revert();
+  }, [props.loginError]);
+
   if (!props.showModal) {
     return null;
   }
 
   return (
-    <main className="everycent-login-page" id="login-page">
+    <main className="everycent-login-page" id="login-page" ref={pageRef}>
       <section className="everycent-login-shell" aria-labelledby="login-title">
         <div className="everycent-login-hero">
           <div className="everycent-login-brand">

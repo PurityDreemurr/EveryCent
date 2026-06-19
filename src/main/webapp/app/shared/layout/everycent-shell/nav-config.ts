@@ -80,7 +80,7 @@ export const everyCentSidebarData: EveryCentSidebarData = {
       title: '洞察',
       items: [
         { title: '数据分析', url: '/everycent/analytics', icon: 'database' },
-        { title: '消息提醒', url: '/everycent/notifications', badge: '3', icon: 'bell' },
+        { title: '消息提醒', url: '/everycent/notifications', icon: 'bell' },
         { title: '导出 Excel', url: '/everycent/export', icon: 'save' },
       ],
     },

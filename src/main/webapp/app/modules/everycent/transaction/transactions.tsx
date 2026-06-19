@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getLedgers, Ledger } from 'app/modules/everycent/ledger/ledger-api';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from 'app/shared/components/everycent/overlays/dialog';
 
+import { messageForLedgerError, messageForTransactionError } from '../api-error';
 import {
   createTransaction,
   deleteTransaction,
@@ -16,6 +17,7 @@ import {
   TransactionRecord,
   updateTransaction,
 } from './transaction-api';
+import { getBehaviorTags, getEmotionTags, TagOption } from './tag-api';
 
 type DialogMode = 'create' | 'edit' | 'detail';
 
@@ -115,6 +117,8 @@ const toPayload = (form: TransactionForm): TransactionPayload => ({
   source: form.source || 'MANUAL',
 });
 
+const isKnownTagId = (tagId: string, tags: TagOption[]) => tags.some(tag => String(tag.id) === tagId);
+
 const TransactionsPage = () => {
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
   const [selectedLedgerId, setSelectedLedgerId] = useState<number>();
@@ -128,12 +132,20 @@ const TransactionsPage = () => {
   const [dialogMode, setDialogMode] = useState<DialogMode>('create');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingLedgers, setLoadingLedgers] = useState(true);
+  const [behaviorTags, setBehaviorTags] = useState<TagOption[]>([]);
+  const [emotionTags, setEmotionTags] = useState<TagOption[]>([]);
+  const [loadingTags, setLoadingTags] = useState(true);
   const [loadingRecords, setLoadingRecords] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const selectedLedger = useMemo(() => ledgers.find(ledger => ledger.id === selectedLedgerId), [ledgers, selectedLedgerId]);
   const totalPages = Math.max(Math.ceil(totalElements / size), 1);
+  const defaultFormWithLoadedTags = (): TransactionForm => ({
+    ...emptyForm,
+    behaviorTagId: String(behaviorTags[0]?.id || ''),
+    emotionTagId: String(emotionTags[0]?.id || ''),
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -149,7 +161,7 @@ const TransactionsPage = () => {
         }
       } catch (err) {
         if (mounted) {
-          setError('账本列表加载失败，请确认登录状态。');
+          setError(messageForLedgerError(err, '账本列表加载失败，请确认登录状态。'));
         }
       } finally {
         if (mounted) {
@@ -159,6 +171,35 @@ const TransactionsPage = () => {
     };
 
     loadLedgers();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadTags = async () => {
+      setLoadingTags(true);
+      try {
+        const [behavior, emotion] = await Promise.all([getBehaviorTags(), getEmotionTags()]);
+        if (mounted) {
+          setBehaviorTags(behavior);
+          setEmotionTags(emotion);
+        }
+      } catch (err) {
+        if (mounted) {
+          setError('标签加载失败，请检查后端标签接口。');
+        }
+      } finally {
+        if (mounted) {
+          setLoadingTags(false);
+        }
+      }
+    };
+
+    loadTags();
 
     return () => {
       mounted = false;
@@ -189,7 +230,7 @@ const TransactionsPage = () => {
         }
       } catch (err) {
         if (mounted) {
-          setError('收支记录加载失败，请检查筛选条件或账本权限。');
+          setError(messageForTransactionError(err, '收支记录加载失败，请检查筛选条件或账本权限。'));
         }
       } finally {
         if (mounted) {
@@ -220,7 +261,7 @@ const TransactionsPage = () => {
   };
 
   const openCreateDialog = () => {
-    setForm(emptyForm);
+    setForm(defaultFormWithLoadedTags());
     setDetailRecord(null);
     setDialogMode('create');
     setDialogOpen(true);
@@ -235,7 +276,7 @@ const TransactionsPage = () => {
       setForm(toForm(detail));
       setDialogOpen(true);
     } catch (err) {
-      setError('收支记录详情加载失败。');
+      setError(messageForTransactionError(err, '收支记录详情加载失败。'));
     }
   };
 
@@ -247,7 +288,7 @@ const TransactionsPage = () => {
       setDetailRecord(detail);
       setDialogOpen(true);
     } catch (err) {
-      setError('收支记录详情加载失败。');
+      setError(messageForTransactionError(err, '收支记录详情加载失败。'));
     }
   };
 
@@ -269,7 +310,18 @@ const TransactionsPage = () => {
     }
 
     if (!form.amount.trim() || !form.description.trim() || !form.recordDate || !form.behaviorTagId || !form.emotionTagId) {
-      setError('请完整填写金额、描述、日期和标签 ID。');
+      setError('请完整填写金额、描述、日期和标签。');
+      return;
+    }
+
+    const amount = Number(form.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError('金额必须是大于 0 的数字。');
+      return;
+    }
+
+    if (!isKnownTagId(form.behaviorTagId, behaviorTags) || !isKnownTagId(form.emotionTagId, emotionTags)) {
+      setError('请选择有效的行为标签和情绪标签。');
       return;
     }
 
@@ -283,10 +335,10 @@ const TransactionsPage = () => {
         await createTransaction(selectedLedgerId, payload);
       }
       setDialogOpen(false);
-      setForm(emptyForm);
+      setForm(defaultFormWithLoadedTags());
       await refreshCurrentPage();
     } catch (err) {
-      setError(dialogMode === 'edit' ? '修改收支记录失败。' : '创建收支记录失败。');
+      setError(messageForTransactionError(err, dialogMode === 'edit' ? '修改收支记录失败。' : '创建收支记录失败。'));
     } finally {
       setSaving(false);
     }
@@ -303,7 +355,7 @@ const TransactionsPage = () => {
       await deleteTransaction(record.id);
       await refreshCurrentPage();
     } catch (err) {
-      setError('删除收支记录失败。');
+      setError(messageForTransactionError(err, '删除收支记录失败。'));
     }
   };
 
@@ -365,22 +417,34 @@ const TransactionsPage = () => {
           <DateFilterInput value={query.endDate} onChange={value => setQuery(current => ({ ...current, endDate: value }))} />
         </label>
         <label>
-          <span>行为标签 ID</span>
-          <input
-            type="number"
-            min="1"
+          <span>行为标签</span>
+          <select
             value={query.behaviorTagId || ''}
             onChange={event => setQuery(current => ({ ...current, behaviorTagId: event.target.value }))}
-          />
+            disabled={loadingTags || behaviorTags.length === 0}
+          >
+            <option value="">{loadingTags ? '标签加载中' : '全部行为标签'}</option>
+            {behaviorTags.map(tag => (
+              <option key={tag.id} value={tag.id}>
+                {tag.name}
+              </option>
+            ))}
+          </select>
         </label>
         <label>
-          <span>情绪标签 ID</span>
-          <input
-            type="number"
-            min="1"
+          <span>情绪标签</span>
+          <select
             value={query.emotionTagId || ''}
             onChange={event => setQuery(current => ({ ...current, emotionTagId: event.target.value }))}
-          />
+            disabled={loadingTags || emotionTags.length === 0}
+          >
+            <option value="">{loadingTags ? '标签加载中' : '全部情绪标签'}</option>
+            {emotionTags.map(tag => (
+              <option key={tag.id} value={tag.id}>
+                {tag.name}
+              </option>
+            ))}
+          </select>
         </label>
         <div className="everycent-transactions-page__filter-actions">
           <button
@@ -558,22 +622,34 @@ const TransactionsPage = () => {
                 />
               </label>
               <label>
-                <span>行为标签 ID</span>
-                <input
-                  type="number"
-                  min="1"
+                <span>行为标签</span>
+                <select
                   value={form.behaviorTagId}
                   onChange={event => setForm(current => ({ ...current, behaviorTagId: event.target.value }))}
-                />
+                  disabled={loadingTags || behaviorTags.length === 0}
+                >
+                  <option value="">{loadingTags ? '标签加载中' : '请选择行为标签'}</option>
+                  {behaviorTags.map(tag => (
+                    <option key={tag.id} value={tag.id}>
+                      {tag.name}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label>
-                <span>情绪标签 ID</span>
-                <input
-                  type="number"
-                  min="1"
+                <span>情绪标签</span>
+                <select
                   value={form.emotionTagId}
                   onChange={event => setForm(current => ({ ...current, emotionTagId: event.target.value }))}
-                />
+                  disabled={loadingTags || emotionTags.length === 0}
+                >
+                  <option value="">{loadingTags ? '标签加载中' : '请选择情绪标签'}</option>
+                  {emotionTags.map(tag => (
+                    <option key={tag.id} value={tag.id}>
+                      {tag.name}
+                    </option>
+                  ))}
+                </select>
               </label>
               <div className="everycent-transactions-page__form-actions">
                 <button type="button" onClick={() => setDialogOpen(false)}>

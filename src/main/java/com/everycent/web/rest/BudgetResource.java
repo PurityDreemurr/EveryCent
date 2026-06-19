@@ -82,7 +82,7 @@ public class BudgetResource {
     @GetMapping({ "/ledgers/{ledgerId}/budgets/status", "/ledgers/{ledgerId}/budgets/status/" })
     public ResponseEntity<BudgetDTO> getBudgetStatus(
         @PathVariable Long ledgerId,
-        @RequestParam BudgetCycle cycle,
+        @RequestParam(required = false, defaultValue = "MONTHLY") BudgetCycle cycle,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         User currentUser = getCurrentUser();

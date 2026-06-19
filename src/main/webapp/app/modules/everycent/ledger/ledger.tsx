@@ -5,7 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from 'app/shared/components/everycent/overlays/dialog';
 
-import { createLedger, deleteLedger, getLedgers, Ledger, updateLedger } from './ledger-api';
+import { messageForLedgerError } from '../api-error';
+import { createLedger, deleteLedger, getLedger, getLedgers, Ledger, updateLedger } from './ledger-api';
 
 type FormState = {
   id?: number;
@@ -32,14 +33,20 @@ const formatDate = (value?: string) => {
 const LedgerPage = () => {
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
   const [selectedId, setSelectedId] = useState<number>();
+  const [ledgerDetail, setLedgerDetail] = useState<Ledger | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [loading, setLoading] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState<string | null>(null);
 
-  const selectedLedger = useMemo(() => ledgers.find(ledger => ledger.id === selectedId) || ledgers[0], [ledgers, selectedId]);
+  const selectedLedger = useMemo(
+    () => ledgerDetail || ledgers.find(ledger => ledger.id === selectedId) || ledgers[0],
+    [ledgerDetail, ledgers, selectedId],
+  );
 
   const loadLedgers = async () => {
     setLoading(true);
@@ -49,7 +56,7 @@ const LedgerPage = () => {
       setLedgers(data);
       setSelectedId(current => current || data[0]?.id);
     } catch (err) {
-      setError('账本列表加载失败，请确认后端服务和登录状态。');
+      setError(messageForLedgerError(err, '账本列表加载失败，请确认后端服务和登录状态。'));
     } finally {
       setLoading(false);
     }
@@ -59,8 +66,44 @@ const LedgerPage = () => {
     loadLedgers();
   }, []);
 
+  useEffect(() => {
+    if (!selectedId) {
+      setLedgerDetail(null);
+      return;
+    }
+
+    let mounted = true;
+
+    const loadLedgerDetail = async () => {
+      setLoadingDetail(true);
+      setError(null);
+      try {
+        const detail = await getLedger(selectedId);
+        if (mounted) {
+          setLedgerDetail(detail);
+        }
+      } catch (err) {
+        if (mounted) {
+          setLedgerDetail(null);
+          setError(messageForLedgerError(err, '账本详情加载失败，请确认你是否有权限。'));
+        }
+      } finally {
+        if (mounted) {
+          setLoadingDetail(false);
+        }
+      }
+    };
+
+    loadLedgerDetail();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedId]);
+
   const startCreate = () => {
     setForm(emptyForm);
+    setDialogError(null);
     setDialogMode('create');
     setDialogOpen(true);
   };
@@ -71,6 +114,7 @@ const LedgerPage = () => {
       name: ledger.name,
       description: ledger.description || '',
     });
+    setDialogError(null);
     setDialogMode('edit');
     setDialogOpen(true);
   };
@@ -78,12 +122,12 @@ const LedgerPage = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form.name.trim()) {
-      setError('请填写账本名称。');
+      setDialogError('请填写账本名称。');
       return;
     }
 
     setSaving(true);
-    setError(null);
+    setDialogError(null);
     try {
       const payload = {
         name: form.name.trim(),
@@ -102,7 +146,7 @@ const LedgerPage = () => {
       setForm(emptyForm);
       setDialogOpen(false);
     } catch (err) {
-      setError('账本保存失败，请稍后重试。');
+      setDialogError(messageForLedgerError(err, '账本保存失败，请稍后重试。'));
     } finally {
       setSaving(false);
     }
@@ -120,7 +164,7 @@ const LedgerPage = () => {
       setLedgers(current => current.filter(item => item.id !== ledger.id));
       setSelectedId(current => (current === ledger.id ? undefined : current));
     } catch (err) {
-      setError('账本删除失败，请确认你是否有权限。');
+      setError(messageForLedgerError(err, '账本删除失败，请确认你是否有权限。'));
     }
   };
 
@@ -185,7 +229,9 @@ const LedgerPage = () => {
             )}
           </header>
 
-          {selectedLedger ? (
+          {loadingDetail ? (
+            <div className="everycent-ledger-page__empty">正在读取账本详情...</div>
+          ) : selectedLedger ? (
             <div className="everycent-ledger-page__detail-grid">
               <div>
                 <span>账本名称</span>
@@ -229,6 +275,7 @@ const LedgerPage = () => {
             </DialogDescription>
           </DialogHeader>
           <form className="everycent-ledger-page__form" onSubmit={handleSubmit}>
+            {dialogError && <div className="everycent-ledger-page__dialog-alert">{dialogError}</div>}
             <label>
               <span>账本名称</span>
               <input value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))} />
