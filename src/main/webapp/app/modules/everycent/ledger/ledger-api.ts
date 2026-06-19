@@ -23,14 +23,16 @@ export interface LedgerPayload {
 
 const apiUrl = 'api/ledgers';
 
+const normalizeLedgerDetail = (data: Ledger | Ledger[]) => (Array.isArray(data) ? data[0] : data);
+
 export const getLedgers = async () => {
   const response = await axios.get<Ledger[]>(apiUrl);
   return response.data;
 };
 
-export const getLedger = async (ledgerId: number) => {
-  const response = await axios.get<Ledger>(`${apiUrl}/${ledgerId}`);
-  return response.data;
+export const getLedger = async (ledgerId: number | string) => {
+  const response = await axios.get<Ledger | Ledger[]>(`${apiUrl}/${ledgerId}`);
+  return normalizeLedgerDetail(response.data);
 };
 
 export const createLedger = async (payload: LedgerPayload) => {
@@ -38,11 +40,11 @@ export const createLedger = async (payload: LedgerPayload) => {
   return response.data;
 };
 
-export const updateLedger = async (ledgerId: number, payload: LedgerPayload) => {
+export const updateLedger = async (ledgerId: number | string, payload: LedgerPayload) => {
   const response = await axios.put<Ledger>(`${apiUrl}/${ledgerId}`, payload);
   return response.data;
 };
 
-export const deleteLedger = async (ledgerId: number) => {
+export const deleteLedger = async (ledgerId: number | string) => {
   await axios.delete(`${apiUrl}/${ledgerId}`);
 };

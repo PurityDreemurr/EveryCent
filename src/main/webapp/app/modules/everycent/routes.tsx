@@ -6,10 +6,14 @@ import ErrorBoundaryRoutes from 'app/shared/error/error-boundary-routes';
 
 import AiHomePage from './ai-record/ai-home-page';
 import Dashboard from './dashboard/dashboard';
+import ExportPage from './export/export';
 import LedgerPage from './ledger/ledger';
+import BudgetsPage from './budget/budgets';
+import NotificationsPage from './notifications/notifications';
 import Settings from './settings/settings';
 import MembersPage from './shared-ledger/members';
 import TransactionsPage from './transaction/transactions';
+import TagsPage from './tags/tags';
 
 const ComingSoon = ({ title }: { title: string }) => (
   <div className="everycent-page">
@@ -31,12 +35,12 @@ const EveryCentRoutes = () => (
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="ledgers" element={<LedgerPage />} />
       <Route path="transactions" element={<TransactionsPage />} />
-      <Route path="budgets" element={<ComingSoon title="预算" />} />
+      <Route path="budgets" element={<BudgetsPage />} />
       <Route path="members" element={<MembersPage />} />
       <Route path="analytics" element={<ComingSoon title="数据分析" />} />
-      <Route path="notifications" element={<ComingSoon title="消息提醒" />} />
-      <Route path="export" element={<ComingSoon title="导出 Excel" />} />
-      <Route path="tags" element={<ComingSoon title="标签" />} />
+      <Route path="notifications" element={<NotificationsPage />} />
+      <Route path="export" element={<ExportPage />} />
+      <Route path="tags" element={<TagsPage />} />
       <Route path="settings" element={<Settings />} />
       <Route path="help" element={<ComingSoon title="帮助中心" />} />
       <Route path="*" element={<Navigate to="/everycent/ai" replace />} />

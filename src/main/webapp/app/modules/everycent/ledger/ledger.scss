@@ -30,13 +30,19 @@
   color: var(--ec-danger);
 }
 
-.everycent-ledger-page__alert {
+.everycent-ledger-page__alert,
+.everycent-ledger-page__dialog-alert {
   padding: 0.85rem 1rem;
   border: 1px solid color-mix(in srgb, var(--ec-danger) 28%, var(--ec-border));
   border-radius: 8px;
   color: var(--ec-danger);
   background: color-mix(in srgb, var(--ec-danger) 8%, var(--ec-panel));
   font-weight: 750;
+}
+
+.everycent-ledger-page__dialog-alert {
+  padding: 0.75rem 0.85rem;
+  font-size: 0.9rem;
 }
 
 .everycent-ledger-page__grid {

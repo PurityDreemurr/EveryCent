@@ -1,0 +1,102 @@
+.everycent-tags-page {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.everycent-tags-page__alert {
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--ec-danger) 28%, var(--ec-border));
+  border-radius: 8px;
+  color: var(--ec-danger);
+  background: color-mix(in srgb, var(--ec-danger) 8%, var(--ec-panel));
+  font-weight: 750;
+}
+
+.everycent-tags-page__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.everycent-tags-page__panel {
+  display: grid;
+  align-content: start;
+  gap: 1.1rem;
+}
+
+.everycent-tags-page__section-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.everycent-tags-page__section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-soft);
+}
+
+.everycent-tags-page__section-header h2 {
+  margin: 0;
+  color: var(--ec-text);
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.everycent-tags-page__section-header p {
+  margin: 0.2rem 0 0;
+  color: var(--ec-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.everycent-tags-page__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.everycent-tags-page__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 36px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+}
+
+.everycent-tags-page__tag em {
+  color: var(--ec-muted);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.everycent-tags-page__tag strong {
+  font-weight: 850;
+}
+
+.everycent-tags-page__empty {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  color: var(--ec-muted);
+  border: 1px dashed var(--ec-border);
+  border-radius: 8px;
+  background: var(--ec-soft);
+  font-weight: 750;
+}
+
+@media (max-width: 860px) {
+  .everycent-tags-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
