@@ -2,10 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getLedgers, Ledger } from '../ledger/ledger-api';
-import { createTransactionFromNaturalLanguage, parseTransactionText } from './ai-record-api';
+import { createTransactionFromPreview, parseTransactionText } from './ai-record-api';
 import { AiChatMessage } from './ai-record-types';
 import ChatComposer from './chat-composer';
 import ChatMessageList from './chat-message-list';
+
+const CHAT_MESSAGES_STORAGE_KEY = 'everycent.aiRecord.chat.messages';
+const SELECTED_LEDGER_STORAGE_KEY = 'everycent.aiRecord.selectedLedgerId';
 
 const createMessage = (role: AiChatMessage['role'], content: string, preview?: AiChatMessage['preview']): AiChatMessage => ({
   id: uuidv4(),
@@ -15,15 +18,57 @@ const createMessage = (role: AiChatMessage['role'], content: string, preview?: A
   preview,
 });
 
+const readStoredMessages = (): AiChatMessage[] => {
+  try {
+    const raw = window.sessionStorage.getItem(CHAT_MESSAGES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const readStoredLedgerId = () => {
+  try {
+    const raw = window.sessionStorage.getItem(SELECTED_LEDGER_STORAGE_KEY);
+    if (!raw) return undefined;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const AssistantChat = () => {
   const [confirmingMessageId, setConfirmingMessageId] = useState<string>();
   const [ledgerError, setLedgerError] = useState('');
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
-  const [messages, setMessages] = useState<AiChatMessage[]>([]);
-  const [selectedLedgerId, setSelectedLedgerId] = useState<number>();
+  const [messages, setMessages] = useState<AiChatMessage[]>(readStoredMessages);
+  const [selectedLedgerId, setSelectedLedgerId] = useState<number | undefined>(readStoredLedgerId);
   const [loading, setLoading] = useState(false);
   const isEmpty = messages.length === 0;
   const selectedLedger = useMemo(() => ledgers.find(ledger => ledger.id === selectedLedgerId), [selectedLedgerId, ledgers]);
+
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(CHAT_MESSAGES_STORAGE_KEY, JSON.stringify(messages));
+    } catch {
+      // Ignore storage failures; chat still works for the current render.
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    try {
+      if (selectedLedgerId) {
+        window.sessionStorage.setItem(SELECTED_LEDGER_STORAGE_KEY, String(selectedLedgerId));
+      } else {
+        window.sessionStorage.removeItem(SELECTED_LEDGER_STORAGE_KEY);
+      }
+    } catch {
+      // Ignore storage failures; ledger selection can be restored from API defaults.
+    }
+  }, [selectedLedgerId]);
 
   useEffect(() => {
     let mounted = true;
@@ -32,7 +77,7 @@ const AssistantChat = () => {
       .then(data => {
         if (!mounted) return;
         setLedgers(data);
-        setSelectedLedgerId(current => current ?? data[0]?.id);
+        setSelectedLedgerId(current => (current && data.some(ledger => ledger.id === current) ? current : data[0]?.id));
       })
       .catch(() => {
         if (!mounted) return;
@@ -70,12 +115,9 @@ const AssistantChat = () => {
   const confirmPreview = async (message: AiChatMessage) => {
     if (!selectedLedgerId || !message.preview || message.preview.source !== 'api') return;
 
-    const rawInput = message.preview.rawInput ?? message.preview.remark;
-    if (!rawInput) return;
-
     setConfirmingMessageId(message.id);
     try {
-      const created = await createTransactionFromNaturalLanguage(selectedLedgerId, rawInput, message.preview.transactionDate);
+      const created = await createTransactionFromPreview(selectedLedgerId, message.preview);
 
       setMessages(current =>
         current.map(item =>
@@ -88,6 +130,7 @@ const AssistantChat = () => {
                   ...created,
                   created: true,
                   transactionId: created.transactionId,
+                  transactionDate: created.transactionDate,
                 },
               }
             : item,

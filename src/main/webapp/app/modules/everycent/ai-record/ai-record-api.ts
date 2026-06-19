@@ -32,6 +32,16 @@ type NaturalLanguageCreateResponse = {
   };
 };
 
+type TransactionCreateResponse = {
+  id?: number;
+  amount?: number | string;
+  type?: string;
+  behaviorTagName?: string;
+  emotionTagName?: string;
+  recordDate?: string;
+  description?: string;
+};
+
 const normalizeAmount = (amount: ParseTransactionResponse['amount']) => {
   if (typeof amount === 'number') return amount;
   if (typeof amount === 'string') {
@@ -105,5 +115,37 @@ export const createTransactionFromNaturalLanguage = async (ledgerId: number, tex
     type: normalizeType(response.data.type ?? response.data.parsedResult?.type),
     behaviorTag: response.data.behaviorTagName ?? response.data.parsedResult?.behaviorTag,
     moodTag: response.data.emotionTagName ?? response.data.parsedResult?.emotionTag,
+  };
+};
+
+export const createTransactionFromPreview = async (ledgerId: number, preview: TransactionParsePreview) => {
+  if (
+    preview.amount === undefined ||
+    !preview.type ||
+    !preview.transactionDate ||
+    preview.behaviorTagId === undefined ||
+    preview.emotionTagId === undefined
+  ) {
+    throw new Error('解析结果不完整，无法直接入账');
+  }
+
+  const response = await axios.post<TransactionCreateResponse>(`/api/ledgers/${ledgerId}/transactions`, {
+    amount: String(preview.amount),
+    type: preview.type.toUpperCase(),
+    behaviorTagId: preview.behaviorTagId,
+    emotionTagId: preview.emotionTagId,
+    recordDate: preview.transactionDate,
+    description: preview.remark ?? preview.rawInput ?? '',
+    rawInput: preview.rawInput,
+    source: 'NATURAL_LANGUAGE',
+  });
+
+  return {
+    transactionId: response.data.id,
+    amount: normalizeAmount(response.data.amount),
+    type: normalizeType(response.data.type),
+    behaviorTag: response.data.behaviorTagName ?? preview.behaviorTag,
+    moodTag: response.data.emotionTagName ?? preview.moodTag,
+    transactionDate: response.data.recordDate ?? preview.transactionDate,
   };
 };
