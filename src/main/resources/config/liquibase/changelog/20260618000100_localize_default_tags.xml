@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260618000100-1" author="everycent">
+        <update tableName="behavior_tag">
+            <column name="name" value="餐饮"/>
+            <where>code = 'FOOD'</where>
+        </update>
+        <update tableName="behavior_tag">
+            <column name="name" value="交通"/>
+            <where>code = 'TRANSPORT'</where>
+        </update>
+        <update tableName="behavior_tag">
+            <column name="name" value="购物"/>
+            <where>code = 'SHOPPING'</where>
+        </update>
+        <update tableName="behavior_tag">
+            <column name="name" value="娱乐"/>
+            <where>code = 'ENTERTAINMENT'</where>
+        </update>
+        <update tableName="behavior_tag">
+            <column name="name" value="学习"/>
+            <where>code = 'STUDY'</where>
+        </update>
+        <update tableName="behavior_tag">
+            <column name="name" value="医疗"/>
+            <where>code = 'MEDICAL'</where>
+        </update>
+        <update tableName="behavior_tag">
+            <column name="name" value="工资"/>
+            <where>code = 'SALARY'</where>
+        </update>
+        <update tableName="behavior_tag">
+            <column name="name" value="兼职"/>
+            <where>code = 'PART_TIME'</where>
+        </update>
+        <update tableName="behavior_tag">
+            <column name="name" value="其他"/>
+            <where>code = 'OTHER'</where>
+        </update>
+
+        <update tableName="emotion_tag">
+            <column name="name" value="开心"/>
+            <where>code = 'HAPPY'</where>
+        </update>
+        <update tableName="emotion_tag">
+            <column name="name" value="平静"/>
+            <where>code = 'CALM'</where>
+        </update>
+        <update tableName="emotion_tag">
+            <column name="name" value="冲动"/>
+            <where>code = 'IMPULSIVE'</where>
+        </update>
+        <update tableName="emotion_tag">
+            <column name="name" value="焦虑"/>
+            <where>code = 'ANXIOUS'</where>
+        </update>
+        <update tableName="emotion_tag">
+            <column name="name" value="后悔"/>
+            <where>code = 'REGRET'</where>
+        </update>
+        <update tableName="emotion_tag">
+            <column name="name" value="压力"/>
+            <where>code = 'STRESSED'</where>
+        </update>
+        <update tableName="emotion_tag">
+            <column name="name" value="无明显情绪"/>
+            <where>code = 'NONE'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

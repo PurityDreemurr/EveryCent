@@ -5,7 +5,17 @@ import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis } fro
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 
-import { getLedgers, Ledger } from '../ledger/ledger-api';
+import { getLedgers, Ledger } from 'app/modules/everycent/ledger/ledger-api';
+
+import {
+  DashboardPeriod,
+  TagStat,
+  TrendPoint,
+  getBehaviorTagStats,
+  getDashboardSummary,
+  getDashboardTrend,
+  getEmotionTagStats,
+} from './dashboard-api';
 
 type TabKey = 'overview' | 'analytics';
 
@@ -17,51 +27,20 @@ type SummaryCard = {
   tone: string;
 };
 
-const overviewData = [
-  { name: '1月', total: 3650 },
-  { name: '2月', total: 2850 },
-  { name: '3月', total: 1100 },
-  { name: '4月', total: 5800 },
-  { name: '5月', total: 1900 },
-  { name: '6月', total: 6000 },
-  { name: '7月', total: 5450 },
-  { name: '8月', total: 5700 },
-  { name: '9月', total: 2000 },
-  { name: '10月', total: 1100 },
-  { name: '11月', total: 6050 },
-  { name: '12月', total: 3900 },
-];
+const monthlyFallback = Array.from({ length: 12 }, (_, index) => ({
+  name: `${index + 1}月`,
+  total: 0,
+}));
 
-const analyticsData = [
-  { name: '周一', income: 900, expense: 520 },
-  { name: '周二', income: 720, expense: 430 },
-  { name: '周三', income: 1080, expense: 610 },
-  { name: '周四', income: 840, expense: 760 },
-  { name: '周五', income: 1240, expense: 680 },
-  { name: '周六', income: 680, expense: 520 },
-  { name: '周日', income: 960, expense: 390 },
-];
+const weekFallback = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'].map(name => ({
+  date: name,
+  income: '0',
+  expense: '0',
+}));
 
-const recentRecords = [
-  { name: '刘晨', email: 'liuchen@email.com', amount: '+$1,999.00', tone: 'income' },
-  { name: '张译', email: 'zhangyi@email.com', amount: '+$39.00', tone: 'income' },
-  { name: '李宁', email: 'lining@email.com', amount: '+$299.00', tone: 'income' },
-  { name: '王凯', email: 'wangkai@email.com', amount: '+$99.00', tone: 'income' },
-  { name: '陈雪', email: 'chenxue@email.com', amount: '+$39.00', tone: 'income' },
-];
+const cyclePeriod = (activeTab: TabKey): DashboardPeriod => (activeTab === 'overview' ? 'MONTH' : 'WEEK');
 
-const referrers = [
-  { name: '餐饮', value: 512 },
-  { name: '购物', value: 238 },
-  { name: '交通', value: 174 },
-  { name: '住房', value: 104 },
-];
-
-const devices = [
-  { name: '手动录入', value: 74 },
-  { name: 'AI 解析', value: 22 },
-  { name: '导入', value: 4 },
-];
+const formatMoney = (value?: string | number) => Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
 
 const DashboardCard = ({
   title,
@@ -83,23 +62,23 @@ const DashboardCard = ({
   </article>
 );
 
-const OverviewChart = () => (
+const OverviewChart = ({ data }: { data: { name: string; total: number }[] }) => (
   <div className="everycent-chart">
     <ResponsiveContainer width="100%" height={360}>
-      <BarChart data={overviewData}>
+      <BarChart data={data} barCategoryGap="42%">
         <XAxis dataKey="name" stroke="var(--ec-muted)" fontSize={12} tickLine={false} axisLine={false} />
-        <YAxis stroke="var(--ec-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} />
-        <Bar dataKey="total" fill="var(--ec-chart-bar, #0f172a)" radius={[6, 6, 0, 0]} />
+        <YAxis stroke="var(--ec-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `¥${value}`} />
+        <Bar dataKey="total" fill="var(--ec-chart-bar, #0f172a)" maxBarSize={44} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   </div>
 );
 
-const AnalyticsChart = () => (
+const AnalyticsChart = ({ data }: { data: TrendPoint[] }) => (
   <div className="everycent-chart">
     <ResponsiveContainer width="100%" height={300}>
-      <AreaChart data={analyticsData}>
-        <XAxis dataKey="name" stroke="#6f7b8d" fontSize={12} tickLine={false} axisLine={false} />
+      <AreaChart data={data}>
+        <XAxis dataKey="date" stroke="#6f7b8d" fontSize={12} tickLine={false} axisLine={false} />
         <YAxis stroke="#6f7b8d" fontSize={12} tickLine={false} axisLine={false} />
         <Area type="monotone" dataKey="income" stroke="#166f86" fill="#166f86" fillOpacity={0.16} />
         <Area type="monotone" dataKey="expense" stroke="#b43d4a" fill="#b43d4a" fillOpacity={0.1} />
@@ -108,40 +87,35 @@ const AnalyticsChart = () => (
   </div>
 );
 
-const RecentRecords = () => (
+const RecentRecords = ({ items }: { items: { name: string; amount: string }[] }) => (
   <div className="everycent-recent-records">
-    {recentRecords.map(record => (
+    {items.map(record => (
       <div key={`${record.name}-${record.amount}`} className="everycent-recent-records__item">
         <span className="everycent-recent-records__avatar">{record.name.slice(0, 2).toUpperCase()}</span>
         <span className="everycent-recent-records__copy">
           <strong>{record.name}</strong>
-          <small>{record.email}</small>
+          <small>账本记录</small>
         </span>
-        <strong className={`everycent-recent-records__amount everycent-recent-records__amount--${record.tone}`}>{record.amount}</strong>
+        <strong className="everycent-recent-records__amount">{record.amount}</strong>
       </div>
     ))}
   </div>
 );
 
-const SimpleBarList = ({
-  items,
-  valueFormatter,
-}: {
-  items: { name: string; value: number }[];
-  valueFormatter: (value: number) => string;
-}) => {
-  const max = Math.max(...items.map(item => item.value), 1);
+const SimpleBarList = ({ items, valueFormatter }: { items: TagStat[]; valueFormatter: (value: number) => string }) => {
+  const max = Math.max(...items.map(item => Number(item.amount || 0)), 1);
 
   return (
     <ul className="everycent-simple-bars">
       {items.map(item => {
-        const width = `${Math.round((item.value / max) * 100)}%`;
+        const value = Number(item.amount || 0);
+        const width = `${Math.round((value / max) * 100)}%`;
 
         return (
-          <li key={item.name}>
+          <li key={item.tagId}>
             <div className="everycent-simple-bars__row">
-              <span>{item.name}</span>
-              <strong>{valueFormatter(item.value)}</strong>
+              <span>{item.tagName}</span>
+              <strong>{valueFormatter(value)}</strong>
             </div>
             <div className="everycent-simple-bars__track">
               <span style={{ width }} />
@@ -158,6 +132,13 @@ const Dashboard = () => {
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
   const [ledgerLoading, setLedgerLoading] = useState(true);
   const [ledgerError, setLedgerError] = useState<string | null>(null);
+  const [selectedLedgerId, setSelectedLedgerId] = useState<number>();
+  const [summary, setSummary] = useState<SummaryCard[]>([]);
+  const [overviewData, setOverviewData] = useState<{ name: string; total: number }[]>(monthlyFallback);
+  const [trendData, setTrendData] = useState<TrendPoint[]>(weekFallback);
+  const [behaviorStats, setBehaviorStats] = useState<TagStat[]>([]);
+  const [emotionStats, setEmotionStats] = useState<TagStat[]>([]);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -169,6 +150,7 @@ const Dashboard = () => {
         const data = await getLedgers();
         if (mounted) {
           setLedgers(data);
+          setSelectedLedgerId(current => current || data[0]?.id);
         }
       } catch (error) {
         if (mounted) {
@@ -188,41 +170,91 @@ const Dashboard = () => {
     };
   }, []);
 
-  const dashboardSummaryCards = useMemo<SummaryCard[]>(() => {
-    const totalBalance = ledgers.reduce((sum, ledger) => sum + (ledger.currentMonthBalance || 0), 0);
-    const primaryLedger = ledgers[0];
+  useEffect(() => {
+    if (!selectedLedgerId) {
+      return;
+    }
 
-    return [
-      {
-        label: '账本数量',
-        value: ledgerLoading ? '加载中' : `${ledgers.length}`,
-        change: ledgerError || '来自 /api/ledgers',
-        icon: 'book' as IconProp,
-        tone: 'neutral',
-      },
-      {
-        label: '本月结余',
-        value: ledgerLoading ? '加载中' : `¥${totalBalance.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`,
-        change: '按当前可访问账本汇总',
-        icon: 'database' as IconProp,
-        tone: 'neutral',
-      },
-      {
-        label: '当前账本',
-        value: ledgerLoading ? '加载中' : primaryLedger?.name || '暂无账本',
-        change: primaryLedger?.description || '可在账本管理中创建',
-        icon: 'list' as IconProp,
-        tone: 'neutral',
-      },
-      {
-        label: '当前权限',
-        value: ledgerLoading ? '加载中' : primaryLedger?.permissionLevel || primaryLedger?.permissionType || '暂无',
-        change: primaryLedger?.creatorLogin ? `创建人 ${primaryLedger.creatorLogin}` : '等待账本数据',
-        icon: 'users-cog' as IconProp,
-        tone: 'neutral',
-      },
-    ];
-  }, [ledgerError, ledgerLoading, ledgers]);
+    let mounted = true;
+
+    const loadDashboard = async () => {
+      setAnalyticsError(null);
+      try {
+        const [summaryData, trend, behavior, emotion] = await Promise.all([
+          getDashboardSummary(selectedLedgerId, { period: cyclePeriod(activeTab) }),
+          getDashboardTrend(selectedLedgerId, {}),
+          getBehaviorTagStats(selectedLedgerId, { period: cyclePeriod(activeTab) }),
+          getEmotionTagStats(selectedLedgerId, { period: cyclePeriod(activeTab) }),
+        ]);
+
+        if (mounted) {
+          setSummary([
+            {
+              label: '账本数量',
+              value: ledgerLoading ? '加载中' : `${ledgers.length}`,
+              change: ledgerError || '来自 /api/ledgers',
+              icon: 'book' as IconProp,
+              tone: 'neutral',
+            },
+            {
+              label: '本期收入',
+              value: `¥${formatMoney(summaryData.incomeTotal || summaryData.totalIncome)}`,
+              change: `交易 ${summaryData.transactionCount || 0} 笔`,
+              icon: 'database' as IconProp,
+              tone: 'neutral',
+            },
+            {
+              label: '本期支出',
+              value: `¥${formatMoney(summaryData.expenseTotal || summaryData.totalExpense)}`,
+              change: `结余 ¥${formatMoney(summaryData.balance)}`,
+              icon: 'list' as IconProp,
+              tone: 'neutral',
+            },
+            {
+              label: '预算状态',
+              value: String(summaryData.budgetAlertLevel || 'NONE'),
+              change: `使用率 ${formatMoney(summaryData.budgetUsedRate || summaryData.budgetUsedRatio)}%`,
+              icon: 'tasks' as IconProp,
+              tone: 'neutral',
+            },
+          ]);
+
+          setOverviewData(
+            trend.length > 0
+              ? trend.map(item => ({
+                  name: item.date.slice(5),
+                  total: Number(item.expense || 0) + Number(item.income || 0),
+                }))
+              : monthlyFallback,
+          );
+          setTrendData(trend.length > 0 ? trend : weekFallback);
+          setBehaviorStats(behavior);
+          setEmotionStats(emotion);
+        }
+      } catch (error) {
+        if (mounted) {
+          setAnalyticsError('看板数据加载失败');
+        }
+      }
+    };
+
+    loadDashboard();
+
+    return () => {
+      mounted = false;
+    };
+  }, [activeTab, selectedLedgerId, ledgers, ledgerError, ledgerLoading]);
+
+  const selectedLedger = useMemo(() => ledgers.find(ledger => ledger.id === selectedLedgerId), [ledgers, selectedLedgerId]);
+
+  const recentRecords = useMemo(
+    () =>
+      trendData.slice(0, 5).map((item, index) => ({
+        name: item.date,
+        amount: `¥${formatMoney(index % 2 === 0 ? item.income : item.expense)}`,
+      })),
+    [trendData],
+  );
 
   return (
     <div className="everycent-page everycent-dashboard">
@@ -243,19 +275,36 @@ const Dashboard = () => {
           <button type="button" className={activeTab === 'analytics' ? 'active' : ''} onClick={() => setActiveTab('analytics')}>
             数据分析
           </button>
-          <button type="button" disabled>
-            报表
-          </button>
-          <button type="button" disabled>
-            通知
-          </button>
         </div>
       </div>
+
+      {ledgerError && <div className="everycent-dashboard__alert">{ledgerError}</div>}
+      {analyticsError && <div className="everycent-dashboard__alert">{analyticsError}</div>}
+
+      <section className="everycent-panel everycent-dashboard__toolbar">
+        <label>
+          <span>当前账本</span>
+          <select
+            value={selectedLedgerId || ''}
+            onChange={event => setSelectedLedgerId(event.target.value ? Number(event.target.value) : undefined)}
+          >
+            {ledgerLoading ? (
+              <option value="">账本加载中</option>
+            ) : (
+              ledgers.map(ledger => (
+                <option key={ledger.id} value={ledger.id}>
+                  {ledger.name}
+                </option>
+              ))
+            )}
+          </select>
+        </label>
+      </section>
 
       {activeTab === 'overview' && (
         <div className="everycent-dashboard__tab-panel">
           <section className="everycent-dashboard__summary" aria-label="账户摘要">
-            {dashboardSummaryCards.map(card => (
+            {summary.map(card => (
               <article key={card.label} className={`everycent-summary-card everycent-summary-card--${card.tone}`}>
                 <header>
                   <span>{card.label}</span>
@@ -269,10 +318,10 @@ const Dashboard = () => {
 
           <section className="everycent-dashboard__main-grid">
             <DashboardCard title="概览" className="everycent-dashboard__span-4">
-              <OverviewChart />
+              <OverviewChart data={overviewData} />
             </DashboardCard>
-            <DashboardCard title="最近记录" description="本月已记录 265 条。" className="everycent-dashboard__span-3">
-              <RecentRecords />
+            <DashboardCard title="最近记录" description={selectedLedger?.name || '请选择账本'} className="everycent-dashboard__span-3">
+              <RecentRecords items={recentRecords} />
             </DashboardCard>
           </section>
         </div>
@@ -280,16 +329,40 @@ const Dashboard = () => {
 
       {activeTab === 'analytics' && (
         <div className="everycent-dashboard__tab-panel">
-          <DashboardCard title="财务概览" description="每周收入与支出变化。">
-            <AnalyticsChart />
+          <DashboardCard title="财务趋势" description="接口返回的趋势数据。">
+            <AnalyticsChart data={trendData} />
           </DashboardCard>
 
           <section className="everycent-dashboard__summary" aria-label="数据分析摘要">
             {[
-              { label: 'AI 解析', value: '1,248', change: '较上周 +12.4%', icon: 'pencil-alt' as IconProp, tone: 'accent' },
-              { label: '唯一标签', value: '832', change: '较上周 +5.8%', icon: 'flag' as IconProp, tone: 'success' },
-              { label: '超预算', value: '42%', change: '较上周 -3.2%', icon: 'tasks' as IconProp, tone: 'warning' },
-              { label: '平均录入时间', value: '3m 24s', change: '较上周 +18s', icon: 'sync' as IconProp, tone: 'danger' },
+              {
+                label: '行为标签数',
+                value: `${behaviorStats.length}`,
+                change: '来自 /behavior-tags',
+                icon: 'flag' as IconProp,
+                tone: 'accent',
+              },
+              {
+                label: '情绪标签数',
+                value: `${emotionStats.length}`,
+                change: '来自 /emotion-tags',
+                icon: 'heart' as IconProp,
+                tone: 'success',
+              },
+              {
+                label: '最大行为标签',
+                value: behaviorStats[0]?.tagName || '暂无',
+                change: behaviorStats[0] ? `¥${formatMoney(behaviorStats[0].amount)}` : '等待数据',
+                icon: 'pencil-alt' as IconProp,
+                tone: 'warning',
+              },
+              {
+                label: '最大情绪标签',
+                value: emotionStats[0]?.tagName || '暂无',
+                change: emotionStats[0] ? `¥${formatMoney(emotionStats[0].amount)}` : '等待数据',
+                icon: 'tasks' as IconProp,
+                tone: 'danger',
+              },
             ].map(card => (
               <article key={card.label} className={`everycent-summary-card everycent-summary-card--${card.tone}`}>
                 <header>
@@ -303,11 +376,11 @@ const Dashboard = () => {
           </section>
 
           <section className="everycent-dashboard__main-grid">
-            <DashboardCard title="分类" description="支出最高的分类。" className="everycent-dashboard__span-4">
-              <SimpleBarList items={referrers} valueFormatter={value => `${value}`} />
+            <DashboardCard title="行为标签统计" description="接口：/dashboard/behavior-tags" className="everycent-dashboard__span-4">
+              <SimpleBarList items={behaviorStats} valueFormatter={value => `¥${value}`} />
             </DashboardCard>
-            <DashboardCard title="录入来源" description="记录进入 EveryCent 的方式。" className="everycent-dashboard__span-3">
-              <SimpleBarList items={devices} valueFormatter={value => `${value}%`} />
+            <DashboardCard title="情绪标签统计" description="接口：/dashboard/emotion-tags" className="everycent-dashboard__span-3">
+              <SimpleBarList items={emotionStats} valueFormatter={value => `¥${value}`} />
             </DashboardCard>
           </section>
         </div>

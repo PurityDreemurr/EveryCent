@@ -48,6 +48,42 @@
   justify-content: space-between;
 }
 
+.everycent-dashboard__alert {
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--ec-danger) 28%, var(--ec-border));
+  border-radius: 8px;
+  color: var(--ec-danger);
+  background: color-mix(in srgb, var(--ec-danger) 8%, var(--ec-panel));
+  font-weight: 750;
+}
+
+.everycent-dashboard__toolbar {
+  display: grid;
+  max-width: 360px;
+}
+
+.everycent-dashboard__toolbar label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.everycent-dashboard__toolbar span {
+  color: var(--ec-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.everycent-dashboard__toolbar select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+  font-weight: 750;
+}
+
 .everycent-dashboard__tabs {
   display: inline-flex;
   gap: 0.2rem;
