@@ -5,11 +5,13 @@ import { AiChatMessage } from './ai-record-types';
 import ParsePreviewCard from './parse-preview-card';
 
 type ChatMessageListProps = {
+  confirmingMessageId?: string;
   loading?: boolean;
   messages: AiChatMessage[];
+  onConfirmPreview?: (message: AiChatMessage) => void;
 };
 
-const ChatMessageList = ({ loading, messages }: ChatMessageListProps) => {
+const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPreview }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -24,7 +26,13 @@ const ChatMessageList = ({ loading, messages }: ChatMessageListProps) => {
           <div className="everycent-chat-message__body">
             <strong>{message.role === 'assistant' ? 'EveryCent AI' : '你'}</strong>
             <p>{message.content}</p>
-            {message.preview && <ParsePreviewCard preview={message.preview} />}
+            {message.preview && (
+              <ParsePreviewCard
+                confirming={confirmingMessageId === message.id}
+                onConfirm={onConfirmPreview ? () => onConfirmPreview(message) : undefined}
+                preview={message.preview}
+              />
+            )}
           </div>
         </article>
       ))}

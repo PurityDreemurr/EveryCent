@@ -6,7 +6,45 @@
   min-height: calc(100vh - 170px);
 }
 
+.everycent-chat__ledger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--ec-border);
+  background: var(--ec-panel);
+}
+
+.everycent-chat--empty .everycent-chat__ledger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.everycent-chat__ledger label {
+  color: var(--ec-muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.everycent-chat__ledger select {
+  min-width: 180px;
+  height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-bg);
+}
+
+.everycent-chat__ledger span {
+  color: var(--ec-danger);
+  font-size: 0.82rem;
+}
+
 .everycent-chat--empty {
+  position: relative;
   display: grid;
   place-items: center;
   background: var(--ec-bg);
@@ -283,6 +321,16 @@
 
   .everycent-chat-home {
     padding: 2rem 0 5rem;
+  }
+
+  .everycent-chat__ledger {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .everycent-chat__ledger select {
+    width: 100%;
   }
 
   .everycent-chat-composer--hero {
