@@ -3,7 +3,9 @@ package com.everycent.assistant.skill;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ActionSchemaValidator {
 
     private static final Pattern ACTION_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$");
@@ -41,7 +43,7 @@ public class ActionSchemaValidator {
         Map.entry("dashboard.trend", Set.of("ledgerId")),
         Map.entry("dashboard.behavior_tags", Set.of("ledgerId")),
         Map.entry("dashboard.emotion_tags", Set.of("ledgerId")),
-        Map.entry("export.transactions", Set.of("ledgerId"))
+        Map.entry("export.transactions", Set.of("ledgerId", "startDate", "endDate"))
     );
 
     public void validate(AssistantAction action) {

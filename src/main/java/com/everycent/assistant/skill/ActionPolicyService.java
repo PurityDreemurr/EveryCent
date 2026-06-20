@@ -1,5 +1,8 @@
 package com.everycent.assistant.skill;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class ActionPolicyService {
 
     private final ActionSchemaValidator schemaValidator;
