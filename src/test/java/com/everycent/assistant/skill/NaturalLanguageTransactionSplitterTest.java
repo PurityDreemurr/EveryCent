@@ -17,7 +17,17 @@ class NaturalLanguageTransactionSplitterTest {
     @Test
     void shouldCarryObjectContextToFollowingAmountOnlyPart() {
         assertThat(splitter.split("我今天晚上去夜市，买生蚝花了20元，然后又吃了海鲜，花了62"))
-            .containsExactly("生蚝20元", "海鲜62");
+            .containsExactly("今天晚上生蚝20元", "今天晚上海鲜62");
+    }
+
+    @Test
+    void shouldCarrySharedAmountToFollowingSpendWithoutAmount() {
+        assertThat(splitter.split("昨天开工资收入50元，修手机都花了")).containsExactly("昨天开工资收入50元", "昨天修手机花了50元");
+    }
+
+    @Test
+    void shouldCarryDateContextToFollowingTransactions() {
+        assertThat(splitter.split("昨天开工资收入50元，修手机花了50")).containsExactly("昨天开工资收入50元", "昨天修手机50");
     }
 
     @Test

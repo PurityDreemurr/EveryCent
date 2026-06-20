@@ -167,3 +167,9 @@ export const getAssistantChatHistory = async (ledgerId: number) => {
 
   return response.data;
 };
+
+export const clearAssistantChatHistory = async (ledgerId: number) => {
+  await axios.delete('/api/assistant/chat/history', {
+    params: { ledgerId },
+  });
+};

@@ -38,6 +38,29 @@
   background: var(--ec-bg);
 }
 
+.everycent-chat__clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-danger);
+  background: transparent;
+  font-weight: 800;
+}
+
+.everycent-chat__clear:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.everycent-chat__clear:not(:disabled):hover {
+  border-color: var(--ec-danger);
+  background: color-mix(in srgb, var(--ec-danger) 10%, transparent);
+}
+
 .everycent-chat__ledger span {
   color: var(--ec-danger);
   font-size: 0.82rem;

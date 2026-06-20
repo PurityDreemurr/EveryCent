@@ -120,6 +120,35 @@ class AssistantConversationStoreTest {
         assertThat(history.getMessages().get(1).getCards().get(0).getType()).isEqualTo("transaction_created");
     }
 
+    @Test
+    void shouldArchiveCurrentUserLedgerConversationsWhenClearingHistory() {
+        User user = user();
+        Ledger ledger = ledger();
+        AiConversation conversation = conversation(user, ledger);
+        when(ledgerPermissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
+        when(conversationRepository.findAllByUserAndLedgerAndArchivedFalse(user, ledger)).thenReturn(List.of(conversation));
+
+        store.clearHistory(user, 10L);
+
+        assertThat(conversation.getArchived()).isTrue();
+        assertThat(conversation.getLastModifiedDate()).isNotNull();
+        verify(conversationRepository).saveAll(List.of(conversation));
+    }
+
+    @Test
+    void shouldReturnEmptyHistoryAfterClearedConversationIsArchived() {
+        User user = user();
+        Ledger ledger = ledger();
+        when(ledgerPermissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
+        when(conversationRepository.findFirstByUserAndLedgerAndArchivedFalseOrderByLastMessageDateDescIdDesc(user, ledger))
+            .thenReturn(Optional.empty());
+
+        var history = store.latestHistory(user, 10L);
+
+        assertThat(history.getConversationId()).isNull();
+        assertThat(history.getMessages()).isEmpty();
+    }
+
     private ChatRequestDTO request(String message, Long ledgerId, Long conversationId) {
         ChatRequestDTO request = new ChatRequestDTO();
         request.setMessage(message);

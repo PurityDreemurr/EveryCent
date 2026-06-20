@@ -1,9 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getLedgers, Ledger } from '../ledger/ledger-api';
 import { readSelectedLedgerId, subscribeSelectedLedgerChange, writeSelectedLedgerId } from '../ledger/ledger-selection';
-import { createTransactionFromPreview, getAssistantChatHistory, sendAssistantChatMessage } from './ai-record-api';
+import {
+  clearAssistantChatHistory,
+  createTransactionFromPreview,
+  getAssistantChatHistory,
+  sendAssistantChatMessage,
+} from './ai-record-api';
 import { AiChatMessage } from './ai-record-types';
 import ChatComposer from './chat-composer';
 import ChatMessageList from './chat-message-list';
@@ -29,6 +35,7 @@ const AssistantChat = () => {
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<number>();
   const [selectedLedgerId, setSelectedLedgerId] = useState<number | undefined>(readSelectedLedgerId);
+  const [clearing, setClearing] = useState(false);
   const [loading, setLoading] = useState(false);
   const submittingRef = useRef(false);
   const isEmpty = messages.length === 0;
@@ -162,6 +169,21 @@ const AssistantChat = () => {
     }
   };
 
+  const clearCurrentHistory = async () => {
+    if (!selectedLedgerId || clearing || loading || messages.length === 0) return;
+
+    setClearing(true);
+    try {
+      await clearAssistantChatHistory(selectedLedgerId);
+      setMessages([]);
+      setConversationId(undefined);
+    } catch {
+      setMessages(current => [...current, createMessage('assistant', '暂时没有清除成功，请稍后再试。')]);
+    } finally {
+      setClearing(false);
+    }
+  };
+
   return (
     <section className={`everycent-chat${isEmpty ? ' everycent-chat--empty' : ' everycent-chat--thread'}`} aria-label="AI transaction chat">
       <div className="everycent-chat__ledger">
@@ -182,6 +204,17 @@ const AssistantChat = () => {
             ))
           )}
         </select>
+        <button
+          type="button"
+          className="everycent-chat__clear"
+          disabled={!selectedLedgerId || loading || clearing || messages.length === 0}
+          onClick={clearCurrentHistory}
+          title="清除当前账本对话"
+          aria-label="清除当前账本对话"
+        >
+          <FontAwesomeIcon icon="trash" />
+          <span>{clearing ? '清除中' : '清除'}</span>
+        </button>
         {ledgerError && <span>{ledgerError}</span>}
       </div>
       {isEmpty ? (

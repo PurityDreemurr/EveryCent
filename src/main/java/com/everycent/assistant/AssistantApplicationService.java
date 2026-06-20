@@ -85,6 +85,10 @@ public class AssistantApplicationService {
         return conversationStore.latestHistory(currentUser, ledgerId);
     }
 
+    public void clearHistory(User currentUser, Long ledgerId) {
+        conversationStore.clearHistory(currentUser, ledgerId);
+    }
+
     private SkillResult execute(AssistantAction action, SkillExecutionContext context) {
         try {
             return skillRouter.route(action, context);

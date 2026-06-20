@@ -106,6 +106,20 @@ public class AssistantConversationStore {
             .orElse(history);
     }
 
+    public void clearHistory(User user, Long ledgerId) {
+        if (user == null || ledgerId == null) {
+            return;
+        }
+        Ledger ledger = readableLedger(user, ledgerId);
+        Instant now = Instant.now();
+        List<AiConversation> conversations = conversationRepository.findAllByUserAndLedgerAndArchivedFalse(user, ledger);
+        conversations.forEach(conversation -> {
+            conversation.setArchived(true);
+            conversation.setLastModifiedDate(now);
+        });
+        conversationRepository.saveAll(conversations);
+    }
+
     private AiConversation findConversation(User user, Ledger ledger, Long conversationId) {
         if (conversationId != null) {
             return conversationRepository.findOneByIdAndUserAndLedgerAndArchivedFalse(conversationId, user, ledger).orElse(null);

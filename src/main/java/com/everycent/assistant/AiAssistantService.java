@@ -25,4 +25,8 @@ public class AiAssistantService {
     public ChatHistoryDTO latestHistory(User currentUser, Long ledgerId) {
         return assistantApplicationService.latestHistory(currentUser, ledgerId);
     }
+
+    public void clearHistory(User currentUser, Long ledgerId) {
+        assistantApplicationService.clearHistory(currentUser, ledgerId);
+    }
 }

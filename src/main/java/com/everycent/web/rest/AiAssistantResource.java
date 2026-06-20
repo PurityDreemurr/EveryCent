@@ -9,7 +9,9 @@ import com.everycent.repository.UserRepository;
 import com.everycent.security.SecurityUtils;
 import com.everycent.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,6 +41,12 @@ public class AiAssistantResource {
     @GetMapping("/chat/history")
     public ResponseEntity<ChatHistoryDTO> latestHistory(@RequestParam Long ledgerId) {
         return ResponseEntity.ok(aiAssistantService.latestHistory(getCurrentUser(), ledgerId));
+    }
+
+    @DeleteMapping("/chat/history")
+    public ResponseEntity<Void> clearHistory(@RequestParam Long ledgerId) {
+        aiAssistantService.clearHistory(getCurrentUser(), ledgerId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     private User getCurrentUser() {
