@@ -47,6 +47,17 @@ class ActionSchemaValidatorTest {
     }
 
     @Test
+    void shouldRequireConfirmedNaturalLanguageTransactionCreate() {
+        AssistantAction unconfirmedAction = new AssistantAction("transaction.create_from_text", Map.of("ledgerId", 1L, "text", "午饭 28 元", "confirm", false));
+        AssistantAction confirmedAction = new AssistantAction("transaction.create_from_text", Map.of("ledgerId", 1L, "text", "午饭 28 元", "confirm", true));
+
+        assertThatThrownBy(() -> validator.validate(unconfirmedAction))
+            .isInstanceOf(InvalidActionException.class)
+            .hasMessageContaining("confirm=true");
+        assertThatCode(() -> validator.validate(confirmedAction)).doesNotThrowAnyException();
+    }
+
+    @Test
     void shouldAllowForbiddenDeleteActionThroughSchemaSoPolicyCanBlockItExplicitly() {
         AssistantAction action = new AssistantAction("transaction.delete");
         action.setRequiresConfirmation(true);

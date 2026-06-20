@@ -53,6 +53,7 @@ public class ActionSchemaValidator {
         }
         validateActionName(action.getName());
         validateRequiredArguments(action);
+        validateActionSpecificRules(action);
     }
 
     private void validateActionName(String actionName) {
@@ -85,6 +86,15 @@ public class ActionSchemaValidator {
             if (value == null || (value instanceof String text && text.isBlank())) {
                 throw new InvalidActionException("Action " + action.getName() + " 缺少必要参数：" + requiredArgument);
             }
+        }
+    }
+
+    private void validateActionSpecificRules(AssistantAction action) {
+        if (!"transaction.create_from_text".equals(action.getName())) {
+            return;
+        }
+        if (!Boolean.TRUE.equals(new ActionArgumentReader(action).booleanValue("confirm"))) {
+            throw new InvalidActionException("Action transaction.create_from_text 必须由用户确认 confirm=true 后才能执行");
         }
     }
 }
