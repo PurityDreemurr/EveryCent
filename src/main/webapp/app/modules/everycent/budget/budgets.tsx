@@ -6,11 +6,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getLedgers, Ledger } from 'app/modules/everycent/ledger/ledger-api';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from 'app/shared/components/everycent/overlays/dialog';
 
+import type { Budget, BudgetAlertResult, BudgetCycle, BudgetPayload } from './budget-api';
 import {
-  Budget,
-  BudgetAlertResult,
-  BudgetCycle,
-  BudgetPayload,
   budgetLimit,
   budgetUsageRate,
   createBudget,

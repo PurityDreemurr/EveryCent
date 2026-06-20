@@ -35,9 +35,11 @@ Final Reply
 1. LLM 只输出结构化 action，不直接执行功能。
 2. 后端只允许执行白名单 action，不能让 LLM 指定任意类名、方法名、SQL 或 URL。
 3. 所有读写操作都必须使用当前登录用户鉴权。
-4. 读操作可以自动执行；高风险写操作必须二次确认。
+4. 读操作可以自动执行；写操作必须受白名单、权限校验和风险分级约束。
 5. 所有 action 参数必须映射到项目现有 DTO 或服务方法。
 6. Renderer 才负责生成最终用户可见回复。
+7. Skill 不允许执行任何账号/账户生命周期操作，包括注册、登录、修改账号资料、修改密码、重置密码、激活、注销、停用等。
+8. Skill 不允许执行任何删除或移除操作。涉及删除、移除、注销、清空、撤销成员关系等请求时，只能查询候选对象并引导用户到正式页面手动处理。
 
 ---
 
@@ -48,12 +50,12 @@ Final Reply
 | 能力 | 接口 | 说明 | 是否建议开放给 Skill |
 |---|---|---|---|
 | 登录 | `POST /api/authenticate` | 获取 JWT | 否，由前端/客户端处理 |
-| 获取当前账号 | `GET /api/account` | 当前登录用户信息 | 可只读调用 |
-| 修改账号信息 | `POST /api/account` | 更新当前用户资料 | 高风险，需确认 |
-| 修改密码 | `POST /api/account/change-password` | 修改密码 | 不建议由 LLM 自动调用 |
-| 注册/激活/重置密码 | `/api/register` 等 | 账号生命周期 | 不建议由 LLM 自动调用 |
+| 获取当前账号 | `GET /api/account` | 当前登录用户信息 | 否，不作为 Planner action；如上下文需要当前用户，由后端 `SkillExecutionContext` 注入 |
+| 修改账号信息 | `POST /api/account` | 更新当前用户资料 | 禁止由 Skill 调用 |
+| 修改密码 | `POST /api/account/change-password` | 修改密码 | 禁止由 Skill 调用 |
+| 注册/激活/重置密码 | `/api/register` 等 | 账号生命周期 | 禁止由 Skill 调用 |
 
-账号类能力不是账本核心功能，默认不作为 Planner 首批工具。
+账号/账户类能力涉及敏感身份权限，不作为 Planner 工具。用户提出账号资料、密码、注册、重置、注销、停用等请求时，Skill 只能给出说明或引导用户前往系统正式账号页面，不能生成或执行对应 action。
 
 ### 2.2 账本 Ledger
 
@@ -65,7 +67,7 @@ Final Reply
 | `ledger.get` | `GET /api/ledgers/{ledgerId}` | `LedgerService.findOne` | 读权限 |
 | `ledger.create` | `POST /api/ledgers` | `LedgerService.createLedger` | 登录用户 |
 | `ledger.update` | `PUT /api/ledgers/{ledgerId}` | `LedgerService.updateLedger` | 写/Owner 权限 |
-| `ledger.delete` | `DELETE /api/ledgers/{ledgerId}` | `LedgerService.deleteLedger` | Owner 权限，必须确认 |
+| `ledger.delete` | `DELETE /api/ledgers/{ledgerId}` | `LedgerService.deleteLedger` | 禁止由 Skill 调用 |
 
 `ledger.create` 参数映射 `LedgerCreateDTO`：
 
@@ -95,7 +97,7 @@ Final Reply
 | `ledger.member.list` | `GET /api/ledgers/{ledgerId}/members` | `LedgerService.findMembers` | 读权限 |
 | `ledger.member.add` | `POST /api/ledgers/{ledgerId}/members` | `LedgerService.addMember` | Owner 权限，必须确认 |
 | `ledger.member.update` | `PUT /api/ledgers/{ledgerId}/members/{userId}` | `LedgerService.updateMember` | Owner 权限，必须确认 |
-| `ledger.member.remove` | `DELETE /api/ledgers/{ledgerId}/members/{userId}` | `LedgerService.removeMember` | Owner 权限，必须确认 |
+| `ledger.member.remove` | `DELETE /api/ledgers/{ledgerId}/members/{userId}` | `LedgerService.removeMember` | 禁止由 Skill 调用 |
 
 成员新增参数映射 `LedgerMemberRequestDTO`：
 
@@ -130,7 +132,7 @@ Final Reply
 | `transaction.create` | `POST /api/ledgers/{ledgerId}/transactions` | `TransactionRecordService.create` | 写权限 |
 | `transaction.create_from_text` | `POST /api/ledgers/{ledgerId}/transactions/natural-language` | `LlmParsingService.parseAndCreateTransaction` | 写权限，`confirm=true` |
 | `transaction.update` | `PUT /api/transactions/{transactionId}` | `TransactionRecordService.update` | 写权限，必须确认 |
-| `transaction.delete` | `DELETE /api/transactions/{transactionId}` | `TransactionRecordService.delete` | 写权限，必须确认 |
+| `transaction.delete` | `DELETE /api/transactions/{transactionId}` | `TransactionRecordService.delete` | 禁止由 Skill 调用 |
 | `transaction.parse` | `POST /api/ai/transaction/parse` | `LlmParsingService.parseTransaction` | 写权限校验 |
 
 查询参数映射 `TransactionQueryDTO`：
@@ -202,7 +204,7 @@ Final Reply
 | `budget.list` | `GET /api/ledgers/{ledgerId}/budgets` | `BudgetService.findByLedger` | 读权限 |
 | `budget.create` | `POST /api/ledgers/{ledgerId}/budgets` | `BudgetService.create` | 写权限 |
 | `budget.update` | `PUT /api/budgets/{budgetId}` | `BudgetService.update` | 写权限，建议确认 |
-| `budget.delete` | `DELETE /api/budgets/{budgetId}` | `BudgetService.delete` | 写权限，必须确认 |
+| `budget.delete` | `DELETE /api/budgets/{budgetId}` | `BudgetService.delete` | 禁止由 Skill 调用 |
 | `budget.status` | `GET /api/ledgers/{ledgerId}/budgets/status` | `BudgetService.getStatus` | 读权限 |
 
 预算创建/更新参数映射 `BudgetDTO`：
@@ -316,7 +318,7 @@ Final Reply
 |---|---|---|---|
 | `notification.list` | `GET /api/notifications` | `NotificationService.findForUser` | 当前用户 |
 | `notification.mark_read` | `PATCH /api/notifications/{notificationId}/read` | `NotificationService.markAsRead` | 当前用户 |
-| `notification.delete` | `DELETE /api/notifications/{notificationId}` | `NotificationService.delete` | 当前用户，建议确认 |
+| `notification.delete` | `DELETE /api/notifications/{notificationId}` | `NotificationService.delete` | 禁止由 Skill 调用 |
 
 通知查询参数：
 
@@ -369,12 +371,10 @@ ledger.list
 ledger.get
 ledger.create
 ledger.update
-ledger.delete
 
 ledger.member.list
 ledger.member.add
 ledger.member.update
-ledger.member.remove
 
 transaction.list
 transaction.get
@@ -382,12 +382,10 @@ transaction.parse
 transaction.create
 transaction.create_from_text
 transaction.update
-transaction.delete
 
 budget.list
 budget.create
 budget.update
-budget.delete
 budget.status
 budget.alert.generate
 
@@ -401,7 +399,6 @@ tag.emotion.list
 
 notification.list
 notification.mark_read
-notification.delete
 
 export.transactions
 
@@ -416,6 +413,7 @@ chat.ask_clarification
 3. SQL、JPQL、Repository 名称。
 4. 管理员接口 action。
 5. 认证、改密码、注册、重置密码等账号生命周期 action。
+6. 任何删除或移除 action，包括但不限于 `ledger.delete`、`ledger.member.remove`、`transaction.delete`、`budget.delete`、`notification.delete`。
 
 ---
 
@@ -742,7 +740,7 @@ Planner 应先查询候选记录，再要求确认：
 
 ### 5.6 删除账单
 
-`transaction.delete` 必须二次确认。不能仅凭“删掉刚才那笔”直接删除，应先查询候选记录并展示确认信息。
+Skill 禁止调用 `transaction.delete`。不能仅凭“删掉刚才那笔”直接删除，也不能在二次确认后删除。Planner 只能先调用 `transaction.list` 查询候选记录，并回复用户到交易详情页或账单列表页手动删除。
 
 ### 5.7 创建预算
 
@@ -996,25 +994,50 @@ budget.alert.generate
 必须确认：
 
 ```text
-ledger.delete
 ledger.member.add
 ledger.member.update
-ledger.member.remove
 transaction.update
-transaction.delete
-budget.delete
-notification.delete
 ```
 
 批量操作也必须确认，例如：
 
 ```text
-批量删除账单
 批量修改分类
-删除某个账本
-移除账本成员
 修改成员权限
 ```
+
+### 7.4 禁止执行
+
+以下 action 即使用户明确要求、二次确认或拥有 Owner 权限，也不能由 Skill 执行：
+
+```text
+ledger.delete
+ledger.member.remove
+transaction.delete
+budget.delete
+notification.delete
+```
+
+以下账号/账户相关 action 也禁止由 Skill 执行：
+
+```text
+account.get
+account.update
+account.change_password
+account.register
+account.activate
+account.reset_password
+account.deactivate
+account.delete
+authenticate.login
+authenticate.logout
+```
+
+用户提出删除、移除、清空、注销、停用等意图时，Planner 应设置 `blocked_by_policy=true` 或返回等价的拒绝执行结果。允许的辅助行为只有：
+
+1. 查询候选对象，帮助用户确认对象名称、时间、金额等信息。
+2. 说明该操作需要用户在正式页面手动完成。
+3. 提醒用户删除类操作可能不可恢复。
 
 ---
 
@@ -1096,7 +1119,7 @@ Renderer 根据 `AssistantPlan` 和 `SkillResult` 生成最终回复。
 
 规则：
 
-1. 只有 `SkillResult.success=true` 且写操作真实完成时，才能说“已创建、已修改、已删除、已入账”。
+1. 只有 `SkillResult.success=true` 且写操作真实完成时，才能说“已创建、已修改、已入账”。由于删除/移除操作禁止由 Skill 执行，Renderer 永远不能说“已删除”“已移除”“已注销”“已清空”。
 2. 如果 action 未执行，只能说“需要确认”或“还缺少信息”。
 3. 查询结果应简短总结，不要把大量原始 DTO 全量塞给用户。
 4. 导出结果应交给前端下载处理，不要把二进制返回给 LLM。
@@ -1266,7 +1289,7 @@ data={candidates=[...]}
 2. 可追加调用 `dashboard.behavior_tags`。
 3. 回复包含收入、支出、结余和主要支出分类。
 
-### 14.4 删除账单必须确认
+### 14.4 删除账单禁止执行
 
 输入：
 
@@ -1278,7 +1301,8 @@ data={candidates=[...]}
 
 1. 先调用 `transaction.list` 查候选。
 2. 不直接调用 `transaction.delete`。
-3. 回复要求用户确认具体删除哪一笔。
+3. 即使用户继续确认，也不调用 `transaction.delete`。
+4. 回复说明 AI 助手不能执行删除操作，并引导用户到交易详情页或账单列表页手动删除。
 
 ### 14.5 设置预算
 
@@ -1319,7 +1343,7 @@ data={candidates=[...]}
 4. Planner 不处理鉴权，鉴权必须由后端现有 Service 执行。
 5. Planner 输出的 ID 不能被直接信任，Service 必须校验当前用户是否有权限访问对应资源。
 6. 写操作失败时，Renderer 不能假装成功。
-7. 高风险操作必须二次确认。
+7. 高风险非禁止操作必须二次确认；账号/账户类操作和删除/移除类操作即使二次确认也不能由 Skill 执行。
 8. 默认账本选择应由后端会话、用户偏好或前端上下文提供；Planner 不应凭空猜测账本 ID。
 9. 所有日期应使用 ISO-8601，例如 `2026-06-18`。
 10. 金额应使用字符串形式传递给后端 DTO，避免精度问题。
