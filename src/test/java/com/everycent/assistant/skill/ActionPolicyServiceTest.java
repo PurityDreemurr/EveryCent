@@ -13,7 +13,12 @@ class ActionPolicyServiceTest {
     @Test
     void shouldAllowAutoAndExplicitRequestActions() {
         ActionPolicyDecision readDecision = policyService.evaluate(new AssistantAction("ledger.list"));
-        ActionPolicyDecision writeDecision = policyService.evaluate(new AssistantAction("budget.create", Map.of("ledgerId", 1L, "cycle", "MONTHLY", "limitAmount", "3000.00")));
+        ActionPolicyDecision writeDecision = policyService.evaluate(
+            new AssistantAction(
+                "budget.create",
+                Map.of("ledgerId", 1L, "cycle", "MONTHLY", "periodStart", "2026-06-01", "periodEnd", "2026-06-30", "limitAmount", "3000.00")
+            )
+        );
 
         assertThat(readDecision.isAllowed()).isTrue();
         assertThat(readDecision.getRiskLevel()).isEqualTo(RiskLevel.AUTO_EXECUTE);

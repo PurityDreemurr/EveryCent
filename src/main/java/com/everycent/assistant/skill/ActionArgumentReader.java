@@ -1,7 +1,9 @@
 package com.everycent.assistant.skill;
 
 import com.everycent.domain.enumeration.BudgetCycle;
+import com.everycent.domain.enumeration.RecordSource;
 import com.everycent.domain.enumeration.TransactionType;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -60,6 +62,21 @@ public class ActionArgumentReader {
         return value == null ? null : value.toString();
     }
 
+    public BigDecimal decimalValue(String name) {
+        Object value = arguments.get(name);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof BigDecimal decimal) {
+            return decimal;
+        }
+        if (value instanceof Number || value instanceof String) {
+            String text = value.toString();
+            return text.isBlank() ? null : new BigDecimal(text);
+        }
+        throw new InvalidActionException("参数 " + name + " 必须是数字");
+    }
+
     public LocalDate dateValue(String name) {
         String value = stringValue(name);
         return value == null || value.isBlank() ? null : LocalDate.parse(value);
@@ -73,5 +90,10 @@ public class ActionArgumentReader {
     public BudgetCycle budgetCycle(String name) {
         String value = stringValue(name);
         return value == null || value.isBlank() ? null : BudgetCycle.valueOf(value);
+    }
+
+    public RecordSource recordSource(String name) {
+        String value = stringValue(name);
+        return value == null || value.isBlank() ? null : RecordSource.valueOf(value);
     }
 }

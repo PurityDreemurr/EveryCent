@@ -12,7 +12,10 @@ class ActionSchemaValidatorTest {
 
     @Test
     void shouldAcceptKnownSkillActionShape() {
-        AssistantAction action = new AssistantAction("transaction.create", Map.of("ledgerId", 1L, "amount", "28.00", "type", "EXPENSE"));
+        AssistantAction action = new AssistantAction(
+            "transaction.create",
+            Map.of("ledgerId", 1L, "amount", "28.00", "type", "EXPENSE", "recordDate", "2026-06-18")
+        );
 
         assertThatCode(() -> validator.validate(action)).doesNotThrowAnyException();
     }
@@ -38,7 +41,7 @@ class ActionSchemaValidatorTest {
 
     @Test
     void shouldRejectMissingRequiredArguments() {
-        AssistantAction action = new AssistantAction("transaction.create", Map.of("ledgerId", 1L, "type", "EXPENSE"));
+        AssistantAction action = new AssistantAction("transaction.create", Map.of("ledgerId", 1L, "type", "EXPENSE", "recordDate", "2026-06-18"));
 
         assertThatThrownBy(() -> validator.validate(action)).isInstanceOf(InvalidActionException.class).hasMessageContaining("缺少必要参数：amount");
     }

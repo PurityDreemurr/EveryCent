@@ -1,7 +1,7 @@
 package com.everycent.assistant.skill;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +11,7 @@ public class ActionSchemaValidator {
     private static final Pattern ACTION_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$");
     private static final Pattern URL_PATTERN = Pattern.compile("(?i)^(https?://|/api/).*");
     private static final Pattern JAVA_CLASS_PATTERN = Pattern.compile("^[a-z]+(\\.[a-z_$][\\w$]*)*\\.[A-Z_$][\\w$]*(\\.[a-zA-Z_$][\\w$]*)*$");
-    private static final Set<String> SQL_KEYWORDS = Set.of(
+    private static final java.util.Set<String> SQL_KEYWORDS = java.util.Set.of(
         "select",
         "insert",
         "update",
@@ -22,28 +22,29 @@ public class ActionSchemaValidator {
         "create"
     );
 
-    private static final Map<String, Set<String>> REQUIRED_ARGUMENTS = Map.ofEntries(
-        Map.entry("ledger.get", Set.of("ledgerId")),
-        Map.entry("ledger.update", Set.of("ledgerId")),
-        Map.entry("ledger.member.list", Set.of("ledgerId")),
-        Map.entry("ledger.member.add", Set.of("ledgerId", "userId", "permissionLevel")),
-        Map.entry("ledger.member.update", Set.of("ledgerId", "userId", "permissionLevel")),
-        Map.entry("transaction.list", Set.of("ledgerId")),
-        Map.entry("transaction.get", Set.of("transactionId")),
-        Map.entry("transaction.parse", Set.of("ledgerId", "text")),
-        Map.entry("transaction.create", Set.of("ledgerId", "amount", "type")),
-        Map.entry("transaction.create_from_text", Set.of("ledgerId", "text", "confirm")),
-        Map.entry("transaction.update", Set.of("transactionId")),
-        Map.entry("budget.list", Set.of("ledgerId")),
-        Map.entry("budget.create", Set.of("ledgerId", "cycle", "limitAmount")),
-        Map.entry("budget.update", Set.of("budgetId")),
-        Map.entry("budget.status", Set.of("ledgerId")),
-        Map.entry("budget.alert.generate", Set.of("ledgerId", "budgetId")),
-        Map.entry("dashboard.summary", Set.of("ledgerId")),
-        Map.entry("dashboard.trend", Set.of("ledgerId")),
-        Map.entry("dashboard.behavior_tags", Set.of("ledgerId")),
-        Map.entry("dashboard.emotion_tags", Set.of("ledgerId")),
-        Map.entry("export.transactions", Set.of("ledgerId", "startDate", "endDate"))
+    private static final Map<String, List<String>> REQUIRED_ARGUMENTS = Map.ofEntries(
+        Map.entry("ledger.create", List.of("name")),
+        Map.entry("ledger.get", List.of("ledgerId")),
+        Map.entry("ledger.update", List.of("ledgerId", "name")),
+        Map.entry("ledger.member.list", List.of("ledgerId")),
+        Map.entry("ledger.member.add", List.of("ledgerId", "userId", "permissionLevel")),
+        Map.entry("ledger.member.update", List.of("ledgerId", "userId", "permissionLevel")),
+        Map.entry("transaction.list", List.of("ledgerId")),
+        Map.entry("transaction.get", List.of("transactionId")),
+        Map.entry("transaction.parse", List.of("ledgerId", "text")),
+        Map.entry("transaction.create", List.of("ledgerId", "amount", "type", "recordDate")),
+        Map.entry("transaction.create_from_text", List.of("ledgerId", "text", "confirm")),
+        Map.entry("transaction.update", List.of("transactionId")),
+        Map.entry("budget.list", List.of("ledgerId")),
+        Map.entry("budget.create", List.of("ledgerId", "cycle", "periodStart", "periodEnd", "limitAmount")),
+        Map.entry("budget.update", List.of("budgetId", "cycle", "periodStart", "periodEnd", "limitAmount")),
+        Map.entry("budget.status", List.of("ledgerId")),
+        Map.entry("budget.alert.generate", List.of("ledgerId", "budgetId")),
+        Map.entry("dashboard.summary", List.of("ledgerId")),
+        Map.entry("dashboard.trend", List.of("ledgerId")),
+        Map.entry("dashboard.behavior_tags", List.of("ledgerId")),
+        Map.entry("dashboard.emotion_tags", List.of("ledgerId")),
+        Map.entry("export.transactions", List.of("ledgerId", "startDate", "endDate"))
     );
 
     public void validate(AssistantAction action) {
@@ -74,7 +75,7 @@ public class ActionSchemaValidator {
     }
 
     private void validateRequiredArguments(AssistantAction action) {
-        Set<String> requiredArguments = REQUIRED_ARGUMENTS.get(action.getName());
+        List<String> requiredArguments = REQUIRED_ARGUMENTS.get(action.getName());
         if (requiredArguments == null || requiredArguments.isEmpty()) {
             return;
         }
