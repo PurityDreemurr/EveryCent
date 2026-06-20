@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getLedgers, Ledger } from '../ledger/ledger-api';
-import { createTransactionFromPreview, parseTransactionText } from './ai-record-api';
+import { createTransactionFromPreview, sendAssistantChatMessage } from './ai-record-api';
 import { AiChatMessage } from './ai-record-types';
 import ChatComposer from './chat-composer';
 import ChatMessageList from './chat-message-list';
@@ -10,12 +10,18 @@ import ChatMessageList from './chat-message-list';
 const CHAT_MESSAGES_STORAGE_KEY = 'everycent.aiRecord.chat.messages';
 const SELECTED_LEDGER_STORAGE_KEY = 'everycent.aiRecord.selectedLedgerId';
 
-const createMessage = (role: AiChatMessage['role'], content: string, preview?: AiChatMessage['preview']): AiChatMessage => ({
+const createMessage = (
+  role: AiChatMessage['role'],
+  content: string,
+  preview?: AiChatMessage['preview'],
+  cards?: AiChatMessage['cards'],
+): AiChatMessage => ({
   id: uuidv4(),
   role,
   content,
   createdAt: new Date().toISOString(),
   preview,
+  cards,
 });
 
 const readStoredMessages = (): AiChatMessage[] => {
@@ -45,10 +51,10 @@ const AssistantChat = () => {
   const [ledgerError, setLedgerError] = useState('');
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
   const [messages, setMessages] = useState<AiChatMessage[]>(readStoredMessages);
+  const [conversationId, setConversationId] = useState<number>();
   const [selectedLedgerId, setSelectedLedgerId] = useState<number | undefined>(readStoredLedgerId);
   const [loading, setLoading] = useState(false);
   const isEmpty = messages.length === 0;
-  const selectedLedger = useMemo(() => ledgers.find(ledger => ledger.id === selectedLedgerId), [selectedLedgerId, ledgers]);
 
   useEffect(() => {
     try {
@@ -102,14 +108,18 @@ const AssistantChat = () => {
     setMessages(current => [...current, createMessage('user', text)]);
     setLoading(true);
 
-    const preview = await parseTransactionText(selectedLedgerId, text);
-    const responseText =
-      preview.source === 'api'
-        ? `已解析到 ${selectedLedger?.name ?? '当前账本'}，请确认后入账。`
-        : '后端解析接口暂不可用，我先生成了一条本地预览。';
-
-    setMessages(current => [...current, createMessage('assistant', responseText, preview)]);
-    setLoading(false);
+    try {
+      const response = await sendAssistantChatMessage(text, selectedLedgerId, conversationId);
+      setConversationId(response.conversationId);
+      setMessages(current => [
+        ...current,
+        createMessage('assistant', response.assistantMessage ?? '已处理。', undefined, response.cards ?? []),
+      ]);
+    } catch {
+      setMessages(current => [...current, createMessage('assistant', '暂时无法连接 Assistant Chat，请稍后再试。')]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const confirmPreview = async (message: AiChatMessage) => {

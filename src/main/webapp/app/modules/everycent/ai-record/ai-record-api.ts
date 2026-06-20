@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { TransactionParsePreview } from './ai-record-types';
+import { AssistantChatResponse, TransactionParsePreview } from './ai-record-types';
 
 type ParseTransactionResponse = {
   amount?: number | string;
@@ -148,4 +148,14 @@ export const createTransactionFromPreview = async (ledgerId: number, preview: Tr
     moodTag: response.data.emotionTagName ?? preview.moodTag,
     transactionDate: response.data.recordDate ?? preview.transactionDate,
   };
+};
+
+export const sendAssistantChatMessage = async (message: string, ledgerId?: number, conversationId?: number) => {
+  const response = await axios.post<AssistantChatResponse>('/api/assistant/chat', {
+    message,
+    ledgerId,
+    conversationId,
+  });
+
+  return response.data;
 };

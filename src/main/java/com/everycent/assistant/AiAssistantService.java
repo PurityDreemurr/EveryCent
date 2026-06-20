@@ -10,13 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AiAssistantService {
 
-    private final AiAssistantOrchestrator aiAssistantOrchestrator;
+    private final AssistantApplicationService assistantApplicationService;
 
-    public AiAssistantService(AiAssistantOrchestrator aiAssistantOrchestrator) {
-        this.aiAssistantOrchestrator = aiAssistantOrchestrator;
+    public AiAssistantService(AssistantApplicationService assistantApplicationService) {
+        this.assistantApplicationService = assistantApplicationService;
     }
 
     public ChatResponseDTO chat(User currentUser, ChatRequestDTO request) {
-        return aiAssistantOrchestrator.chat(currentUser, request);
+        return assistantApplicationService.chat(currentUser, request);
     }
 }
