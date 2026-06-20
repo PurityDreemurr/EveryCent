@@ -1,6 +1,7 @@
 package com.everycent.web.rest;
 
 import com.everycent.assistant.AiAssistantService;
+import com.everycent.assistant.dto.ChatHistoryDTO;
 import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.domain.User;
@@ -9,9 +10,11 @@ import com.everycent.security.SecurityUtils;
 import com.everycent.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -31,6 +34,11 @@ public class AiAssistantResource {
     @PostMapping("/chat")
     public ResponseEntity<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
         return ResponseEntity.ok(aiAssistantService.chat(getCurrentUser(), request));
+    }
+
+    @GetMapping("/chat/history")
+    public ResponseEntity<ChatHistoryDTO> latestHistory(@RequestParam Long ledgerId) {
+        return ResponseEntity.ok(aiAssistantService.latestHistory(getCurrentUser(), ledgerId));
     }
 
     private User getCurrentUser() {

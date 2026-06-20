@@ -44,7 +44,7 @@ class NaturalLanguageAccountingSkillTest {
     @Test
     void shouldCreateTransactionFromConfirmedNaturalLanguageInput() {
         LlmParsingService llmParsingService = org.mockito.Mockito.mock(LlmParsingService.class);
-        NaturalLanguageAccountingSkill skill = new NaturalLanguageAccountingSkill(llmParsingService, currentUserResolver);
+        NaturalLanguageAccountingSkill skill = naturalLanguageAccountingSkill(llmParsingService);
         NaturalLanguageTransactionCreateResultDTO serviceResult = new NaturalLanguageTransactionCreateResultDTO();
         serviceResult.setTransactionId(99L);
         serviceResult.setAmount(new BigDecimal("28.00"));
@@ -79,7 +79,7 @@ class NaturalLanguageAccountingSkillTest {
     @Test
     void routerShouldExecuteNaturalLanguageSkillAfterConfirmation() {
         LlmParsingService llmParsingService = org.mockito.Mockito.mock(LlmParsingService.class);
-        NaturalLanguageAccountingSkill skill = new NaturalLanguageAccountingSkill(llmParsingService, currentUserResolver);
+        NaturalLanguageAccountingSkill skill = naturalLanguageAccountingSkill(llmParsingService);
         SkillRouter router = new SkillRouter(new SkillRegistry(List.of(skill)), new ActionPolicyService());
         when(
             llmParsingService.parseAndCreateTransaction(
@@ -112,7 +112,7 @@ class NaturalLanguageAccountingSkillTest {
     @Test
     void routerShouldRejectUnconfirmedNaturalLanguageCreateBeforeSkillExecution() {
         LlmParsingService llmParsingService = org.mockito.Mockito.mock(LlmParsingService.class);
-        NaturalLanguageAccountingSkill skill = new NaturalLanguageAccountingSkill(llmParsingService, currentUserResolver);
+        NaturalLanguageAccountingSkill skill = naturalLanguageAccountingSkill(llmParsingService);
         SkillRouter router = new SkillRouter(new SkillRegistry(List.of(skill)), new ActionPolicyService());
 
         SkillResult result = router.route(
@@ -126,10 +126,76 @@ class NaturalLanguageAccountingSkillTest {
         verifyNoInteractions(llmParsingService);
     }
 
+    @Test
+    void shouldSplitMultipleShortTransactionsAndCreateEachOne() {
+        LlmParsingService llmParsingService = org.mockito.Mockito.mock(LlmParsingService.class);
+        NaturalLanguageAccountingSkill skill = naturalLanguageAccountingSkill(llmParsingService);
+        NaturalLanguageTransactionCreateResultDTO lunch = new NaturalLanguageTransactionCreateResultDTO();
+        lunch.setTransactionId(100L);
+        lunch.setAmount(new BigDecimal("28.00"));
+        NaturalLanguageTransactionCreateResultDTO coffee = new NaturalLanguageTransactionCreateResultDTO();
+        coffee.setTransactionId(101L);
+        coffee.setAmount(new BigDecimal("18.00"));
+        when(
+            llmParsingService.parseAndCreateTransaction(
+                org.mockito.ArgumentMatchers.eq(10L),
+                org.mockito.ArgumentMatchers.argThat(request -> "午饭28".equals(request.getText())),
+                org.mockito.ArgumentMatchers.eq(user)
+            )
+        )
+            .thenReturn(lunch);
+        when(
+            llmParsingService.parseAndCreateTransaction(
+                org.mockito.ArgumentMatchers.eq(10L),
+                org.mockito.ArgumentMatchers.argThat(request -> "咖啡18".equals(request.getText())),
+                org.mockito.ArgumentMatchers.eq(user)
+            )
+        )
+            .thenReturn(coffee);
+
+        SkillResult result = skill.execute(
+            new AssistantAction(
+                "transaction.create_from_text",
+                Map.of("ledgerId", 10L, "text", "午饭28，咖啡18，分成两笔流水记录", "transactionDate", "2026-06-20", "confirm", true)
+            ),
+            context
+        );
+
+        assertThat(result.getSuccess()).isTrue();
+        List<?> createdRecords = (List<?>) result.getData();
+        assertThat(createdRecords).hasSize(2);
+        assertThat(createdRecords.get(0)).isSameAs(lunch);
+        assertThat(createdRecords.get(1)).isSameAs(coffee);
+        verify(llmParsingService)
+            .parseAndCreateTransaction(
+                org.mockito.ArgumentMatchers.eq(10L),
+                org.mockito.ArgumentMatchers.argThat(request ->
+                    "午饭28".equals(request.getText())
+                        && LocalDate.of(2026, 6, 20).equals(request.getTransactionDate())
+                        && Boolean.TRUE.equals(request.getConfirm())
+                ),
+                org.mockito.ArgumentMatchers.eq(user)
+            );
+        verify(llmParsingService)
+            .parseAndCreateTransaction(
+                org.mockito.ArgumentMatchers.eq(10L),
+                org.mockito.ArgumentMatchers.argThat(request ->
+                    "咖啡18".equals(request.getText())
+                        && LocalDate.of(2026, 6, 20).equals(request.getTransactionDate())
+                        && Boolean.TRUE.equals(request.getConfirm())
+                ),
+                org.mockito.ArgumentMatchers.eq(user)
+            );
+    }
+
     private boolean matchesNaturalLanguageRequest(NaturalLanguageTransactionCreateRequestDTO request) {
         return request != null
             && "昨天午饭 28 元".equals(request.getText())
             && LocalDate.of(2026, 6, 19).equals(request.getTransactionDate())
             && Boolean.TRUE.equals(request.getConfirm());
+    }
+
+    private NaturalLanguageAccountingSkill naturalLanguageAccountingSkill(LlmParsingService llmParsingService) {
+        return new NaturalLanguageAccountingSkill(llmParsingService, currentUserResolver, new NaturalLanguageTransactionSplitter());
     }
 }

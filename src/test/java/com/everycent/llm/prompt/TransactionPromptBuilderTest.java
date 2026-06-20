@@ -34,6 +34,8 @@ class TransactionPromptBuilderTest {
         assertThat(prompt).contains("type 只能是 INCOME 或 EXPENSE");
         assertThat(prompt).contains("标签只能从白名单中选");
         assertThat(prompt).contains("amount 必须为正数");
+        assertThat(prompt).contains("description 必须是本笔交易的简短对象或事项");
+        assertThat(prompt).contains("description=\"海鲜\"");
         assertThat(prompt).contains("needUserConfirm=true");
         assertThat(prompt).contains("兼容旧字段");
         assertThat(prompt).contains("不要输出解释、Markdown 或多余文本");

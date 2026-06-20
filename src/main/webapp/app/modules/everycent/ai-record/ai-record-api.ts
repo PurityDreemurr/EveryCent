@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { AssistantChatResponse, TransactionParsePreview } from './ai-record-types';
+import { AssistantChatHistory, AssistantChatResponse, TransactionParsePreview } from './ai-record-types';
 
 type ParseTransactionResponse = {
   amount?: number | string;
@@ -155,6 +155,14 @@ export const sendAssistantChatMessage = async (message: string, ledgerId?: numbe
     message,
     ledgerId,
     conversationId,
+  });
+
+  return response.data;
+};
+
+export const getAssistantChatHistory = async (ledgerId: number) => {
+  const response = await axios.get<AssistantChatHistory>('/api/assistant/chat/history', {
+    params: { ledgerId },
   });
 
   return response.data;

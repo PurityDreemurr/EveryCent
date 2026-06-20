@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260620000100-1" author="everycent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ai_conversation" columnName="ledger_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="ai_conversation">
+            <column name="ledger_id" type="bigint"/>
+            <column name="session_key" type="varchar(120)"/>
+            <column name="summary" type="text"/>
+            <column name="last_modified_date" type="${datetimeType}"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260620000100-2" author="everycent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ai_message" columnName="ledger_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="ai_message">
+            <column name="ledger_id" type="bigint"/>
+            <column name="message_type" type="varchar(50)" defaultValue="CHAT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response_type" type="varchar(50)"/>
+            <column name="cards_json" type="longtext"/>
+            <column name="skill_results_json" type="longtext"/>
+            <column name="accounting_capture_json" type="longtext"/>
+            <column name="metadata_json" type="longtext"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260620000100-3" author="everycent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="ai_conversation" indexName="idx_ai_conversation_user_ledger_last_message"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="ai_conversation" indexName="idx_ai_conversation_user_ledger_last_message">
+            <column name="user_id"/>
+            <column name="ledger_id"/>
+            <column name="last_message_date"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260620000100-4" author="everycent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="ai_conversation" indexName="idx_ai_conversation_session_key"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="ai_conversation" indexName="idx_ai_conversation_session_key">
+            <column name="session_key"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260620000100-5" author="everycent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="ai_message" indexName="idx_ai_message_user_ledger_created"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="ai_message" indexName="idx_ai_message_user_ledger_created">
+            <column name="user_id"/>
+            <column name="ledger_id"/>
+            <column name="created_date"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260620000100-6" author="everycent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_ai_conversation_ledger_id"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="ai_conversation" baseColumnNames="ledger_id"
+                                 constraintName="fk_ai_conversation_ledger_id"
+                                 referencedTableName="ledger" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260620000100-7" author="everycent">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_ai_message_ledger_id"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="ai_message" baseColumnNames="ledger_id"
+                                 constraintName="fk_ai_message_ledger_id"
+                                 referencedTableName="ledger" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260620000100-8" author="everycent" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = 'ai_message'
+                      AND CONSTRAINT_NAME = 'ck_ai_message_type'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE ai_message ADD CONSTRAINT ck_ai_message_type CHECK (message_type IN ('CHAT', 'SKILL_RESULT', 'SYSTEM'))</sql>
+    </changeSet>
+</databaseChangeLog>

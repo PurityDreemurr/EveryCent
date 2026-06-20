@@ -38,7 +38,8 @@ class AiAssistantSingleTurnIT {
             new AssistantPromptBuilder(),
             new DialogueSceneClassifier(),
             new AssistantReplyPostProcessor(new ReplyOutputValidator(OBJECT_MAPPER), new LlmRewriteService(new RewritePromptBuilder(), client)),
-            client
+            client,
+            new SimpleChatReplyService()
         );
         User user = new User();
         user.setId(1L);

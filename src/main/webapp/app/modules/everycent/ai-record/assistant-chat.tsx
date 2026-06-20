@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getLedgers, Ledger } from '../ledger/ledger-api';
-import { createTransactionFromPreview, sendAssistantChatMessage } from './ai-record-api';
+import { readSelectedLedgerId, subscribeSelectedLedgerChange, writeSelectedLedgerId } from '../ledger/ledger-selection';
+import { createTransactionFromPreview, getAssistantChatHistory, sendAssistantChatMessage } from './ai-record-api';
 import { AiChatMessage } from './ai-record-types';
 import ChatComposer from './chat-composer';
 import ChatMessageList from './chat-message-list';
-
-const CHAT_MESSAGES_STORAGE_KEY = 'everycent.aiRecord.chat.messages';
-const SELECTED_LEDGER_STORAGE_KEY = 'everycent.aiRecord.selectedLedgerId';
 
 const createMessage = (
   role: AiChatMessage['role'],
@@ -24,56 +22,40 @@ const createMessage = (
   cards,
 });
 
-const readStoredMessages = (): AiChatMessage[] => {
-  try {
-    const raw = window.sessionStorage.getItem(CHAT_MESSAGES_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const readStoredLedgerId = () => {
-  try {
-    const raw = window.sessionStorage.getItem(SELECTED_LEDGER_STORAGE_KEY);
-    if (!raw) return undefined;
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
-};
-
 const AssistantChat = () => {
   const [confirmingMessageId, setConfirmingMessageId] = useState<string>();
   const [ledgerError, setLedgerError] = useState('');
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
-  const [messages, setMessages] = useState<AiChatMessage[]>(readStoredMessages);
+  const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<number>();
-  const [selectedLedgerId, setSelectedLedgerId] = useState<number | undefined>(readStoredLedgerId);
+  const [selectedLedgerId, setSelectedLedgerId] = useState<number | undefined>(readSelectedLedgerId);
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
   const isEmpty = messages.length === 0;
 
   useEffect(() => {
-    try {
-      window.sessionStorage.setItem(CHAT_MESSAGES_STORAGE_KEY, JSON.stringify(messages));
-    } catch {
-      // Ignore storage failures; chat still works for the current render.
+    if (!selectedLedgerId) {
+      setMessages([]);
+      setConversationId(undefined);
+      return;
     }
-  }, [messages]);
 
-  useEffect(() => {
-    try {
-      if (selectedLedgerId) {
-        window.sessionStorage.setItem(SELECTED_LEDGER_STORAGE_KEY, String(selectedLedgerId));
-      } else {
-        window.sessionStorage.removeItem(SELECTED_LEDGER_STORAGE_KEY);
-      }
-    } catch {
-      // Ignore storage failures; ledger selection can be restored from API defaults.
-    }
+    let mounted = true;
+    getAssistantChatHistory(selectedLedgerId)
+      .then(history => {
+        if (!mounted) return;
+        setConversationId(history.conversationId);
+        setMessages(Array.isArray(history.messages) ? history.messages : []);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setMessages([]);
+        setConversationId(undefined);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, [selectedLedgerId]);
 
   useEffect(() => {
@@ -83,7 +65,16 @@ const AssistantChat = () => {
       .then(data => {
         if (!mounted) return;
         setLedgers(data);
-        setSelectedLedgerId(current => (current && data.some(ledger => ledger.id === current) ? current : data[0]?.id));
+        setSelectedLedgerId(current => {
+          if (current && data.some(ledger => ledger.id === current)) {
+            return current;
+          }
+          const defaultLedgerId = data[0]?.id;
+          if (defaultLedgerId) {
+            writeSelectedLedgerId(defaultLedgerId);
+          }
+          return defaultLedgerId;
+        });
       })
       .catch(() => {
         if (!mounted) return;
@@ -95,13 +86,30 @@ const AssistantChat = () => {
     };
   }, []);
 
+  useEffect(
+    () =>
+      subscribeSelectedLedgerChange(ledgerId => {
+        setSelectedLedgerId(ledgerId);
+      }),
+    [],
+  );
+
+  const handleLedgerChange = (ledgerId?: number) => {
+    setSelectedLedgerId(ledgerId);
+    writeSelectedLedgerId(ledgerId);
+  };
+
   const submitMessage = async (text: string) => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
     if (!selectedLedgerId) {
       setMessages(current => [
         ...current,
         createMessage('user', text),
         createMessage('assistant', ledgers.length === 0 ? '还没有可用账本，请先创建账本后再使用 AI 记账。' : '请先选择要记入的账本。'),
       ]);
+      submittingRef.current = false;
       return;
     }
 
@@ -118,6 +126,7 @@ const AssistantChat = () => {
     } catch {
       setMessages(current => [...current, createMessage('assistant', '暂时无法连接 Assistant Chat，请稍后再试。')]);
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };
@@ -161,7 +170,7 @@ const AssistantChat = () => {
           id="ai-record-ledger"
           value={selectedLedgerId ?? ''}
           disabled={loading || ledgers.length === 0}
-          onChange={event => setSelectedLedgerId(event.target.value ? Number(event.target.value) : undefined)}
+          onChange={event => handleLedgerChange(event.target.value ? Number(event.target.value) : undefined)}
         >
           {ledgers.length === 0 ? (
             <option value="">暂无账本</option>

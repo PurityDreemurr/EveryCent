@@ -16,6 +16,7 @@
     <include file="config/liquibase/changelog/20260618000100_localize_default_tags.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260615000200_add_database_test_constraints.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260617000100_add_ai_assistant_mecot_rag_tables.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260620000100_add_ai_chat_ledger_persistence.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->

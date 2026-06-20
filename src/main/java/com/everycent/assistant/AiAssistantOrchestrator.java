@@ -29,6 +29,7 @@ public class AiAssistantOrchestrator {
     private final DialogueSceneClassifier dialogueSceneClassifier;
     private final AssistantReplyPostProcessor replyPostProcessor;
     private final LlmClient llmClient;
+    private final SimpleChatReplyService simpleChatReplyService;
 
     public AiAssistantOrchestrator(
         MemoryRetrievalService memoryRetrievalService,
@@ -36,7 +37,8 @@ public class AiAssistantOrchestrator {
         AssistantPromptBuilder assistantPromptBuilder,
         DialogueSceneClassifier dialogueSceneClassifier,
         AssistantReplyPostProcessor replyPostProcessor,
-        LlmClient llmClient
+        LlmClient llmClient,
+        SimpleChatReplyService simpleChatReplyService
     ) {
         this.memoryRetrievalService = memoryRetrievalService;
         this.aiMemoryService = aiMemoryService;
@@ -44,6 +46,7 @@ public class AiAssistantOrchestrator {
         this.dialogueSceneClassifier = dialogueSceneClassifier;
         this.replyPostProcessor = replyPostProcessor;
         this.llmClient = llmClient;
+        this.simpleChatReplyService = simpleChatReplyService;
     }
 
     public ChatResponseDTO chat(User currentUser, ChatRequestDTO request) {
@@ -52,12 +55,15 @@ public class AiAssistantOrchestrator {
         Long conversationId = request.getConversationId() == null ? System.currentTimeMillis() : request.getConversationId();
         Long messageId = System.nanoTime();
 
-        String prompt = assistantPromptBuilder.buildSingleTurnPrompt(userMessage, INITIAL_USER_EMOTION_STATE, List.of());
-        LOG.info("Assistant prompt built for userId={}, conversationId={}, rag=false, memoryPersist=false, mecot=false", userId, conversationId);
-
-        String rawReply = llmClient.complete(prompt);
         DialogueScene scene = dialogueSceneClassifier.classify(userMessage);
-        String assistantMessage = replyPostProcessor.process(userMessage, rawReply, scene);
+        String assistantMessage = simpleChatReplyService.reply(userMessage);
+        if (assistantMessage == null) {
+            String prompt = assistantPromptBuilder.buildSingleTurnPrompt(userMessage, INITIAL_USER_EMOTION_STATE, List.of());
+            LOG.info("Assistant prompt built for userId={}, conversationId={}, rag=false, memoryPersist=false, mecot=false", userId, conversationId);
+
+            String rawReply = llmClient.complete(prompt);
+            assistantMessage = replyPostProcessor.process(userMessage, rawReply, scene);
+        }
 
         ChatResponseDTO response = new ChatResponseDTO();
         response.setConversationId(conversationId);
@@ -65,8 +71,8 @@ public class AiAssistantOrchestrator {
         response.setAssistantMessage(assistantMessage);
         response.setUserEmotionTagCode("NEUTRAL");
         response.setUserEmotionConfidence(1.0);
-        response.setAiEmotionBefore("neutral");
-        response.setAiEmotionAfter("neutral");
+        response.setAiEmotionBefore("calm");
+        response.setAiEmotionAfter("calm");
         response.setAccountingCapture(noAccountingCapture());
         response.setRetrievedMemories(List.of());
         return response;

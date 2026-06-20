@@ -69,7 +69,7 @@ public class ResponseRenderer {
             return first.getMessage() == null ? "这次没有执行成功，请检查信息是否完整。" : first.getMessage();
         }
         return switch (first.getActionName()) {
-            case "transaction.create_from_text", "transaction.create" -> "已记账。";
+            case "transaction.create_from_text", "transaction.create" -> transactionCreatedMessage(first.getData());
             case "transaction.list" -> "已查询账单。";
             case "budget.create", "budget.update" -> "预算已设置。";
             case "budget.status" -> "已查询预算状态。";
@@ -108,6 +108,10 @@ public class ResponseRenderer {
     }
 
     private void applyTransactionData(AccountingCaptureDTO dto, Object data) {
+        if (data instanceof List<?> records && !records.isEmpty()) {
+            applyTransactionData(dto, records.get(0));
+            return;
+        }
         if (data instanceof NaturalLanguageTransactionCreateResultDTO created) {
             dto.setTransactionId(created.getTransactionId());
             dto.setAmount(created.getAmount());
@@ -122,6 +126,13 @@ public class ResponseRenderer {
             dto.setEmotionTagCode(record.getEmotionTagName());
             dto.setTransactionDate(record.getTransactionDate());
         }
+    }
+
+    private String transactionCreatedMessage(Object data) {
+        if (data instanceof List<?> records && records.size() > 1) {
+            return "已记账 " + records.size() + " 笔。";
+        }
+        return "已记账。";
     }
 
     public record RenderedAssistantResponse(

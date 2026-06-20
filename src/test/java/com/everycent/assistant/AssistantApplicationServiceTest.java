@@ -26,7 +26,8 @@ class AssistantApplicationServiceTest {
             planner,
             router,
             new ResponseRenderer(),
-            org.mockito.Mockito.mock(AiAssistantOrchestrator.class)
+            org.mockito.Mockito.mock(AiAssistantOrchestrator.class),
+            org.mockito.Mockito.mock(AssistantConversationStore.class)
         );
         ChatRequestDTO request = request("午饭28", 10L);
         AssistantPlan plan = plan("transaction.create_from_text");
@@ -50,6 +51,34 @@ class AssistantApplicationServiceTest {
     }
 
     @Test
+    void shouldRenderMultipleCreatedTransactions() {
+        AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
+        SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
+        AssistantApplicationService service = new AssistantApplicationService(
+            planner,
+            router,
+            new ResponseRenderer(),
+            org.mockito.Mockito.mock(AiAssistantOrchestrator.class),
+            org.mockito.Mockito.mock(AssistantConversationStore.class)
+        );
+        ChatRequestDTO request = request("午饭28，咖啡18", 10L);
+        NaturalLanguageTransactionCreateResultDTO lunch = new NaturalLanguageTransactionCreateResultDTO();
+        lunch.setTransactionId(99L);
+        NaturalLanguageTransactionCreateResultDTO coffee = new NaturalLanguageTransactionCreateResultDTO();
+        coffee.setTransactionId(100L);
+        when(planner.plan(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(plan("transaction.create_from_text"));
+        when(router.route(org.mockito.ArgumentMatchers.any(AssistantAction.class), org.mockito.ArgumentMatchers.any(SkillExecutionContext.class)))
+            .thenReturn(SkillResult.success("transaction.create_from_text", java.util.List.of(lunch, coffee)));
+
+        var response = service.chat(user(), request);
+
+        assertThat(response.getAssistantMessage()).isEqualTo("已记账 2 笔。");
+        assertThat(response.getCards().get(0).getType()).isEqualTo("transaction_created");
+        assertThat(response.getAccountingCapture().getCreated()).isTrue();
+        assertThat(response.getAccountingCapture().getTransactionId()).isEqualTo(99L);
+    }
+
+    @Test
     void shouldRenderForbiddenDeleteAsPolicyBlockedCard() {
         AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
         SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
@@ -57,7 +86,8 @@ class AssistantApplicationServiceTest {
             planner,
             router,
             new ResponseRenderer(),
-            org.mockito.Mockito.mock(AiAssistantOrchestrator.class)
+            org.mockito.Mockito.mock(AiAssistantOrchestrator.class),
+            org.mockito.Mockito.mock(AssistantConversationStore.class)
         );
         ChatRequestDTO request = request("删掉午饭", 10L);
         when(planner.plan(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(plan("transaction.delete"));
@@ -76,7 +106,13 @@ class AssistantApplicationServiceTest {
         AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
         SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
         AiAssistantOrchestrator orchestrator = org.mockito.Mockito.mock(AiAssistantOrchestrator.class);
-        AssistantApplicationService service = new AssistantApplicationService(planner, router, new ResponseRenderer(), orchestrator);
+        AssistantApplicationService service = new AssistantApplicationService(
+            planner,
+            router,
+            new ResponseRenderer(),
+            orchestrator,
+            org.mockito.Mockito.mock(AssistantConversationStore.class)
+        );
         ChatRequestDTO request = request("我今天有点无聊", 10L);
         AssistantPlan dailyChatPlan = new AssistantPlan();
         dailyChatPlan.setIntent(AssistantIntent.DAILY_CHAT);

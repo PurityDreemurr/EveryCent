@@ -14,6 +14,8 @@ const formatCardData = (data: unknown) => {
 
 const cardClassName = (type?: string) => `everycent-result-card everycent-result-card--${type ?? 'result'}`;
 
+const displayMessage = (content: string) => content.replace(/\s*\{\s*"mood"\s*:\s*\d+\s*,\s*"emoji"\s*:\s*"[^"]+"\s*\}\s*$/u, '').trim();
+
 type ChatMessageListProps = {
   confirmingMessageId?: string;
   loading?: boolean;
@@ -35,7 +37,7 @@ const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPrev
           <div className="everycent-chat-message__avatar">{message.role === 'assistant' ? <FontAwesomeIcon icon="pencil-alt" /> : 'U'}</div>
           <div className="everycent-chat-message__body">
             <strong>{message.role === 'assistant' ? 'EveryCent AI' : '你'}</strong>
-            <p>{message.content}</p>
+            <p>{message.role === 'assistant' ? displayMessage(message.content) : message.content}</p>
             {message.preview && (
               <ParsePreviewCard
                 confirming={confirmingMessageId === message.id}

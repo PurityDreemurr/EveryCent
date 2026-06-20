@@ -3,6 +3,7 @@ package com.everycent.assistant.skill;
 import com.everycent.domain.User;
 import com.everycent.llm.dto.NaturalLanguageTransactionCreateRequestDTO;
 import com.everycent.service.LlmParsingService;
+import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +16,16 @@ public class NaturalLanguageAccountingSkill implements Skill {
 
     private final SkillCurrentUserResolver currentUserResolver;
 
-    public NaturalLanguageAccountingSkill(LlmParsingService llmParsingService, SkillCurrentUserResolver currentUserResolver) {
+    private final NaturalLanguageTransactionSplitter transactionSplitter;
+
+    public NaturalLanguageAccountingSkill(
+        LlmParsingService llmParsingService,
+        SkillCurrentUserResolver currentUserResolver,
+        NaturalLanguageTransactionSplitter transactionSplitter
+    ) {
         this.llmParsingService = llmParsingService;
         this.currentUserResolver = currentUserResolver;
+        this.transactionSplitter = transactionSplitter;
     }
 
     @Override
@@ -39,15 +47,25 @@ public class NaturalLanguageAccountingSkill implements Skill {
     public SkillResult execute(AssistantAction action, SkillExecutionContext context) {
         User user = currentUserResolver.resolve(context);
         ActionArgumentReader args = new ActionArgumentReader(action);
+        List<String> transactionTexts = transactionSplitter.split(args.stringValue("text"));
+        if (transactionTexts.size() <= 1) {
+            return SkillResult.success(
+                action.getName(),
+                llmParsingService.parseAndCreateTransaction(args.longValue("ledgerId"), naturalLanguageRequest(args, args.stringValue("text")), user)
+            );
+        }
         return SkillResult.success(
             action.getName(),
-            llmParsingService.parseAndCreateTransaction(args.longValue("ledgerId"), naturalLanguageRequest(args), user)
+            transactionTexts
+                .stream()
+                .map(text -> llmParsingService.parseAndCreateTransaction(args.longValue("ledgerId"), naturalLanguageRequest(args, text), user))
+                .toList()
         );
     }
 
-    private NaturalLanguageTransactionCreateRequestDTO naturalLanguageRequest(ActionArgumentReader args) {
+    private NaturalLanguageTransactionCreateRequestDTO naturalLanguageRequest(ActionArgumentReader args, String text) {
         NaturalLanguageTransactionCreateRequestDTO request = new NaturalLanguageTransactionCreateRequestDTO();
-        request.setText(args.stringValue("text"));
+        request.setText(text);
         request.setTransactionDate(args.dateValue("transactionDate"));
         request.setConfirm(args.booleanValue("confirm"));
         return request;

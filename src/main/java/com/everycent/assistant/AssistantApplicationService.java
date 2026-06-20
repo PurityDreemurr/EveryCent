@@ -2,6 +2,7 @@ package com.everycent.assistant;
 
 import com.everycent.assistant.ResponseRenderer.RenderedAssistantResponse;
 import com.everycent.assistant.dto.AssistantSkillResultDTO;
+import com.everycent.assistant.dto.ChatHistoryDTO;
 import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.assistant.dto.MemoryContextDTO;
@@ -32,25 +33,35 @@ public class AssistantApplicationService {
 
     private final AiAssistantOrchestrator aiAssistantOrchestrator;
 
+    private final AssistantConversationStore conversationStore;
+
     public AssistantApplicationService(
         AssistantPlanner assistantPlanner,
         SkillRouter skillRouter,
         ResponseRenderer responseRenderer,
-        AiAssistantOrchestrator aiAssistantOrchestrator
+        AiAssistantOrchestrator aiAssistantOrchestrator,
+        AssistantConversationStore conversationStore
     ) {
         this.assistantPlanner = assistantPlanner;
         this.skillRouter = skillRouter;
         this.responseRenderer = responseRenderer;
         this.aiAssistantOrchestrator = aiAssistantOrchestrator;
+        this.conversationStore = conversationStore;
     }
 
     public ChatResponseDTO chat(User currentUser, ChatRequestDTO request) {
+        Long conversationId = conversationStore.ensureConversation(currentUser, request);
+        if (conversationId != null) {
+            request.setConversationId(conversationId);
+        }
         AssistantPlan plan = assistantPlanner.plan(currentUser, request);
         LOG.info("Assistant plan generated intent={}, actions={}", plan.getIntent(), actionNames(plan));
+        ChatResponseDTO response;
         if (plan.getActions().isEmpty()) {
             LOG.info("Assistant plan has no skill actions; fallback to LLM chat. intent={}", plan.getIntent());
-            ChatResponseDTO response = aiAssistantOrchestrator.chat(currentUser, request);
+            response = aiAssistantOrchestrator.chat(currentUser, request);
             response.setResponseType("message");
+            persistExchange(currentUser, request, response);
             return response;
         }
 
@@ -64,7 +75,14 @@ public class AssistantApplicationService {
 
         LOG.info("Assistant skill results={}", resultSummary(results));
         RenderedAssistantResponse rendered = responseRenderer.render(plan, results);
-        return response(currentUser, request, rendered, results);
+        response = response(currentUser, request, rendered, results);
+        persistExchange(currentUser, request, response);
+        return response;
+    }
+
+    @Transactional(readOnly = true)
+    public ChatHistoryDTO latestHistory(User currentUser, Long ledgerId) {
+        return conversationStore.latestHistory(currentUser, ledgerId);
     }
 
     private SkillResult execute(AssistantAction action, SkillExecutionContext context) {
@@ -96,10 +114,17 @@ public class AssistantApplicationService {
         response.setAccountingCapture(rendered.accountingCapture());
         response.setUserEmotionTagCode("NEUTRAL");
         response.setUserEmotionConfidence(1.0);
-        response.setAiEmotionBefore("neutral");
-        response.setAiEmotionAfter("neutral");
+        response.setAiEmotionBefore("calm");
+        response.setAiEmotionAfter("calm");
         response.setRetrievedMemories(List.of());
         return response;
+    }
+
+    private void persistExchange(User currentUser, ChatRequestDTO request, ChatResponseDTO response) {
+        Long assistantMessageId = conversationStore.appendExchange(currentUser, request, response);
+        if (assistantMessageId != null) {
+            response.setMessageId(assistantMessageId);
+        }
     }
 
     private List<String> actionNames(AssistantPlan plan) {

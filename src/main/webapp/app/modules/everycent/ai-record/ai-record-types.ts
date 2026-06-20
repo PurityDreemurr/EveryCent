@@ -59,3 +59,9 @@ export type AiChatMessage = {
   preview?: TransactionParsePreview;
   cards?: AssistantResponseCard[];
 };
+
+export type AssistantChatHistory = {
+  conversationId?: number;
+  ledgerId?: number;
+  messages?: AiChatMessage[];
+};

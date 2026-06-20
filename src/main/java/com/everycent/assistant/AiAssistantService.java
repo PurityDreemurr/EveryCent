@@ -1,5 +1,6 @@
 package com.everycent.assistant;
 
+import com.everycent.assistant.dto.ChatHistoryDTO;
 import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.domain.User;
@@ -18,5 +19,10 @@ public class AiAssistantService {
 
     public ChatResponseDTO chat(User currentUser, ChatRequestDTO request) {
         return assistantApplicationService.chat(currentUser, request);
+    }
+
+    @Transactional(readOnly = true)
+    public ChatHistoryDTO latestHistory(User currentUser, Long ledgerId) {
+        return assistantApplicationService.latestHistory(currentUser, ledgerId);
     }
 }
