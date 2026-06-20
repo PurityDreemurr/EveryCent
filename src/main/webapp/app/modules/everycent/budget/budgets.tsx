@@ -8,12 +8,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 import {
   Budget,
+  BudgetAlertResult,
   BudgetCycle,
   BudgetPayload,
   budgetLimit,
   budgetUsageRate,
   createBudget,
   deleteBudget,
+  generateBudgetAlert,
   getBudgetStatus,
   getBudgets,
   updateBudget,
@@ -63,6 +65,21 @@ const statusLabel = (status?: string) => {
   return status || '未知';
 };
 
+const AlertList = ({ emptyText, items, title }: { emptyText: string; items?: string[]; title: string }) => (
+  <div className="everycent-budgets-page__alert-list">
+    <strong>{title}</strong>
+    {items && items.length > 0 ? (
+      <ul>
+        {items.map(item => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    ) : (
+      <span>{emptyText}</span>
+    )}
+  </div>
+);
+
 const BudgetsPage = () => {
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
   const [selectedLedgerId, setSelectedLedgerId] = useState<number>();
@@ -75,6 +92,10 @@ const BudgetsPage = () => {
   const [dialogMode, setDialogMode] = useState<DialogMode>('create');
   const [form, setForm] = useState<BudgetForm>(emptyForm);
   const [statusBudget, setStatusBudget] = useState<Budget | null>(null);
+  const [alertResult, setAlertResult] = useState<BudgetAlertResult | null>(null);
+  const [alertBudgetId, setAlertBudgetId] = useState<number>();
+  const [alertLoading, setAlertLoading] = useState(false);
+  const [savingNotification, setSavingNotification] = useState(false);
 
   const selectedLedger = useMemo(() => ledgers.find(ledger => ledger.id === selectedLedgerId), [ledgers, selectedLedgerId]);
 
@@ -136,6 +157,8 @@ const BudgetsPage = () => {
     setForm(emptyForm);
     setDialogMode('create');
     setStatusBudget(null);
+    setAlertResult(null);
+    setAlertBudgetId(undefined);
     setDialogOpen(true);
   };
 
@@ -151,21 +174,47 @@ const BudgetsPage = () => {
     });
     setDialogMode('edit');
     setStatusBudget(null);
+    setAlertResult(null);
+    setAlertBudgetId(undefined);
     setDialogOpen(true);
   };
 
-  const openStatus = async (budget: Budget) => {
+  const openAlert = async (budget: Budget) => {
     if (!selectedLedgerId) {
       return;
     }
     setDialogMode('status');
     setError(null);
+    setStatusBudget(null);
+    setAlertResult(null);
+    setAlertBudgetId(budget.id);
+    setAlertLoading(true);
+    setDialogOpen(true);
     try {
       const status = await getBudgetStatus(selectedLedgerId, { cycle: budget.cycle, date: budget.periodStart });
+      const alert = await generateBudgetAlert(selectedLedgerId, budget.id, false);
       setStatusBudget(status);
-      setDialogOpen(true);
+      setAlertResult(alert);
     } catch (err) {
-      setError('预算状态加载失败。');
+      setError('预算预警生成失败。');
+    } finally {
+      setAlertLoading(false);
+    }
+  };
+
+  const saveAlertAsNotification = async () => {
+    if (!selectedLedgerId || !alertBudgetId) {
+      return;
+    }
+    setSavingNotification(true);
+    setError(null);
+    try {
+      const alert = await generateBudgetAlert(selectedLedgerId, alertBudgetId, true);
+      setAlertResult(alert);
+    } catch (err) {
+      setError('预警通知保存失败。');
+    } finally {
+      setSavingNotification(false);
     }
   };
 
@@ -300,8 +349,8 @@ const BudgetsPage = () => {
                   <strong>{statusLabel(budget.status)}</strong>
                 </div>
                 <div className="everycent-budgets-page__item-actions">
-                  <button type="button" onClick={() => openStatus(budget)}>
-                    状态
+                  <button type="button" onClick={() => openAlert(budget)}>
+                    预警
                   </button>
                   <button type="button" onClick={() => openEdit(budget)}>
                     编辑
@@ -322,29 +371,74 @@ const BudgetsPage = () => {
             <DialogTitle>
               {dialogMode === 'create' && '新建预算'}
               {dialogMode === 'edit' && '编辑预算'}
-              {dialogMode === 'status' && '预算状态'}
+              {dialogMode === 'status' && '预算预警'}
             </DialogTitle>
-            <DialogDescription>{dialogMode === 'status' ? '查看预算当前使用情况。' : '按账本配置预算周期和金额。'}</DialogDescription>
+            <DialogDescription>
+              {dialogMode === 'status' ? '查看预算使用情况，并生成个性化支出分析。' : '按账本配置预算周期和金额。'}
+            </DialogDescription>
           </DialogHeader>
 
-          {dialogMode === 'status' && statusBudget ? (
-            <div className="everycent-budgets-page__status-grid">
-              <div>
-                <span>预算金额</span>
-                <strong>{budgetLimit(statusBudget)}</strong>
-              </div>
-              <div>
-                <span>已使用</span>
-                <strong>{statusBudget.usedAmount || '0'}</strong>
-              </div>
-              <div>
-                <span>剩余</span>
-                <strong>{statusBudget.remainingAmount || '0'}</strong>
-              </div>
-              <div>
-                <span>状态</span>
-                <strong>{statusLabel(statusBudget.status)}</strong>
-              </div>
+          {dialogMode === 'status' ? (
+            <div className="everycent-budgets-page__alert-detail">
+              {alertLoading && <div className="everycent-budgets-page__empty">正在生成预算预警...</div>}
+
+              {!alertLoading && statusBudget && (
+                <div className="everycent-budgets-page__status-grid">
+                  <div>
+                    <span>预算金额</span>
+                    <strong>{budgetLimit(statusBudget)}</strong>
+                  </div>
+                  <div>
+                    <span>已使用</span>
+                    <strong>{statusBudget.usedAmount || alertResult?.usedAmount || '0'}</strong>
+                  </div>
+                  <div>
+                    <span>剩余</span>
+                    <strong>{statusBudget.remainingAmount || '0'}</strong>
+                  </div>
+                  <div>
+                    <span>状态</span>
+                    <strong>{statusLabel(statusBudget.status || alertResult?.level)}</strong>
+                  </div>
+                </div>
+              )}
+
+              {!alertLoading && alertResult && (
+                <section
+                  className={`everycent-budgets-page__ai-alert everycent-budgets-page__ai-alert--${alertResult.level?.toLowerCase() || 'info'}`}
+                >
+                  <header>
+                    <div>
+                      <span>AI 预警文案</span>
+                      <h3>{alertResult.title || '预算提醒'}</h3>
+                    </div>
+                    {alertResult.level && <strong>{statusLabel(alertResult.level)}</strong>}
+                  </header>
+
+                  {alertResult.content && <p>{alertResult.content}</p>}
+                  {alertResult.analysisSummary && <p>{alertResult.analysisSummary}</p>}
+
+                  <AlertList title="大头花销" items={alertResult.majorExpenses} emptyText="暂无明显大头花销。" />
+                  <AlertList title="可压缩支出" items={alertResult.unnecessaryExpenses} emptyText="暂无明确可压缩项。" />
+                  <AlertList title="建议" items={alertResult.suggestions} emptyText="暂无额外建议。" />
+
+                  <footer>
+                    {alertResult.needNotification ? (
+                      <span>已达到提醒阈值，可保存为通知。</span>
+                    ) : (
+                      <span>当前未达到通知阈值，仅展示分析。</span>
+                    )}
+                    <button
+                      type="button"
+                      className="everycent-budgets-page__primary"
+                      disabled={savingNotification || Boolean(alertResult.notificationId)}
+                      onClick={saveAlertAsNotification}
+                    >
+                      {alertResult.notificationId ? '已保存通知' : savingNotification ? '保存中...' : '保存为通知'}
+                    </button>
+                  </footer>
+                </section>
+              )}
             </div>
           ) : (
             <form className="everycent-budgets-page__form" onSubmit={handleSubmit}>

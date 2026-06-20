@@ -96,6 +96,10 @@ class LlmJsonResponseParserTest {
             {
               "title": "本月预算即将超支",
               "content": "预算已使用 82%。建议减少非必要支出。",
+              "analysisSummary": "餐饮是本期主要支出。",
+              "majorExpenses": ["餐饮 520 元，占比较高"],
+              "unnecessaryExpenses": ["奶茶支出较集中，可考虑减少频次"],
+              "suggestions": ["接下来优先控制外卖"],
               "level": "WARNING",
               "needNotification": true
             }
@@ -106,6 +110,10 @@ class LlmJsonResponseParserTest {
 
         assertThat(result.getTitle()).isEqualTo("本月预算即将超支");
         assertThat(result.getContent()).isEqualTo("预算已使用 82%。建议减少非必要支出。");
+        assertThat(result.getAnalysisSummary()).isEqualTo("餐饮是本期主要支出。");
+        assertThat(result.getMajorExpenses()).containsExactly("餐饮 520 元，占比较高");
+        assertThat(result.getUnnecessaryExpenses()).containsExactly("奶茶支出较集中，可考虑减少频次");
+        assertThat(result.getSuggestions()).containsExactly("接下来优先控制外卖");
         assertThat(result.getLevel()).isEqualTo(AiAlertResultDTO.AlertLevel.WARNING);
         assertThat(result.getNeedNotification()).isTrue();
     }

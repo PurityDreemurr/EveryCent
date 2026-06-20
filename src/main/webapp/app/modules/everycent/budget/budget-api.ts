@@ -35,6 +35,22 @@ export interface BudgetStatusQuery {
   date?: string;
 }
 
+export interface BudgetAlertResult {
+  title?: string;
+  content?: string;
+  analysisSummary?: string;
+  majorExpenses?: string[];
+  unnecessaryExpenses?: string[];
+  suggestions?: string[];
+  level?: 'INFO' | 'WARNING' | 'DANGER';
+  overBudget?: boolean;
+  usedAmount?: string;
+  limitAmount?: string;
+  usedRatio?: string;
+  needNotification?: boolean;
+  notificationId?: number;
+}
+
 const ledgerBudgetsUrl = (ledgerId: number) => `api/ledgers/${ledgerId}/budgets`;
 const budgetUrl = (budgetId: number) => `api/budgets/${budgetId}`;
 
@@ -64,6 +80,15 @@ export const deleteBudget = async (budgetId: number) => {
 export const getBudgetStatus = async (ledgerId: number, query: BudgetStatusQuery = {}) => {
   const response = await axios.get<Budget>(`${ledgerBudgetsUrl(ledgerId)}/status`, {
     params: query,
+  });
+  return response.data;
+};
+
+export const generateBudgetAlert = async (ledgerId: number, budgetId: number, saveAsNotification = false) => {
+  const response = await axios.post<BudgetAlertResult>('api/ai/budget-alert/generate', {
+    ledgerId,
+    budgetId,
+    saveAsNotification,
   });
   return response.data;
 };
