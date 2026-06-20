@@ -3,6 +3,7 @@ package com.everycent.llm.client;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.everycent.llm.config.LlmProperties;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -117,6 +118,39 @@ class LlmClientVisualManualTest {
             assertThat(output).isEqualTo("ok");
             assertThat(OBJECT_MAPPER.readTree(capturedBody.get()).path("enable_thinking").asBoolean()).isFalse();
             assertThat(OBJECT_MAPPER.readTree(capturedBody.get()).path("enable_search").asBoolean()).isFalse();
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void shouldUseOverrideSamplingParametersForRawCompletion() throws Exception {
+        AtomicReference<String> capturedBody = new AtomicReference<>();
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext(
+            "/chat/completions",
+            exchange -> {
+                capturedBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+                writeResponse(exchange, 200, "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}");
+            }
+        );
+        server.start();
+        try {
+            LlmProperties properties = new LlmProperties();
+            properties.setBaseUrl("http://127.0.0.1:" + server.getAddress().getPort());
+            properties.setApiKey("test-key");
+            properties.setModel("test-model");
+            properties.setTimeoutSeconds(5);
+            properties.setTemperature(0.75);
+            properties.setTopP(0.85);
+
+            String output = createClient(properties).completeRaw("测试", 0.3, 0.85);
+            JsonNode request = OBJECT_MAPPER.readTree(capturedBody.get());
+
+            assertThat(output).isEqualTo("ok");
+            assertThat(request.path("temperature").asDouble()).isEqualTo(0.3);
+            assertThat(request.path("top_p").asDouble()).isEqualTo(0.85);
+            assertThat(request.path("enable_thinking").asBoolean()).isFalse();
         } finally {
             server.stop(0);
         }

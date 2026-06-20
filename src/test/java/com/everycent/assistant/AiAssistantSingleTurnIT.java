@@ -7,6 +7,10 @@ import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.assistant.memory.AiMemoryService;
 import com.everycent.assistant.memory.MemoryRetrievalService;
 import com.everycent.assistant.prompt.AssistantPromptBuilder;
+import com.everycent.assistant.rewrite.LlmRewriteService;
+import com.everycent.assistant.rewrite.RewritePromptBuilder;
+import com.everycent.assistant.validation.DialogueSceneClassifier;
+import com.everycent.assistant.validation.ReplyOutputValidator;
 import com.everycent.domain.User;
 import com.everycent.llm.client.OpenAiCompatibleLlmClient;
 import com.everycent.llm.config.LlmProperties;
@@ -27,18 +31,22 @@ class AiAssistantSingleTurnIT {
     @Test
     @Timeout(120)
     void shouldReplyAsHaoweiWithoutRagMecotOrMemoryPersistence() {
+        OpenAiCompatibleLlmClient client = llmClient();
         AiAssistantOrchestrator orchestrator = new AiAssistantOrchestrator(
             null,
             null,
             new AssistantPromptBuilder(),
-            llmClient()
+            new DialogueSceneClassifier(),
+            new AssistantReplyPostProcessor(new ReplyOutputValidator(OBJECT_MAPPER), new LlmRewriteService(new RewritePromptBuilder(), client)),
+            client,
+            new SimpleChatReplyService()
         );
         User user = new User();
         user.setId(1L);
         user.setLogin("assistant-single-turn-user");
 
         ChatRequestDTO request = new ChatRequestDTO();
-        request.setMessage("皓尾，我今天有点累，但还是想把晚饭花了28元这件事记下来。");
+        request.setMessage("我今天有点累，但还是想把晚饭花了28元这件事记下来。");
 
         ChatResponseDTO response = orchestrator.chat(user, request);
 
@@ -49,8 +57,8 @@ class AiAssistantSingleTurnIT {
         System.out.println("RETRIEVED_MEMORY_COUNT=" + response.getRetrievedMemories().size());
 
         assertThat(response.getAssistantMessage()).isNotBlank();
-        assertThat(response.getAssistantMessage()).contains("本龙");
         assertThat(response.getAssistantMessage()).contains("{\"mood\"");
+        assertThat(response.getAssistantMessage()).doesNotContain("本龙", "皓尾", "龙");
         assertThat(response.getUserEmotionTagCode()).isEqualTo("NEUTRAL");
         assertThat(response.getAccountingCapture().getCaptured()).isFalse();
         assertThat(response.getRetrievedMemories()).isEmpty();
@@ -71,6 +79,8 @@ class AiAssistantSingleTurnIT {
         properties.setMaxTemperature(Double.parseDouble(env("APP_LLM_MAX_TEMPERATURE", "0.75")));
         properties.setMinTopP(Double.parseDouble(env("APP_LLM_MIN_TOP_P", "0.85")));
         properties.setMaxTopP(Double.parseDouble(env("APP_LLM_MAX_TOP_P", "0.85")));
+        properties.setEnableThinking(Boolean.parseBoolean(env("APP_LLM_ENABLE_THINKING", "false")));
+        properties.setEnableSearch(Boolean.parseBoolean(env("APP_LLM_ENABLE_SEARCH", "false")));
         return new OpenAiCompatibleLlmClient(properties, OBJECT_MAPPER);
     }
 

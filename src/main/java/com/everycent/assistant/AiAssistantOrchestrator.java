@@ -6,6 +6,9 @@ import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.assistant.memory.AiMemoryService;
 import com.everycent.assistant.memory.MemoryRetrievalService;
 import com.everycent.assistant.prompt.AssistantPromptBuilder;
+import com.everycent.assistant.validation.DialogueScene;
+import com.everycent.assistant.validation.DialogueSceneClassifier;
+import com.everycent.assistant.AssistantReplyPostProcessor;
 import com.everycent.domain.User;
 import com.everycent.llm.client.LlmClient;
 import java.util.List;
@@ -23,18 +26,27 @@ public class AiAssistantOrchestrator {
     private final MemoryRetrievalService memoryRetrievalService;
     private final AiMemoryService aiMemoryService;
     private final AssistantPromptBuilder assistantPromptBuilder;
+    private final DialogueSceneClassifier dialogueSceneClassifier;
+    private final AssistantReplyPostProcessor replyPostProcessor;
     private final LlmClient llmClient;
+    private final SimpleChatReplyService simpleChatReplyService;
 
     public AiAssistantOrchestrator(
         MemoryRetrievalService memoryRetrievalService,
         AiMemoryService aiMemoryService,
         AssistantPromptBuilder assistantPromptBuilder,
-        LlmClient llmClient
+        DialogueSceneClassifier dialogueSceneClassifier,
+        AssistantReplyPostProcessor replyPostProcessor,
+        LlmClient llmClient,
+        SimpleChatReplyService simpleChatReplyService
     ) {
         this.memoryRetrievalService = memoryRetrievalService;
         this.aiMemoryService = aiMemoryService;
         this.assistantPromptBuilder = assistantPromptBuilder;
+        this.dialogueSceneClassifier = dialogueSceneClassifier;
+        this.replyPostProcessor = replyPostProcessor;
         this.llmClient = llmClient;
+        this.simpleChatReplyService = simpleChatReplyService;
     }
 
     public ChatResponseDTO chat(User currentUser, ChatRequestDTO request) {
@@ -43,10 +55,15 @@ public class AiAssistantOrchestrator {
         Long conversationId = request.getConversationId() == null ? System.currentTimeMillis() : request.getConversationId();
         Long messageId = System.nanoTime();
 
-        String prompt = assistantPromptBuilder.buildSingleTurnPrompt(userMessage, INITIAL_USER_EMOTION_STATE, List.of());
-        LOG.info("Assistant prompt built for userId={}, conversationId={}, rag=false, memoryPersist=false, mecot=false", userId, conversationId);
+        DialogueScene scene = dialogueSceneClassifier.classify(userMessage);
+        String assistantMessage = simpleChatReplyService.reply(userMessage);
+        if (assistantMessage == null) {
+            String prompt = assistantPromptBuilder.buildSingleTurnPrompt(userMessage, INITIAL_USER_EMOTION_STATE, List.of());
+            LOG.info("Assistant prompt built for userId={}, conversationId={}, rag=false, memoryPersist=false, mecot=false", userId, conversationId);
 
-        String assistantMessage = llmClient.complete(prompt);
+            String rawReply = llmClient.complete(prompt);
+            assistantMessage = replyPostProcessor.process(userMessage, rawReply, scene);
+        }
 
         ChatResponseDTO response = new ChatResponseDTO();
         response.setConversationId(conversationId);
@@ -54,8 +71,8 @@ public class AiAssistantOrchestrator {
         response.setAssistantMessage(assistantMessage);
         response.setUserEmotionTagCode("NEUTRAL");
         response.setUserEmotionConfidence(1.0);
-        response.setAiEmotionBefore("neutral");
-        response.setAiEmotionAfter("neutral");
+        response.setAiEmotionBefore("calm");
+        response.setAiEmotionAfter("calm");
         response.setAccountingCapture(noAccountingCapture());
         response.setRetrievedMemories(List.of());
         return response;

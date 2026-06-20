@@ -47,6 +47,8 @@ public class TransactionPromptBuilder {
             - amount 必须为正数。
             - 标签只能从白名单中选。
             - 日期不确定时用默认日期。
+            - description 必须是本笔交易的简短对象或事项，不要包含金额、日期、地点，也不要包含“花了/付了/买了/吃了/喝了”等动作词。
+            - description 示例：输入“生蚝20元”或“买生蚝花了20元”，description="生蚝"；输入“海鲜62元”或“吃了海鲜花了62元”，description="海鲜"。
             - 无法确定金额、类型、日期、标签时，needUserConfirm=true 且 confidence 降低。
             - 兼容旧字段：behaviorTag=behaviorTagCode，moodTag=emotionTagCode，remark=description，needsManualReview=needUserConfirm。
             - 不要输出解释、Markdown 或多余文本。

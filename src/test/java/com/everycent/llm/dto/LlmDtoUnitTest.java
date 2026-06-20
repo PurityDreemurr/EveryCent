@@ -11,6 +11,7 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -146,6 +147,10 @@ class LlmDtoUnitTest {
         AiAlertResultDTO dto = new AiAlertResultDTO();
         dto.setTitle("预算预警");
         dto.setContent("本月餐饮预算已使用 85%");
+        dto.setAnalysisSummary("餐饮是本期主要支出。");
+        dto.setMajorExpenses(List.of("餐饮 520 元"));
+        dto.setUnnecessaryExpenses(List.of("奶茶支出较集中"));
+        dto.setSuggestions(List.of("减少外卖频次"));
         dto.setLevel(AiAlertResultDTO.AlertLevel.WARNING);
         dto.setOverBudget(false);
         dto.setUsedAmount(new BigDecimal("850.00"));
@@ -158,6 +163,10 @@ class LlmDtoUnitTest {
 
         assertThat(dto.getTitle()).isEqualTo("预算预警");
         assertThat(dto.getContent()).isEqualTo("本月餐饮预算已使用 85%");
+        assertThat(dto.getAnalysisSummary()).isEqualTo("餐饮是本期主要支出。");
+        assertThat(dto.getMajorExpenses()).containsExactly("餐饮 520 元");
+        assertThat(dto.getUnnecessaryExpenses()).containsExactly("奶茶支出较集中");
+        assertThat(dto.getSuggestions()).containsExactly("减少外卖频次");
         assertThat(dto.getLevel()).isEqualTo(AiAlertResultDTO.AlertLevel.WARNING);
         assertThat(dto.getOverBudget()).isFalse();
         assertThat(dto.getUsedAmount()).isEqualByComparingTo("850.00");
@@ -168,6 +177,10 @@ class LlmDtoUnitTest {
         assertThat(json).contains(
             "\"title\":\"预算预警\"",
             "\"content\":\"本月餐饮预算已使用 85%\"",
+            "\"analysisSummary\":\"餐饮是本期主要支出。\"",
+            "\"majorExpenses\":[\"餐饮 520 元\"]",
+            "\"unnecessaryExpenses\":[\"奶茶支出较集中\"]",
+            "\"suggestions\":[\"减少外卖频次\"]",
             "\"level\":\"WARNING\"",
             "\"overBudget\":false",
             "\"usedAmount\":850.00",

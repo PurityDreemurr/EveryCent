@@ -4,12 +4,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AiChatMessage } from './ai-record-types';
 import ParsePreviewCard from './parse-preview-card';
 
-type ChatMessageListProps = {
-  loading?: boolean;
-  messages: AiChatMessage[];
+const formatCardData = (data: unknown) => {
+  if (data === undefined || data === null) return '';
+  if (Array.isArray(data)) return `共 ${data.length} 条`;
+  if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return String(data);
+  if (typeof data === 'object') return JSON.stringify(data, null, 2);
+  return '';
 };
 
-const ChatMessageList = ({ loading, messages }: ChatMessageListProps) => {
+const cardClassName = (type?: string) => `everycent-result-card everycent-result-card--${type ?? 'result'}`;
+
+const displayMessage = (content: string) => content.replace(/\s*\{\s*"mood"\s*:\s*\d+\s*,\s*"emoji"\s*:\s*"[^"]+"\s*\}\s*$/u, '').trim();
+
+type ChatMessageListProps = {
+  confirmingMessageId?: string;
+  loading?: boolean;
+  messages: AiChatMessage[];
+  onConfirmPreview?: (message: AiChatMessage) => void;
+};
+
+const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPreview }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -23,8 +37,24 @@ const ChatMessageList = ({ loading, messages }: ChatMessageListProps) => {
           <div className="everycent-chat-message__avatar">{message.role === 'assistant' ? <FontAwesomeIcon icon="pencil-alt" /> : 'U'}</div>
           <div className="everycent-chat-message__body">
             <strong>{message.role === 'assistant' ? 'EveryCent AI' : '你'}</strong>
-            <p>{message.content}</p>
-            {message.preview && <ParsePreviewCard preview={message.preview} />}
+            <p>{message.role === 'assistant' ? displayMessage(message.content) : message.content}</p>
+            {message.preview && (
+              <ParsePreviewCard
+                confirming={confirmingMessageId === message.id}
+                onConfirm={onConfirmPreview ? () => onConfirmPreview(message) : undefined}
+                preview={message.preview}
+              />
+            )}
+            {message.cards?.map((card, index) => (
+              <section key={`${message.id}-card-${index}`} className={cardClassName(card.type)}>
+                <header>
+                  <span>{card.type ?? 'result'}</span>
+                  <h2>{card.title ?? '结果'}</h2>
+                </header>
+                {card.message && <p>{card.message}</p>}
+                {formatCardData(card.data) && <pre>{formatCardData(card.data)}</pre>}
+              </section>
+            ))}
           </div>
         </article>
       ))}
@@ -36,7 +66,7 @@ const ChatMessageList = ({ loading, messages }: ChatMessageListProps) => {
           </div>
           <div className="everycent-chat-message__body">
             <strong>EveryCent AI</strong>
-            <p>正在解析你的记账内容...</p>
+            <p>正在处理你的请求...</p>
           </div>
         </article>
       )}

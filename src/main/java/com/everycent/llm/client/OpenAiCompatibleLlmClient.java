@@ -70,14 +70,18 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
 
     @Override
     public String complete(String prompt) {
-        return completeWithMessages(List.of(Map.of("role", "system", "content", TEST_SYSTEM_PROMPT), Map.of("role", "user", "content", prompt)));
+        return completeWithMessages(List.of(Map.of("role", "system", "content", TEST_SYSTEM_PROMPT), Map.of("role", "user", "content", prompt)), null, null);
     }
 
     public String completeRaw(String prompt) {
-        return completeWithMessages(List.of(Map.of("role", "user", "content", prompt)));
+        return completeWithMessages(List.of(Map.of("role", "user", "content", prompt)), null, null);
     }
 
-    private String completeWithMessages(List<Map<String, String>> messages) {
+    public String completeRaw(String prompt, double temperature, double topP) {
+        return completeWithMessages(List.of(Map.of("role", "user", "content", prompt)), temperature, topP);
+    }
+
+    private String completeWithMessages(List<Map<String, String>> messages, Double temperatureOverride, Double topPOverride) {
         validateConfiguration();
         if (messages == null || messages.isEmpty() || messages.stream().noneMatch(message -> StringUtils.hasText(message.get("content")))) {
             throw new LlmClientException("LLM prompt 不能为空，请使用手动记账");
@@ -87,7 +91,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
             ResponseEntity<String> response = restTemplate.exchange(
                 resolveChatCompletionsUrl(),
                 HttpMethod.POST,
-                new HttpEntity<>(buildRequestBody(messages), buildHeaders()),
+                new HttpEntity<>(buildRequestBody(messages, temperatureOverride, topPOverride), buildHeaders()),
                 String.class
             );
             return extractContent(response.getBody());
@@ -141,9 +145,11 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
         return headers;
     }
 
-    private Map<String, Object> buildRequestBody(List<Map<String, String>> messages) {
-        double resolvedTemperature = randomizeSampling ? randomDouble(minTemperature, maxTemperature) : temperature;
-        double resolvedTopP = randomizeSampling ? randomDouble(minTopP, maxTopP) : topP;
+    private Map<String, Object> buildRequestBody(List<Map<String, String>> messages, Double temperatureOverride, Double topPOverride) {
+        double resolvedTemperature = temperatureOverride == null
+            ? randomizeSampling ? randomDouble(minTemperature, maxTemperature) : temperature
+            : temperatureOverride;
+        double resolvedTopP = topPOverride == null ? randomizeSampling ? randomDouble(minTopP, maxTopP) : topP : topPOverride;
         log.info(
             "LLM request parameters model={}, temperature={}, topP={}, enableThinking={}, enableSearch={}",
             model,

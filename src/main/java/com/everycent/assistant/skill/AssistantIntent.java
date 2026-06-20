@@ -1,0 +1,18 @@
+package com.everycent.assistant.skill;
+
+public enum AssistantIntent {
+    LEDGER_MANAGE,
+    LEDGER_MEMBER_MANAGE,
+    TRANSACTION_RECORD,
+    TRANSACTION_QUERY,
+    TRANSACTION_MODIFY,
+    BUDGET_MANAGE,
+    BUDGET_QUERY,
+    FINANCE_ANALYSIS,
+    NOTIFICATION_MANAGE,
+    EXPORT_DATA,
+    DAILY_CHAT,
+    TASK_HELP,
+    CLARIFICATION,
+    UNKNOWN,
+}

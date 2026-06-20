@@ -1,12 +1,22 @@
 package com.everycent.llm.dto;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AiAlertResultDTO {
 
     private String title;
 
     private String content;
+
+    private String analysisSummary;
+
+    private List<String> majorExpenses = new ArrayList<>();
+
+    private List<String> unnecessaryExpenses = new ArrayList<>();
+
+    private List<String> suggestions = new ArrayList<>();
 
     private AlertLevel level;
 
@@ -42,6 +52,38 @@ public class AiAlertResultDTO {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getAnalysisSummary() {
+        return analysisSummary;
+    }
+
+    public void setAnalysisSummary(String analysisSummary) {
+        this.analysisSummary = analysisSummary;
+    }
+
+    public List<String> getMajorExpenses() {
+        return majorExpenses;
+    }
+
+    public void setMajorExpenses(List<String> majorExpenses) {
+        this.majorExpenses = majorExpenses;
+    }
+
+    public List<String> getUnnecessaryExpenses() {
+        return unnecessaryExpenses;
+    }
+
+    public void setUnnecessaryExpenses(List<String> unnecessaryExpenses) {
+        this.unnecessaryExpenses = unnecessaryExpenses;
+    }
+
+    public List<String> getSuggestions() {
+        return suggestions;
+    }
+
+    public void setSuggestions(List<String> suggestions) {
+        this.suggestions = suggestions;
     }
 
     public AlertLevel getLevel() {

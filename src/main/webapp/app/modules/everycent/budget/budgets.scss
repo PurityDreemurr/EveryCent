@@ -150,7 +150,7 @@
 }
 
 .everycent-budget-dialog {
-  width: min(620px, calc(100vw - 2rem));
+  width: min(760px, calc(100vw - 2rem));
 }
 
 .everycent-budgets-page__form,
@@ -180,6 +180,77 @@
   color: var(--ec-text);
 }
 
+.everycent-budgets-page__alert-detail {
+  display: grid;
+  gap: 1rem;
+}
+
+.everycent-budgets-page__ai-alert {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  background: var(--ec-panel);
+}
+
+.everycent-budgets-page__ai-alert--warning {
+  border-color: color-mix(in srgb, #f59e0b 42%, var(--ec-border));
+  background: color-mix(in srgb, #f59e0b 7%, var(--ec-panel));
+}
+
+.everycent-budgets-page__ai-alert--danger {
+  border-color: color-mix(in srgb, var(--ec-danger) 42%, var(--ec-border));
+  background: color-mix(in srgb, var(--ec-danger) 7%, var(--ec-panel));
+}
+
+.everycent-budgets-page__ai-alert header,
+.everycent-budgets-page__ai-alert footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.everycent-budgets-page__ai-alert header span,
+.everycent-budgets-page__ai-alert footer span,
+.everycent-budgets-page__alert-list span {
+  color: var(--ec-muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.everycent-budgets-page__ai-alert h3 {
+  margin: 0.2rem 0 0;
+  color: var(--ec-text);
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+.everycent-budgets-page__ai-alert p {
+  margin: 0;
+  color: var(--ec-text);
+  line-height: 1.6;
+}
+
+.everycent-budgets-page__alert-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.everycent-budgets-page__alert-list > strong {
+  color: var(--ec-text);
+  font-size: 0.92rem;
+}
+
+.everycent-budgets-page__alert-list ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--ec-text);
+}
+
 @media (max-width: 1080px) {
   .everycent-budgets-page__item {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -191,5 +262,11 @@
   .everycent-budgets-page__form,
   .everycent-budgets-page__status-grid {
     grid-template-columns: 1fr;
+  }
+
+  .everycent-budgets-page__ai-alert header,
+  .everycent-budgets-page__ai-alert footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

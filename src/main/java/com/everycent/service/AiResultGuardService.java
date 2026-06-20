@@ -11,6 +11,7 @@ import com.everycent.repository.BehaviorTagRepository;
 import com.everycent.repository.EmotionTagRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,6 +19,8 @@ public class AiResultGuardService {
 
     private static final int DESCRIPTION_MAX_LENGTH = 500;
     private static final int RAW_INPUT_MAX_LENGTH = 500;
+    private static final int ALERT_ITEM_MAX_LENGTH = 120;
+    private static final int ALERT_ITEM_MAX_COUNT = 5;
     private static final int PAST_YEAR_LIMIT = 10;
     private static final int FUTURE_YEAR_LIMIT = 1;
 
@@ -100,6 +103,10 @@ public class AiResultGuardService {
         }
         result.setTitle(sanitizeRequiredText(result.getTitle(), 100, "AI 提醒标题不能为空"));
         result.setContent(sanitizeRequiredText(result.getContent(), DESCRIPTION_MAX_LENGTH, "AI 提醒正文不能为空"));
+        result.setAnalysisSummary(sanitizeText(result.getAnalysisSummary(), DESCRIPTION_MAX_LENGTH));
+        result.setMajorExpenses(sanitizeList(result.getMajorExpenses()));
+        result.setUnnecessaryExpenses(sanitizeList(result.getUnnecessaryExpenses()));
+        result.setSuggestions(sanitizeList(result.getSuggestions()));
         if (result.getNeedNotification() == null) {
             result.setNeedNotification(false);
         }
@@ -128,5 +135,17 @@ public class AiResultGuardService {
 
     private int rawInputMaxLength() {
         return llmProperties.getMaxInputLength() == null ? RAW_INPUT_MAX_LENGTH : llmProperties.getMaxInputLength();
+    }
+
+    private List<String> sanitizeList(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return List.of();
+        }
+        return values
+            .stream()
+            .map(value -> sanitizeText(value, ALERT_ITEM_MAX_LENGTH))
+            .filter(value -> value != null && !value.isBlank())
+            .limit(ALERT_ITEM_MAX_COUNT)
+            .toList();
     }
 }

@@ -3,6 +3,8 @@ import React from 'react';
 import { TransactionParsePreview } from './ai-record-types';
 
 type ParsePreviewCardProps = {
+  confirming?: boolean;
+  onConfirm?: () => void;
   preview: TransactionParsePreview;
 };
 
@@ -22,7 +24,7 @@ const formatType = (type?: string) => {
   return '-';
 };
 
-const ParsePreviewCard = ({ preview }: ParsePreviewCardProps) => (
+const ParsePreviewCard = ({ confirming, onConfirm, preview }: ParsePreviewCardProps) => (
   <section className="everycent-parse-card">
     <header>
       <div>
@@ -49,18 +51,28 @@ const ParsePreviewCard = ({ preview }: ParsePreviewCardProps) => (
         <dt>情绪</dt>
         <dd>{preview.moodTag ?? '-'}</dd>
       </div>
+      <div>
+        <dt>日期</dt>
+        <dd>{preview.transactionDate ?? '-'}</dd>
+      </div>
     </dl>
 
     {preview.remark && <p>{preview.remark}</p>}
 
     <footer>
-      <button type="button" className="everycent-primary-button">
-        确认入账
+      <button
+        type="button"
+        className="everycent-primary-button"
+        disabled={!onConfirm || confirming || preview.source !== 'api' || preview.created}
+        onClick={onConfirm}
+      >
+        {preview.created ? '已入账' : confirming ? '正在入账' : '确认入账'}
       </button>
       <button type="button" className="everycent-secondary-button">
         继续编辑
       </button>
       {preview.source === 'fallback' && <span>本地预览，后端解析接口暂未连接。</span>}
+      {preview.transactionId && <span>记录 #{preview.transactionId}</span>}
     </footer>
   </section>
 );

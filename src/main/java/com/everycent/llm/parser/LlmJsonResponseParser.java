@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -62,6 +64,12 @@ public class LlmJsonResponseParser {
             AiAlertResultDTO dto = new AiAlertResultDTO();
             dto.setTitle(root.path("title").asText());
             dto.setContent(root.path("content").asText());
+            if (hasValue(root, "analysisSummary")) {
+                dto.setAnalysisSummary(root.path("analysisSummary").asText());
+            }
+            dto.setMajorExpenses(textArray(root, "majorExpenses"));
+            dto.setUnnecessaryExpenses(textArray(root, "unnecessaryExpenses"));
+            dto.setSuggestions(textArray(root, "suggestions"));
             dto.setLevel(AiAlertResultDTO.AlertLevel.valueOf(root.path("level").asText()));
             dto.setNeedNotification(root.path("needNotification").asBoolean());
             return dto;
@@ -100,6 +108,20 @@ public class LlmJsonResponseParser {
             }
         }
         return null;
+    }
+
+    private List<String> textArray(JsonNode root, String fieldName) {
+        JsonNode node = root.path(fieldName);
+        if (!node.isArray()) {
+            return List.of();
+        }
+        List<String> values = new ArrayList<>();
+        node.forEach(item -> {
+            if (!item.isNull() && StringUtils.hasText(item.asText())) {
+                values.add(item.asText());
+            }
+        });
+        return values;
     }
 
     private String extractJson(String jsonText) {

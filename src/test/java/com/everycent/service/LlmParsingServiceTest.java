@@ -252,7 +252,7 @@ class LlmParsingServiceTest {
             .thenReturn(List.of(expense, income));
         when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodEnd().minusDays(14), budget.getPeriodEnd()))
             .thenReturn(List.of(expense));
-        when(alertPromptBuilder.build(any(), any(), any(), any())).thenReturn("alert-prompt");
+        when(alertPromptBuilder.build(any(), any(), any(), any(), any())).thenReturn("alert-prompt");
         when(llmClient.complete("alert-prompt")).thenReturn("{alert-json}");
         when(parser.parseAlert("{alert-json}")).thenReturn(parsed);
         when(guardService.validateAlertResult(parsed)).thenReturn(parsed);
@@ -264,7 +264,7 @@ class LlmParsingServiceTest {
         assertThat(result.getUsedRatio()).isEqualByComparingTo("0.8200");
         assertThat(result.getOverBudget()).isFalse();
         assertThat(result.getNeedNotification()).isTrue();
-        verify(alertPromptBuilder).build(any(), any(), any(), any());
+        verify(alertPromptBuilder).build(any(), any(), any(), any(), any());
         verify(parser).parseAlert("{alert-json}");
     }
 
@@ -302,7 +302,7 @@ class LlmParsingServiceTest {
             .thenReturn(List.of(expense));
         when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodEnd().minusDays(14), budget.getPeriodEnd()))
             .thenReturn(List.of(expense));
-        when(alertPromptBuilder.build(any(), any(), any(), any())).thenReturn("alert-prompt");
+        when(alertPromptBuilder.build(any(), any(), any(), any(), any())).thenReturn("alert-prompt");
         when(llmClient.complete("alert-prompt")).thenReturn("{alert-json}");
         when(parser.parseAlert("{alert-json}")).thenReturn(parsed);
         when(guardService.validateAlertResult(parsed)).thenReturn(parsed);
@@ -348,7 +348,7 @@ class LlmParsingServiceTest {
             .thenReturn(List.of(expense));
         when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodEnd().minusDays(14), budget.getPeriodEnd()))
             .thenReturn(List.of(expense));
-        when(alertPromptBuilder.build(any(), any(), any(), any())).thenReturn("alert-prompt");
+        when(alertPromptBuilder.build(any(), any(), any(), any(), any())).thenReturn("alert-prompt");
         when(llmClient.complete("alert-prompt")).thenThrow(new RuntimeException("timeout"));
         when(guardService.validateAlertResult(any(AiAlertResultDTO.class))).then(returnsFirstArg());
 
@@ -393,7 +393,7 @@ class LlmParsingServiceTest {
             .thenReturn(List.of(expense));
         when(transactionRecordRepository.findAllByLedgerAndTransactionDateBetween(ledger, budget.getPeriodEnd().minusDays(14), budget.getPeriodEnd()))
             .thenReturn(List.of(expense));
-        when(alertPromptBuilder.build(any(), any(), any(), any())).thenReturn("alert-prompt");
+        when(alertPromptBuilder.build(any(), any(), any(), any(), any())).thenReturn("alert-prompt");
         when(llmClient.complete("alert-prompt")).thenThrow(new RuntimeException("timeout"));
         when(guardService.validateAlertResult(any(AiAlertResultDTO.class))).then(returnsFirstArg());
         when(notificationMessageRepository.save(any(NotificationMessage.class))).thenReturn(savedNotification);

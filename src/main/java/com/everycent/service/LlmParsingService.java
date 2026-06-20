@@ -178,7 +178,7 @@ public class LlmParsingService {
             budget.getPeriodEnd()
         );
         List<EmotionStatDTO> emotionStats = buildEmotionStats(periodRecords);
-        String prompt = alertPromptBuilder.build(ledger, budgetStatus, recentRecords, emotionStats);
+        String prompt = alertPromptBuilder.build(ledger, budgetStatus, periodRecords, recentRecords, emotionStats);
         AiAlertResultDTO result;
         boolean alertReached = usedRatio.compareTo(budget.getAlertThreshold()) >= 0;
         try {
@@ -233,6 +233,10 @@ public class LlmParsingService {
         result.setContent(
             "当前预算已使用 %s，剩余 %s 元，请注意控制支出。".formatted(formatPercent(usedRatio), remainingAmount.setScale(2, RoundingMode.HALF_UP))
         );
+        result.setAnalysisSummary(overBudget ? "当前周期支出已超过预算上限。" : "当前周期预算使用已接近提醒阈值。");
+        result.setMajorExpenses(List.of("当前预算已使用 " + formatPercent(usedRatio)));
+        result.setUnnecessaryExpenses(List.of());
+        result.setSuggestions(List.of(overBudget ? "先暂停非必要支出，优先保留刚性开销。" : "接下来优先控制可选消费，避免超过预算。"));
         result.setLevel(overBudget ? AiAlertResultDTO.AlertLevel.DANGER : alertReached ? AiAlertResultDTO.AlertLevel.WARNING : AiAlertResultDTO.AlertLevel.INFO);
         result.setNeedNotification(alertReached);
         return result;

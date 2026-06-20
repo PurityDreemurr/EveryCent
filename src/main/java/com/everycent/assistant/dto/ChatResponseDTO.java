@@ -21,6 +21,12 @@ public class ChatResponseDTO {
 
     private AccountingCaptureDTO accountingCapture;
 
+    private String responseType;
+
+    private List<AssistantResponseCardDTO> cards = new ArrayList<>();
+
+    private List<AssistantSkillResultDTO> skillResults = new ArrayList<>();
+
     private List<MemoryContextDTO> retrievedMemories = new ArrayList<>();
 
     public Long getConversationId() {
@@ -85,6 +91,30 @@ public class ChatResponseDTO {
 
     public void setAccountingCapture(AccountingCaptureDTO accountingCapture) {
         this.accountingCapture = accountingCapture;
+    }
+
+    public String getResponseType() {
+        return responseType;
+    }
+
+    public void setResponseType(String responseType) {
+        this.responseType = responseType;
+    }
+
+    public List<AssistantResponseCardDTO> getCards() {
+        return cards;
+    }
+
+    public void setCards(List<AssistantResponseCardDTO> cards) {
+        this.cards = cards == null ? new ArrayList<>() : cards;
+    }
+
+    public List<AssistantSkillResultDTO> getSkillResults() {
+        return skillResults;
+    }
+
+    public void setSkillResults(List<AssistantSkillResultDTO> skillResults) {
+        this.skillResults = skillResults == null ? new ArrayList<>() : skillResults;
     }
 
     public List<MemoryContextDTO> getRetrievedMemories() {
