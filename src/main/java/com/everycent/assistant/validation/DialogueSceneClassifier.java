@@ -1,14 +1,21 @@
 package com.everycent.assistant.validation;
 
+import com.everycent.assistant.accounting.AccountingIntentService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component
 public class DialogueSceneClassifier {
 
-    private static final String AMOUNT_REGEX = ".*(\\d+(\\.\\d+)?\\s*(元|块|rmb|RMB|¥)?|[一二三四五六七八九十百]+[块元]).*";
-    private static final String FINANCE_INTENT_REGEX = ".*(记一笔|记账|入账|花了|花掉|消费|支出|收入|工资|到账|付款|付了|报销|退款|转账).*";
-    private static final String EXPLICIT_ACCOUNTING_REGEX = ".*(帮我记|帮忙记|记一下|记一笔|记到账|入账).*";
+    private final AccountingIntentService accountingIntentService;
+
+    public DialogueSceneClassifier() {
+        this(new AccountingIntentService());
+    }
+
+    public DialogueSceneClassifier(AccountingIntentService accountingIntentService) {
+        this.accountingIntentService = accountingIntentService;
+    }
 
     public DialogueScene classify(String userMessage) {
         if (!StringUtils.hasText(userMessage)) {
@@ -54,10 +61,7 @@ public class DialogueSceneClassifier {
     }
 
     private boolean isAccounting(String text) {
-        boolean hasAmount = matches(text, AMOUNT_REGEX);
-        boolean hasFinanceIntent = matches(text, FINANCE_INTENT_REGEX);
-        boolean hasExplicitAccounting = matches(text, EXPLICIT_ACCOUNTING_REGEX);
-        return hasExplicitAccounting || (hasAmount && hasFinanceIntent);
+        return accountingIntentService.isAccountingIntent(text);
     }
 
     private boolean matches(String text, String regex) {

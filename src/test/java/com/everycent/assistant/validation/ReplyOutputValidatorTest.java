@@ -59,6 +59,8 @@ class ReplyOutputValidatorTest {
         assertThat(classifier.classify("外卖又送错了，真的无语")).isEqualTo(DialogueScene.FRUSTRATION);
         assertThat(classifier.classify("外卖花了 28，结果还送错了")).isEqualTo(DialogueScene.ACCOUNTING);
         assertThat(classifier.classify("帮我记一下外卖 28")).isEqualTo(DialogueScene.ACCOUNTING);
+        assertThat(classifier.classify("午饭28，咖啡18")).isEqualTo(DialogueScene.ACCOUNTING);
+        assertThat(classifier.classify("今天午饭挺难吃")).isEqualTo(DialogueScene.DAILY_CHAT);
         assertThat(classifier.classify("我做完了")).isEqualTo(DialogueScene.ACHIEVEMENT_SHARE);
         assertThat(classifier.classify("嗯")).isEqualTo(DialogueScene.COLD_REPLY);
     }
