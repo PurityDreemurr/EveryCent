@@ -392,6 +392,86 @@
   color: var(--ec-muted);
 }
 
+.everycent-result-readable {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.everycent-result-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.everycent-result-summary div {
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ec-text) 4%, transparent);
+}
+
+.everycent-result-summary dt {
+  color: var(--ec-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.everycent-result-summary dd {
+  margin: 0.15rem 0 0;
+  color: var(--ec-text);
+  font-weight: 900;
+}
+
+.everycent-result-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.everycent-result-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--ec-border);
+}
+
+.everycent-result-list div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.everycent-result-list strong {
+  overflow: hidden;
+  color: var(--ec-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.everycent-result-list span {
+  color: var(--ec-muted);
+  font-size: 0.82rem;
+}
+
+.everycent-result-list b {
+  flex: 0 0 auto;
+  font-weight: 950;
+}
+
+.everycent-result-list b.is-income {
+  color: var(--ec-success);
+}
+
+.everycent-result-list b.is-expense {
+  color: var(--ec-danger);
+}
+
 .everycent-result-card pre {
   max-height: 240px;
   margin: 0;
