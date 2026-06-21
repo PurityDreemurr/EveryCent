@@ -78,6 +78,19 @@ public class ReplyOutputValidator {
 
     private static final List<String> ACCOUNTING_WORDS = List.of("记账", "账单", "消费", "收入", "报数", "入账", "支出");
 
+    private static final List<String> ACCOUNTING_PUSH_MARKERS = List.of(
+        "直接报数",
+        "顺手记账",
+        "要查账",
+        "要记账",
+        "查账、记账",
+        "记账、查账",
+        "消费或收入",
+        "想起什么消费",
+        "告诉我要查账",
+        "告诉我要记账"
+    );
+
     private static final List<String> ADVICE_MARKERS = List.of(
         "要不",
         "建议",
@@ -234,6 +247,10 @@ public class ReplyOutputValidator {
 
     private void validateAccountingLeak(String reply, DialogueScene scene, List<String> violations) {
         if (scene == DialogueScene.ACCOUNTING) {
+            return;
+        }
+        if (scene == DialogueScene.DAILY_CHAT || scene == DialogueScene.TASK_HELP || scene == DialogueScene.UNKNOWN) {
+            addViolationOnAny(reply, ACCOUNTING_PUSH_MARKERS, "ACCOUNTING_PUSH", violations);
             return;
         }
         for (String word : ACCOUNTING_WORDS) {

@@ -51,7 +51,7 @@ public class DialogueSceneClassifier {
         if (containsAny(text, "烦", "无语", "气死", "火大", "不爽", "糟心")) {
             return DialogueScene.FRUSTRATION;
         }
-        if (containsAny(text, "难受", "不想说", "焦虑", "压力")) {
+        if (containsAny(text, "难受", "不开心", "低落", "焦虑", "压力", "安慰", "陪陪我", "陪我一下")) {
             return DialogueScene.EMOTION_LIGHT;
         }
         if (containsAny(text, "怎么办", "怎么处理", "帮我", "帮忙", "怎么做", "分析一下")) {

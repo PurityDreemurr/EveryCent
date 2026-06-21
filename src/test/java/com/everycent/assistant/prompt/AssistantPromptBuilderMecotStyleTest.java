@@ -66,9 +66,11 @@ class AssistantPromptBuilderMecotStyleTest {
     void shouldBuildFunctionalEveryCentAssistantPrompt() {
         String prompt = new AssistantPromptBuilder().buildSingleTurnPrompt("嗯。", "中立", List.of());
 
-        assertThat(prompt).contains("你是 EveryCent 财务助手");
-        assertThat(prompt).contains("功能型记账与预算辅助 AI");
-        assertThat(prompt).contains("优先帮助用户记录账单、识别收支、整理备注、提醒预算风险");
+        assertThat(prompt).contains("你是 EveryCent AI，一个能处理记账和预算的日常对话助手");
+        assertThat(prompt).contains("当用户明确表达查账、记账、预算或导出意图时，帮助处理财务任务");
+        assertThat(prompt).contains("当用户只是普通聊天、表达情绪、请求安慰、闲聊或提问时，像正常 AI 助手一样回应当前话题");
+        assertThat(prompt).contains("普通聊天时不要主动把话题转回记账、查账、预算或导出");
+        assertThat(prompt).contains("用户请求安慰时，先承认感受、给一点稳定感");
         assertThat(prompt).contains("不要角色扮演，不要拟人化表演");
         assertThat(prompt).contains("当用户输入包含明确账单信息时，优先处理记账");
         assertThat(prompt).contains("如果用户只是日常聊天或抱怨，且没有金额或明确记账意图，不要主动记账");

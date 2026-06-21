@@ -25,10 +25,16 @@ class ReplyOutputValidatorTest {
     }
 
     @Test
-    void shouldFailOnAccountingLeak() {
+    void shouldFailOnAccountingPushInDailyChat() {
         ReplyValidationResult result = validator.validate("今天要是想起什么消费或收入，直接报数就行。{\"mood\":40,\"emoji\":\"peace\"}", DialogueScene.DAILY_CHAT);
         assertThat(result.isPassed()).isFalse();
-        assertThat(result.getViolations()).contains("ACCOUNTING_LEAK:消费", "ACCOUNTING_LEAK:收入", "ACCOUNTING_LEAK:报数");
+        assertThat(result.getViolations()).contains("ACCOUNTING_PUSH:直接报数");
+    }
+
+    @Test
+    void shouldAllowNormalComfortingDailyChat() {
+        ReplyValidationResult result = validator.validate("可以。我先陪你把这口气放慢一点，今天不用马上把自己整理好。{\"mood\":45,\"emoji\":\"peace\"}", DialogueScene.DAILY_CHAT);
+        assertThat(result.isPassed()).isTrue();
     }
 
     @Test
@@ -61,6 +67,7 @@ class ReplyOutputValidatorTest {
         assertThat(classifier.classify("帮我记一下外卖 28")).isEqualTo(DialogueScene.ACCOUNTING);
         assertThat(classifier.classify("午饭28，咖啡18")).isEqualTo(DialogueScene.ACCOUNTING);
         assertThat(classifier.classify("今天午饭挺难吃")).isEqualTo(DialogueScene.DAILY_CHAT);
+        assertThat(classifier.classify("你不能安慰我一下吗")).isEqualTo(DialogueScene.EMOTION_LIGHT);
         assertThat(classifier.classify("我做完了")).isEqualTo(DialogueScene.ACHIEVEMENT_SHARE);
         assertThat(classifier.classify("嗯")).isEqualTo(DialogueScene.COLD_REPLY);
     }
