@@ -112,6 +112,39 @@ class BudgetServiceTest {
     }
 
     @Test
+    void setForPeriodShouldUpdateExistingBudgetInsteadOfRejectingDuplicate() {
+        Budget existing = budget(100L);
+        BudgetDTO requestDTO = budgetDTO();
+        requestDTO.setLimitAmount(new BigDecimal("3000.00"));
+        requestDTO.setAlertThreshold(new BigDecimal("0.80"));
+
+        when(ledgerPermissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
+        when(budgetRepository.findOneByLedgerAndCycleAndPeriodStartAndPeriodEnd(
+                ledger,
+                BudgetCycle.MONTHLY,
+                LocalDate.of(2026, 6, 1),
+                LocalDate.of(2026, 6, 30)
+            ))
+            .thenReturn(Optional.of(existing));
+        when(budgetRepository.save(any(Budget.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(transactionRecordRepository.sumAmountByLedgerAndTypeAndDateBetween(
+                ledger,
+                TransactionType.EXPENSE,
+                LocalDate.of(2026, 6, 1),
+                LocalDate.of(2026, 6, 30)
+            ))
+            .thenReturn(new BigDecimal("0.00"));
+
+        BudgetDTO result = service.setForPeriod(user, 10L, requestDTO);
+
+        assertThat(result.getId()).isEqualTo(100L);
+        assertThat(result.getLimitAmount()).isEqualByComparingTo("3000.00");
+        assertThat(result.getAlertThreshold()).isEqualByComparingTo("0.80");
+        verify(ledgerPermissionService).checkWritePermission(user, 10L);
+        verify(budgetRepository).save(existing);
+    }
+
+    @Test
     void createShouldRejectInvalidDateRange() {
         BudgetDTO requestDTO = budgetDTO();
         requestDTO.setPeriodStart(LocalDate.of(2026, 6, 30));

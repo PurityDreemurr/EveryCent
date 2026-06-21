@@ -70,7 +70,7 @@ public class FinanceWriteSkill implements Skill {
                 action.getName(),
                 transactionRecordService.create(user, args.longValue("ledgerId"), transactionDTO(args))
             );
-            case "budget.create" -> SkillResult.success(action.getName(), budgetService.create(user, args.longValue("ledgerId"), budgetDTO(args)));
+            case "budget.create" -> SkillResult.success(action.getName(), budgetService.setForPeriod(user, args.longValue("ledgerId"), budgetDTO(args)));
             case "budget.update" -> SkillResult.success(action.getName(), budgetService.update(user, args.longValue("budgetId"), budgetDTO(args)));
             case "notification.mark_read" -> SkillResult.success(
                 action.getName(),

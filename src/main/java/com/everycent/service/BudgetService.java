@@ -64,6 +64,28 @@ public class BudgetService {
         return toDTO(budgetRepository.save(budget));
     }
 
+    public BudgetDTO setForPeriod(User currentUser, Long ledgerId, BudgetDTO budgetDTO) {
+        ledgerPermissionService.checkWritePermission(currentUser, ledgerId);
+        Ledger ledger = ledgerPermissionService.getLedgerOrThrow(ledgerId);
+        validateBudgetDTO(budgetDTO);
+
+        Budget budget = budgetRepository
+            .findOneByLedgerAndCycleAndPeriodStartAndPeriodEnd(
+                ledger,
+                budgetDTO.getCycle(),
+                budgetDTO.getPeriodStart(),
+                budgetDTO.getPeriodEnd()
+            )
+            .orElseGet(() -> {
+                Budget created = new Budget();
+                created.setLedger(ledger);
+                return created;
+            });
+
+        applyEditableFields(budget, budgetDTO);
+        return toDTO(budgetRepository.save(budget));
+    }
+
     public BudgetDTO update(User currentUser, Long budgetId, BudgetDTO budgetDTO) {
         Budget budget = getBudgetOrThrow(budgetId);
         ledgerPermissionService.checkWritePermission(currentUser, budget.getLedger().getId());

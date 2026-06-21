@@ -138,7 +138,7 @@ class LowRiskWriteSkillTest {
     void financeWriteSkillShouldCreateAndUpdateBudget() {
         BudgetService budgetService = org.mockito.Mockito.mock(BudgetService.class);
         FinanceWriteSkill skill = financeWriteSkill(org.mockito.Mockito.mock(TransactionRecordService.class), budgetService, org.mockito.Mockito.mock(NotificationService.class), org.mockito.Mockito.mock(LlmParsingService.class));
-        when(budgetService.create(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.any()))
+        when(budgetService.setForPeriod(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.any()))
             .thenReturn(new BudgetDTO());
         when(budgetService.update(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.eq(20L), org.mockito.ArgumentMatchers.any()))
             .thenReturn(new BudgetDTO());
@@ -165,7 +165,7 @@ class LowRiskWriteSkillTest {
         assertThat(skill.execute(new AssistantAction("budget.update", args), context).getSuccess()).isTrue();
 
         verify(budgetService)
-            .create(
+            .setForPeriod(
                 org.mockito.ArgumentMatchers.eq(user),
                 org.mockito.ArgumentMatchers.eq(10L),
                 org.mockito.ArgumentMatchers.argThat(dto -> matchesBudgetDto(dto))

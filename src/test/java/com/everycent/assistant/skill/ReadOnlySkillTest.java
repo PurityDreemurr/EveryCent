@@ -214,7 +214,11 @@ class ReadOnlySkillTest {
 
         assertThat(result.getData()).isInstanceOf(Map.class);
         Map<String, Object> data = (Map<String, Object>) result.getData();
-        assertThat(data).containsEntry("downloadReady", true).containsEntry("byteLength", 3);
+        assertThat(data)
+            .containsEntry("downloadReady", true)
+            .containsEntry("byteLength", 3)
+            .containsEntry("downloadUrl", "/api/ledgers/10/transactions/export?startDate=2026-06-01&endDate=2026-06-30")
+            .containsEntry("fileName", "everycent-transactions.xlsx");
         assertThat(data).doesNotContainKey("bytes");
         verify(service).exportTransactions(user, 10L, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
     }
