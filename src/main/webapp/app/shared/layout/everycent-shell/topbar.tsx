@@ -7,8 +7,6 @@ import ConfigDrawer from './config-drawer';
 import ProfileDropdown from './profile-dropdown';
 import ThemeSwitch from './theme-switch';
 import TopNav, { TopNavLink } from './top-nav';
-import { getLedgers, Ledger } from 'app/modules/everycent/ledger/ledger-api';
-import { readSelectedLedgerId, subscribeSelectedLedgerChange, writeSelectedLedgerId } from 'app/modules/everycent/ledger/ledger-selection';
 
 type TopbarProps = {
   collapsed: boolean;
@@ -26,11 +24,6 @@ const Topbar = ({ collapsed, onToggleSidebar }: TopbarProps) => {
   const location = useLocation();
   const [commandOpen, setCommandOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
-  const [ledgers, setLedgers] = useState<Ledger[]>([]);
-  const [selectedLedgerId, setSelectedLedgerId] = useState<string>(() => {
-    const storedLedgerId = readSelectedLedgerId();
-    return storedLedgerId ? String(storedLedgerId) : '';
-  });
   const showTopNav = location.pathname === '/everycent/dashboard';
 
   useEffect(() => {
@@ -44,51 +37,6 @@ const Topbar = ({ collapsed, onToggleSidebar }: TopbarProps) => {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    getLedgers()
-      .then(data => {
-        if (!mounted) {
-          return;
-        }
-        setLedgers(data);
-        setSelectedLedgerId(current => {
-          const currentLedgerId = Number(current);
-          if (currentLedgerId && data.some(ledger => ledger.id === currentLedgerId)) {
-            return current;
-          }
-          const defaultLedgerId = data[0]?.id;
-          if (defaultLedgerId) {
-            writeSelectedLedgerId(defaultLedgerId);
-          }
-          return defaultLedgerId ? String(defaultLedgerId) : '';
-        });
-      })
-      .catch(() => {
-        if (mounted) {
-          setLedgers([]);
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(
-    () =>
-      subscribeSelectedLedgerChange(ledgerId => {
-        setSelectedLedgerId(ledgerId ? String(ledgerId) : '');
-      }),
-    [],
-  );
-
-  const handleLedgerChange = (value: string) => {
-    setSelectedLedgerId(value);
-    writeSelectedLedgerId(value ? Number(value) : undefined);
-  };
 
   return (
     <header className={`everycent-topbar${showTopNav ? ' everycent-topbar--with-nav' : ''}`}>
@@ -112,20 +60,6 @@ const Topbar = ({ collapsed, onToggleSidebar }: TopbarProps) => {
         </button>
       )}
       <div className="everycent-topbar__actions">
-        <label className="everycent-topbar__ledger-select">
-          <span>账本</span>
-          <select value={selectedLedgerId} onChange={event => handleLedgerChange(event.target.value)} disabled={ledgers.length === 0}>
-            {ledgers.length === 0 ? (
-              <option value="">暂无账本</option>
-            ) : (
-              ledgers.map(ledger => (
-                <option key={ledger.id} value={ledger.id}>
-                  {ledger.name}
-                </option>
-              ))
-            )}
-          </select>
-        </label>
         {showTopNav && (
           <button className="everycent-search-button" type="button" onClick={() => setCommandOpen(true)}>
             <FontAwesomeIcon icon="search" />

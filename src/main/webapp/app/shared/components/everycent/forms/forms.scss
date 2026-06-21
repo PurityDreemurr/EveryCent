@@ -12,6 +12,15 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.ec-form__success {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--ec-success) 30%, var(--ec-border));
+  border-radius: 8px;
+  color: var(--ec-success);
+  background: color-mix(in srgb, var(--ec-success) 9%, var(--ec-panel));
+  font-weight: 750;
+}
+
 .ec-field,
 .ec-field-group {
   display: grid;

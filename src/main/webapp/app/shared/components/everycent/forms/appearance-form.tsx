@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import type { EveryCentTheme } from 'app/shared/layout/everycent-shell/theme-provider';
 import { useEveryCentTheme } from 'app/shared/layout/everycent-shell/theme-provider';
-import { previewSubmittedData } from './submission-preview';
+import { loadSettings, saveSettings } from './settings-storage';
 import './forms.scss';
 
 const appearanceSchema = z.object({
@@ -23,23 +23,27 @@ const themeOptions: { label: string; previewClassName: string; value: EveryCentT
 
 const AppearanceForm = () => {
   const { setTheme, theme } = useEveryCentTheme();
+  const [saved, setSaved] = React.useState(false);
+  const defaultAppearanceValues: AppearanceFormValues = loadSettings('appearance', {
+    theme,
+    density: 'comfortable',
+  });
 
   const { register, handleSubmit, watch } = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceSchema),
-    defaultValues: {
-      theme,
-      density: 'comfortable',
-    },
+    defaultValues: defaultAppearanceValues,
   });
 
   const selectedTheme = watch('theme');
   const submitAppearance = (values: AppearanceFormValues) => {
     setTheme(values.theme);
-    previewSubmittedData('appearance', values);
+    saveSettings('appearance', values);
+    setSaved(true);
   };
 
   return (
     <form className="ec-form" onSubmit={handleSubmit(submitAppearance)}>
+      {saved && <div className="ec-form__success">外观偏好已保存。</div>}
       <label className="ec-field">
         <span>字体密度</span>
         <select {...register('density')}>

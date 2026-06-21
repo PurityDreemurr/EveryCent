@@ -6,15 +6,10 @@ export type EveryCentUser = {
   initials: string;
 };
 
-export type EveryCentTeam = {
-  name: string;
-  description: string;
-  initials: string;
-};
-
 export type EveryCentNavBase = {
   title: string;
   badge?: string;
+  displayId?: string;
   icon?: IconProp;
 };
 
@@ -37,7 +32,6 @@ export type EveryCentNavGroup = {
 
 export type EveryCentSidebarData = {
   user: EveryCentUser;
-  teams: EveryCentTeam[];
   navGroups: EveryCentNavGroup[];
 };
 
@@ -47,39 +41,21 @@ export const everyCentSidebarData: EveryCentSidebarData = {
     email: 'user@everycent.local',
     initials: 'EC',
   },
-  teams: [
-    {
-      name: 'EveryCent',
-      description: 'Vite + EveryCent',
-      initials: 'PL',
-    },
-    {
-      name: 'EveryCent Pro',
-      description: '共享工作区',
-      initials: 'FL',
-    },
-    {
-      name: 'EveryCent Lite',
-      description: '入门工作区',
-      initials: 'TB',
-    },
-  ],
   navGroups: [
     {
       title: '通用',
       items: [
-        { title: 'AI 记账', url: '/everycent/ai', icon: 'pencil-alt' },
-        { title: '仪表盘', url: '/everycent/dashboard', icon: 'tachometer-alt' },
-        { title: '账本', url: '/everycent/ledgers', icon: 'book' },
-        { title: '收支记录', url: '/everycent/transactions', icon: 'list' },
-        { title: '预算', url: '/everycent/budgets', icon: 'tasks' },
+        { title: 'AI 记账', url: '/everycent/ai', displayId: 'ai', icon: 'pencil-alt' },
+        { title: '仪表盘', url: '/everycent/dashboard', displayId: 'dashboard', icon: 'tachometer-alt' },
+        { title: '账本', url: '/everycent/ledgers', displayId: 'ledger', icon: 'book' },
+        { title: '收支记录', url: '/everycent/transactions', displayId: 'transactions', icon: 'list' },
+        { title: '预算', url: '/everycent/budgets', displayId: 'budget', icon: 'tasks' },
         { title: '成员', url: '/everycent/members', icon: 'users' },
       ],
     },
     {
       title: '洞察',
       items: [
-        { title: '数据分析', url: '/everycent/analytics', icon: 'database' },
         { title: '消息提醒', url: '/everycent/notifications', icon: 'bell' },
         { title: '导出 Excel', url: '/everycent/export', icon: 'save' },
       ],
@@ -103,7 +79,6 @@ export const everyCentSidebarData: EveryCentSidebarData = {
             { title: '账户设置', url: '/everycent/settings', icon: 'lock' },
           ],
         },
-        { title: '帮助中心', url: '/everycent/help', icon: 'wrench' },
       ],
     },
   ],

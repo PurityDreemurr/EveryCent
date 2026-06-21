@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import { previewSubmittedData } from './submission-preview';
+import { loadSettings, saveSettings } from './settings-storage';
 import './forms.scss';
 
 const notificationsSchema = z.object({
@@ -17,21 +17,30 @@ const notificationsSchema = z.object({
 
 type NotificationsFormValues = z.infer<typeof notificationsSchema>;
 
+const defaultNotificationsValues: NotificationsFormValues = {
+  type: 'important',
+  mobile: false,
+  budgetEmails: true,
+  sharedLedgerEmails: true,
+  weeklyReports: false,
+  securityEmails: true,
+};
+
 const NotificationsForm = () => {
+  const [saved, setSaved] = React.useState(false);
   const { register, handleSubmit } = useForm<NotificationsFormValues>({
     resolver: zodResolver(notificationsSchema),
-    defaultValues: {
-      type: 'important',
-      mobile: false,
-      budgetEmails: true,
-      sharedLedgerEmails: true,
-      weeklyReports: false,
-      securityEmails: true,
-    },
+    defaultValues: loadSettings('notifications', defaultNotificationsValues),
   });
 
+  const handleSave = (values: NotificationsFormValues) => {
+    saveSettings('notifications', { ...values, securityEmails: true });
+    setSaved(true);
+  };
+
   return (
-    <form className="ec-form" onSubmit={handleSubmit(values => previewSubmittedData('notifications', values))}>
+    <form className="ec-form" onSubmit={handleSubmit(handleSave)}>
+      {saved && <div className="ec-form__success">通知设置已保存。</div>}
       <fieldset className="ec-radio-group">
         <legend>通知范围</legend>
         <label>

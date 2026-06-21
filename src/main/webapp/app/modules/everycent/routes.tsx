@@ -37,12 +37,10 @@ const EveryCentRoutes = () => (
       <Route path="transactions" element={<TransactionsPage />} />
       <Route path="budgets" element={<BudgetsPage />} />
       <Route path="members" element={<MembersPage />} />
-      <Route path="analytics" element={<ComingSoon title="数据分析" />} />
       <Route path="notifications" element={<NotificationsPage />} />
       <Route path="export" element={<ExportPage />} />
       <Route path="tags" element={<TagsPage />} />
       <Route path="settings" element={<Settings />} />
-      <Route path="help" element={<ComingSoon title="帮助中心" />} />
       <Route path="*" element={<Navigate to="/everycent/ai" replace />} />
     </Route>
   </ErrorBoundaryRoutes>

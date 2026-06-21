@@ -42,13 +42,20 @@
   color: var(--ec-danger);
 }
 
-.everycent-transactions-page__alert {
+.everycent-transactions-page__alert,
+.everycent-transactions-page__dialog-alert {
   padding: 0.85rem 1rem;
   border: 1px solid color-mix(in srgb, var(--ec-danger) 28%, var(--ec-border));
   border-radius: 8px;
   color: var(--ec-danger);
   background: color-mix(in srgb, var(--ec-danger) 8%, var(--ec-panel));
   font-weight: 750;
+}
+
+.everycent-transactions-page__dialog-alert {
+  grid-column: 1 / -1;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.9rem;
 }
 
 .everycent-transactions-page__filters {

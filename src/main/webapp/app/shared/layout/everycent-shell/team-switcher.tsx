@@ -1,60 +1,18 @@
-import React, { useRef, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import { EveryCentTeam } from './nav-config';
+import React from 'react';
 
 type TeamSwitcherProps = {
-  teams: EveryCentTeam[];
   collapsed: boolean;
 };
 
-const TeamSwitcher = ({ teams, collapsed }: TeamSwitcherProps) => {
-  const [activeTeam, setActiveTeam] = useState(teams[0]);
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <div className="everycent-sidebar__team" ref={containerRef}>
-      <button
-        className="everycent-sidebar__team-button"
-        type="button"
-        onClick={() => setOpen(value => !value)}
-        title={collapsed ? activeTeam.name : undefined}
-        aria-expanded={open}
-      >
-        <span className="everycent-sidebar__mark">{activeTeam.initials}</span>
-        <span className="everycent-sidebar__team-copy">
-          <strong>{activeTeam.name}</strong>
-          <small>{activeTeam.description}</small>
-        </span>
-        {!collapsed && <FontAwesomeIcon className="everycent-sidebar__team-caret" icon="sort" />}
-      </button>
-      {open && !collapsed && (
-        <div className="everycent-sidebar__menu" role="menu">
-          <div className="everycent-sidebar__menu-label">账本</div>
-          {teams.map((team, index) => (
-            <button
-              key={team.name}
-              className={`everycent-sidebar__menu-item${team.name === activeTeam.name ? ' active' : ''}`}
-              type="button"
-              onClick={() => {
-                setActiveTeam(team);
-                setOpen(false);
-              }}
-            >
-              <span className="everycent-sidebar__menu-mark">{team.initials}</span>
-              <span>{team.name}</span>
-              <small>{index + 1}</small>
-            </button>
-          ))}
-          <button className="everycent-sidebar__menu-item" type="button" onClick={() => setOpen(false)}>
-            <FontAwesomeIcon icon="plus" fixedWidth />
-            <span>新增账本</span>
-          </button>
-        </div>
-      )}
+const TeamSwitcher = ({ collapsed }: TeamSwitcherProps) => (
+  <div className="everycent-sidebar__team">
+    <div className="everycent-sidebar__team-button" title={collapsed ? 'EveryCent' : undefined}>
+      <span className="everycent-sidebar__mark">EC</span>
+      <span className="everycent-sidebar__team-copy">
+        <strong>EveryCent</strong>
+      </span>
     </div>
-  );
-};
+  </div>
+);
 
 export default TeamSwitcher;

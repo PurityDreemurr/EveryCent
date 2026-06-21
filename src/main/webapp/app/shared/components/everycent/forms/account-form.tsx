@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import { previewSubmittedData } from './submission-preview';
+import { loadSettings, saveSettings } from './settings-storage';
 import './forms.scss';
 
 const languages = [
@@ -23,22 +23,31 @@ const accountSchema = z.object({
 
 type AccountFormValues = z.infer<typeof accountSchema>;
 
+const defaultAccountValues: AccountFormValues = {
+  name: 'EveryCent 用户',
+  dob: '',
+  language: 'zh',
+};
+
 const AccountForm = () => {
+  const [saved, setSaved] = React.useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountSchema),
-    defaultValues: {
-      name: 'EveryCent 用户',
-      dob: '',
-      language: 'zh',
-    },
+    defaultValues: loadSettings('account', defaultAccountValues),
   });
 
+  const handleSave = (values: AccountFormValues) => {
+    saveSettings('account', values);
+    setSaved(true);
+  };
+
   return (
-    <form className="ec-form" onSubmit={handleSubmit(values => previewSubmittedData('account', values))}>
+    <form className="ec-form" onSubmit={handleSubmit(handleSave)}>
+      {saved && <div className="ec-form__success">账户设置已保存。</div>}
       <label className="ec-field">
         <span>姓名</span>
         <input placeholder="你的姓名" {...register('name')} />
