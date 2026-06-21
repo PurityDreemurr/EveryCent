@@ -1,0 +1,121 @@
+﻿erDiagram
+    JHI_USER {
+        bigint id PK
+        varchar login UK
+        varchar email
+        boolean activated
+    }
+
+    JHI_AUTHORITY {
+        varchar name PK
+    }
+
+    JHI_USER_AUTHORITY {
+        bigint user_id FK
+        varchar authority_name FK
+    }
+
+    LEDGER {
+        bigint id PK
+        varchar name
+        varchar description
+        bigint creator_id FK
+        varchar default_currency
+        decimal current_month_balance
+        datetime created_date
+        datetime last_modified_date
+    }
+
+    USER_LEDGER_PERMISSION {
+        bigint id PK
+        bigint user_id FK
+        bigint ledger_id FK
+        varchar permission_level
+        varchar status
+        bigint invited_by_id FK
+        datetime created_date
+    }
+
+    TRANSACTION_RECORD {
+        bigint id PK
+        bigint ledger_id FK
+        bigint creator_id FK
+        decimal amount
+        varchar type
+        bigint behavior_tag_id FK
+        bigint emotion_tag_id FK
+        date transaction_date
+        varchar source
+        varchar description
+        text raw_input
+        datetime created_date
+        datetime last_modified_date
+    }
+
+    BUDGET {
+        bigint id PK
+        bigint ledger_id FK
+        varchar cycle
+        date period_start
+        date period_end
+        decimal limit_amount
+        decimal alert_threshold
+        boolean enabled
+    }
+
+    BEHAVIOR_TAG {
+        bigint id PK
+        varchar code UK
+        varchar name
+        boolean system_default
+        bigint creator_id FK
+    }
+
+    EMOTION_TAG {
+        bigint id PK
+        varchar code UK
+        varchar name
+        varchar valence
+        boolean system_default
+        bigint creator_id FK
+    }
+
+    MONTHLY_BALANCE {
+        bigint id PK
+        bigint ledger_id FK
+        int year
+        int month
+        decimal total_income
+        decimal total_expense
+        decimal balance
+        datetime updated_date
+    }
+
+    NOTIFICATION_MESSAGE {
+        bigint id PK
+        bigint user_id FK
+        bigint ledger_id FK
+        bigint budget_id FK
+        varchar title
+        text content
+        varchar type
+        varchar level
+        boolean is_read
+        datetime created_date
+    }
+
+    JHI_USER ||--o{ JHI_USER_AUTHORITY : has
+    JHI_AUTHORITY ||--o{ JHI_USER_AUTHORITY : grants
+    JHI_USER ||--o{ LEDGER : creates
+    JHI_USER ||--o{ USER_LEDGER_PERMISSION : owns_permission
+    JHI_USER ||--o{ USER_LEDGER_PERMISSION : invites
+    LEDGER ||--o{ USER_LEDGER_PERMISSION : shares
+    LEDGER ||--o{ TRANSACTION_RECORD : contains
+    JHI_USER ||--o{ TRANSACTION_RECORD : creates
+    BEHAVIOR_TAG ||--o{ TRANSACTION_RECORD : classifies
+    EMOTION_TAG ||--o{ TRANSACTION_RECORD : marks
+    LEDGER ||--o{ BUDGET : has
+    LEDGER ||--o{ MONTHLY_BALANCE : summarizes
+    JHI_USER ||--o{ NOTIFICATION_MESSAGE : receives
+    LEDGER ||--o{ NOTIFICATION_MESSAGE : related_to
+    BUDGET ||--o{ NOTIFICATION_MESSAGE : triggers

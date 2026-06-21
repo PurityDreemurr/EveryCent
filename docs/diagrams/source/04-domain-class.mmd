@@ -1,0 +1,97 @@
+﻿classDiagram
+    class User {
+        +Long id
+        +String login
+        +String email
+        +Set~Authority~ authorities
+    }
+
+    class Authority {
+        +String name
+    }
+
+    class Ledger {
+        +Long id
+        +String name
+        +String description
+        +String defaultCurrency
+        +BigDecimal currentMonthBalance
+        +Instant createdDate
+        +Instant lastModifiedDate
+    }
+
+    class UserLedgerPermission {
+        +Long id
+        +PermissionLevel permissionLevel
+        +PermissionStatus status
+        +Instant createdDate
+    }
+
+    class TransactionRecord {
+        +Long id
+        +BigDecimal amount
+        +TransactionType type
+        +LocalDate transactionDate
+        +RecordSource source
+        +String description
+        +String rawInput
+    }
+
+    class Budget {
+        +Long id
+        +BudgetCycle cycle
+        +LocalDate periodStart
+        +LocalDate periodEnd
+        +BigDecimal limitAmount
+        +BigDecimal alertThreshold
+        +Boolean enabled
+    }
+
+    class BehaviorTag {
+        +Long id
+        +String code
+        +String name
+        +Boolean systemDefault
+    }
+
+    class EmotionTag {
+        +Long id
+        +String code
+        +String name
+        +EmotionValence valence
+        +Boolean systemDefault
+    }
+
+    class MonthlyBalance {
+        +Long id
+        +Integer year
+        +Integer month
+        +BigDecimal totalIncome
+        +BigDecimal totalExpense
+        +BigDecimal balance
+    }
+
+    class NotificationMessage {
+        +Long id
+        +String title
+        +String content
+        +NotificationType type
+        +NotificationLevel level
+        +Boolean read
+        +Instant createdDate
+    }
+
+    User "*" -- "*" Authority
+    User "1" --> "*" Ledger : creator
+    User "1" --> "*" UserLedgerPermission : user
+    Ledger "1" --> "*" UserLedgerPermission
+    User "1" --> "*" UserLedgerPermission : invitedBy
+    Ledger "1" --> "*" TransactionRecord
+    User "1" --> "*" TransactionRecord : creator
+    BehaviorTag "1" --> "*" TransactionRecord
+    EmotionTag "1" --> "*" TransactionRecord
+    Ledger "1" --> "*" Budget
+    Ledger "1" --> "*" MonthlyBalance
+    User "1" --> "*" NotificationMessage
+    Ledger "1" --> "*" NotificationMessage
+    Budget "1" --> "*" NotificationMessage

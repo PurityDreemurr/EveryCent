@@ -1,0 +1,112 @@
+﻿classDiagram
+    class AiAssistantResource {
+        +chat()
+        +getChatHistory()
+        +deleteChatHistory()
+    }
+
+    class AssistantApplicationService {
+        +chat()
+        +history()
+        +deleteHistory()
+    }
+
+    class AiAssistantOrchestrator {
+        +handle()
+    }
+
+    class AssistantPlanner
+    class RuleBasedAssistantPlanner
+    class SkillRouter {
+        +route()
+    }
+    class SkillRegistry {
+        +find()
+        +all()
+    }
+    class Skill {
+        <<interface>>
+        +execute()
+    }
+
+    class LedgerReadSkill
+    class LedgerWriteSkill
+    class TransactionReadSkill
+    class FinanceWriteSkill
+    class NaturalLanguageAccountingSkill
+    class BudgetReadSkill
+    class DashboardReadSkill
+    class NotificationReadSkill
+    class ExportReadSkill
+    class TagReadSkill
+
+    class MecotEmotionService {
+        +reason()
+    }
+    class AiEmotionStateService {
+        +getOrCreateState()
+        +updateState()
+    }
+    class AiMemoryService {
+        +saveMemory()
+    }
+    class MemoryRetrievalService {
+        +retrieve()
+    }
+    class LlmRewriteService {
+        +rewrite()
+    }
+    class ResponseRenderer {
+        +render()
+    }
+
+    class LlmResource {
+        +parseTransaction()
+        +generateBudgetAlert()
+    }
+
+    class LlmParsingService {
+        +parseTransaction()
+        +generateBudgetAlert()
+    }
+
+    class LlmClient {
+        <<interface>>
+        +chat()
+    }
+
+    class OpenAiCompatibleLlmClient
+    class LlmJsonResponseParser
+    class TransactionPromptBuilder
+    class AlertPromptBuilder
+
+    AiAssistantResource --> AssistantApplicationService
+    AssistantApplicationService --> AiAssistantOrchestrator
+    AiAssistantOrchestrator --> AssistantPlanner
+    AssistantPlanner <|.. RuleBasedAssistantPlanner
+    AiAssistantOrchestrator --> SkillRouter
+    SkillRouter --> SkillRegistry
+    SkillRegistry --> Skill
+    Skill <|.. LedgerReadSkill
+    Skill <|.. LedgerWriteSkill
+    Skill <|.. TransactionReadSkill
+    Skill <|.. FinanceWriteSkill
+    Skill <|.. NaturalLanguageAccountingSkill
+    Skill <|.. BudgetReadSkill
+    Skill <|.. DashboardReadSkill
+    Skill <|.. NotificationReadSkill
+    Skill <|.. ExportReadSkill
+    Skill <|.. TagReadSkill
+    AiAssistantOrchestrator --> MecotEmotionService
+    AiAssistantOrchestrator --> MemoryRetrievalService
+    AiAssistantOrchestrator --> LlmRewriteService
+    AiAssistantOrchestrator --> ResponseRenderer
+    MecotEmotionService --> AiEmotionStateService
+    MemoryRetrievalService --> AiMemoryService
+
+    LlmResource --> LlmParsingService
+    LlmParsingService --> LlmClient
+    LlmClient <|.. OpenAiCompatibleLlmClient
+    LlmParsingService --> LlmJsonResponseParser
+    LlmParsingService --> TransactionPromptBuilder
+    LlmParsingService --> AlertPromptBuilder

@@ -1,0 +1,41 @@
+﻿flowchart LR
+    Rest[web.rest<br/>REST API 控制器]
+    Error[web.rest.errors<br/>统一异常响应]
+    Filter[web.filter<br/>过滤器]
+    Service[service<br/>业务服务]
+    DTO[service.dto<br/>接口 DTO]
+    Mapper[service.mapper<br/>实体转换]
+    Repo[repository<br/>Spring Data JPA]
+    Projection[repository.projection<br/>统计查询投影]
+    Domain[domain<br/>JPA 实体]
+    Enum[domain.enumeration<br/>业务枚举]
+    Security[security<br/>认证与当前用户]
+    Assistant[assistant<br/>AI 助手编排]
+    Skills[assistant.skill<br/>工具/技能路由]
+    Memory[assistant.memory<br/>长期记忆/RAG]
+    Emotion[assistant.emotion<br/>MeCOT 情绪状态]
+    Role[assistant.role<br/>角色人设/知识]
+    LLM[llm<br/>LLM 抽象层]
+    LLMClient[llm.client<br/>模型客户端]
+    Parser[llm.parser<br/>模型响应解析]
+    Prompt[llm.prompt<br/>提示词构造]
+
+    Rest --> Service
+    Rest --> DTO
+    Rest --> Error
+    Service --> Repo
+    Service --> DTO
+    Service --> Mapper
+    Repo --> Domain
+    Domain --> Enum
+    Rest --> Security
+    Service --> Security
+    Assistant --> Skills
+    Assistant --> Memory
+    Assistant --> Emotion
+    Assistant --> Role
+    Assistant --> Service
+    Assistant --> LLM
+    LLM --> LLMClient
+    LLM --> Parser
+    LLM --> Prompt

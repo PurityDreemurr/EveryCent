@@ -1,0 +1,41 @@
+﻿flowchart TB
+    User[用户 / Apifox / 浏览器]
+    Frontend[src/main/webapp/app<br/>React 前端]
+    Backend[src/main/java/com/everycent<br/>Spring Boot 后端]
+    DB[(MySQL / H2<br/>业务数据库)]
+    Vector[(Qdrant<br/>向量库)]
+    LLMProvider[OpenAI Compatible LLM / Embedding]
+
+    User --> Frontend
+    User --> Backend
+    Frontend --> Backend
+    Backend --> DB
+    Backend --> Vector
+    Backend --> LLMProvider
+
+    Frontend --> FConfig[app/config]
+    Frontend --> FModules[app/modules]
+    Frontend --> FShared[app/shared]
+    Frontend --> FContent[content / swagger-ui]
+
+    FModules --> FEEveryCent[modules/everycent]
+    FEEveryCent --> FELedger[ledger]
+    FEEveryCent --> FETransaction[transaction]
+    FEEveryCent --> FEBudget[budget]
+    FEEveryCent --> FEDashboard[dashboard]
+    FEEveryCent --> FENotification[notifications]
+    FEEveryCent --> FEAi[ai-record]
+    FEEveryCent --> FEExport[export]
+    FEEveryCent --> FETags[tags]
+    FEEveryCent --> FEMember[shared-ledger]
+
+    Backend --> Web[web.rest / web.filter]
+    Backend --> Service[service / service.dto / service.mapper]
+    Backend --> Repository[repository / projection]
+    Backend --> Domain[domain / domain.enumeration]
+    Backend --> Assistant[assistant / assistant.*]
+    Backend --> LLM[llm / llm.*]
+    Backend --> Security[security]
+    Backend --> Config[config]
+    Backend --> Management[management]
+    Backend --> AOP[aop.logging]
