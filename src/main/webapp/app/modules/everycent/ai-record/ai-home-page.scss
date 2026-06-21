@@ -1,9 +1,10 @@
 .everycent-ai-page {
-  min-height: calc(100vh - 170px);
+  height: 100%;
+  min-height: 0;
 }
 
 .everycent-chat {
-  min-height: calc(100vh - 170px);
+  min-height: 0;
 }
 
 .everycent-chat__ledger {
@@ -93,7 +94,7 @@
 .everycent-chat--thread {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  height: calc(100vh - 170px);
+  height: 100%;
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--ec-border);
@@ -112,14 +113,20 @@
 
 .everycent-chat-message {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-columns: 38px minmax(0, auto);
   gap: 0.75rem;
-  max-width: 840px;
+  max-width: min(720px, 100%);
+  width: fit-content;
 }
 
 .everycent-chat-message--user {
   justify-self: end;
-  width: min(760px, 100%);
+  max-width: min(620px, 100%);
+}
+
+.everycent-chat-message--structured {
+  max-width: min(860px, 100%);
+  width: min(860px, 100%);
 }
 
 .everycent-chat-message--user .everycent-chat-message__body {
@@ -146,10 +153,16 @@
 
 .everycent-chat-message__body {
   min-width: 0;
+  width: fit-content;
+  max-width: 100%;
   padding: 0.85rem 1rem;
   border: 1px solid var(--ec-border);
   border-radius: 12px;
   background: var(--ec-bg);
+}
+
+.everycent-chat-message--structured .everycent-chat-message__body {
+  width: 100%;
 }
 
 .everycent-chat-message__body strong {
@@ -160,6 +173,7 @@
   margin: 0.25rem 0 0;
   color: var(--ec-muted);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .everycent-chat-composer {
@@ -513,11 +527,11 @@
 @media (max-width: 760px) {
   .everycent-ai-page,
   .everycent-chat {
-    min-height: calc(100vh - 220px);
+    min-height: 0;
   }
 
   .everycent-chat--thread {
-    height: calc(100vh - 220px);
+    height: 100%;
   }
 
   .everycent-chat-home {
