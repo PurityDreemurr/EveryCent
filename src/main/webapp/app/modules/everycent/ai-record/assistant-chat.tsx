@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getLedgers, Ledger } from '../ledger/ledger-api';
@@ -27,6 +28,19 @@ const createMessage = (
   preview,
   cards,
 });
+
+const assistantErrorMessage = (error: unknown, fallback: string) => {
+  if (!axios.isAxiosError(error)) return fallback;
+  const data = error.response?.data;
+  if (data && typeof data === 'object') {
+    const response = data as Record<string, unknown>;
+    for (const key of ['detail', 'message', 'title']) {
+      const value = response[key];
+      if (typeof value === 'string' && value.trim()) return value;
+    }
+  }
+  return fallback;
+};
 
 const AssistantChat = () => {
   const [confirmingMessageId, setConfirmingMessageId] = useState<string>();
@@ -130,8 +144,11 @@ const AssistantChat = () => {
         ...current,
         createMessage('assistant', response.assistantMessage ?? '已处理。', undefined, response.cards ?? []),
       ]);
-    } catch {
-      setMessages(current => [...current, createMessage('assistant', '暂时无法连接 Assistant Chat，请稍后再试。')]);
+    } catch (error) {
+      setMessages(current => [
+        ...current,
+        createMessage('assistant', assistantErrorMessage(error, '暂时无法连接 Assistant Chat，请稍后再试。')),
+      ]);
     } finally {
       submittingRef.current = false;
       setLoading(false);
