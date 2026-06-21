@@ -1,0 +1,168 @@
+﻿classDiagram
+    class LedgerResource {
+        +getLedgers()
+        +createLedger()
+        +getLedger()
+        +updateLedger()
+        +deleteLedger()
+        +getMembers()
+        +addMember()
+        +updateMember()
+        +removeMember()
+    }
+
+    class TransactionRecordResource {
+        +getTransactions()
+        +createTransaction()
+        +createTransactionByNaturalLanguage()
+        +getTransaction()
+        +updateTransaction()
+        +deleteTransaction()
+    }
+
+    class BudgetResource {
+        +getBudgets()
+        +createBudget()
+        +updateBudget()
+        +deleteBudget()
+        +getBudgetStatus()
+    }
+
+    class DashboardResource {
+        +getSummary()
+        +getTrend()
+        +getBehaviorTagStats()
+        +getEmotionTagStats()
+    }
+
+    class NotificationResource {
+        +getNotifications()
+        +markAsRead()
+        +deleteNotification()
+    }
+
+    class ExportResource {
+        +exportTransactions()
+    }
+
+    class TagResource {
+        +getBehaviorTags()
+        +getEmotionTags()
+    }
+
+    class LedgerService {
+        +findLedgersForCurrentUser()
+        +create()
+        +update()
+        +delete()
+        +addMember()
+        +updateMember()
+        +removeMember()
+    }
+
+    class TransactionRecordService {
+        +findByLedger()
+        +create()
+        +createByNaturalLanguage()
+        +update()
+        +delete()
+    }
+
+    class BudgetService {
+        +findByLedger()
+        +create()
+        +update()
+        +delete()
+        +getStatus()
+    }
+
+    class DashboardService {
+        +getSummary()
+        +getTrend()
+        +getBehaviorTagStats()
+        +getEmotionTagStats()
+    }
+
+    class NotificationService {
+        +findForCurrentUser()
+        +createBudgetAlert()
+        +createLedgerInvite()
+        +markAsRead()
+        +delete()
+    }
+
+    class ExcelExportService {
+        +exportTransactions()
+    }
+
+    class TagService {
+        +getBehaviorTags()
+        +getEmotionTags()
+    }
+
+    class LedgerPermissionService {
+        +requireRead()
+        +requireWrite()
+        +requireOwner()
+    }
+
+    class MonthlyBalanceService {
+        +recalculate()
+    }
+
+    class BudgetAlertService {
+        +checkAndNotify()
+    }
+
+    class LedgerRepository
+    class UserLedgerPermissionRepository
+    class TransactionRecordRepository
+    class BudgetRepository
+    class MonthlyBalanceRepository
+    class NotificationMessageRepository
+    class BehaviorTagRepository
+    class EmotionTagRepository
+    class UserRepository
+
+    LedgerResource --> LedgerService
+    TransactionRecordResource --> TransactionRecordService
+    BudgetResource --> BudgetService
+    DashboardResource --> DashboardService
+    NotificationResource --> NotificationService
+    ExportResource --> ExcelExportService
+    TagResource --> TagService
+
+    LedgerService --> LedgerPermissionService
+    LedgerService --> LedgerRepository
+    LedgerService --> UserLedgerPermissionRepository
+    LedgerService --> UserRepository
+    LedgerService --> NotificationService
+
+    TransactionRecordService --> LedgerPermissionService
+    TransactionRecordService --> TransactionRecordRepository
+    TransactionRecordService --> MonthlyBalanceService
+    TransactionRecordService --> BudgetAlertService
+    TransactionRecordService --> BehaviorTagRepository
+    TransactionRecordService --> EmotionTagRepository
+
+    BudgetService --> LedgerPermissionService
+    BudgetService --> BudgetRepository
+    BudgetService --> TransactionRecordRepository
+
+    DashboardService --> LedgerPermissionService
+    DashboardService --> TransactionRecordRepository
+    DashboardService --> BudgetService
+
+    NotificationService --> NotificationMessageRepository
+    NotificationService --> LedgerPermissionService
+
+    ExcelExportService --> LedgerPermissionService
+    ExcelExportService --> TransactionRecordRepository
+
+    TagService --> BehaviorTagRepository
+    TagService --> EmotionTagRepository
+
+    MonthlyBalanceService --> MonthlyBalanceRepository
+    MonthlyBalanceService --> LedgerRepository
+    BudgetAlertService --> BudgetService
+    BudgetAlertService --> NotificationService
