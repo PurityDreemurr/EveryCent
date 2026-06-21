@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { AiChatMessage } from './ai-record-types';
+import { exportLedgerTransactions } from '../export/export-api';
 import ParsePreviewCard from './parse-preview-card';
 
 type AnyRecord = Record<string, unknown>;
@@ -45,6 +46,8 @@ const isTransactionPage = (data: unknown): data is AnyRecord => isObject(data) &
 const isTransactionRecord = (data: unknown): data is AnyRecord =>
   isObject(data) && data.amount !== undefined && (data.recordDate !== undefined || data.transactionDate !== undefined);
 
+const isDownloadResult = (data: unknown): data is AnyRecord => isObject(data) && typeof data.downloadUrl === 'string';
+
 const humanKey = (key: string) =>
   ({
     totalElements: '总条数',
@@ -75,6 +78,7 @@ const humanKey = (key: string) =>
     count: '笔数',
     ratio: '占比',
     percentage: '占比',
+    byteLength: '文件大小',
   })[key] ?? key;
 
 const formatReadableValue = (key: string, value: unknown) => {
@@ -83,6 +87,25 @@ const formatReadableValue = (key: string, value: unknown) => {
   if (/ratio|rate|percentage/i.test(key)) return `${(numberValue(value) * 100).toFixed(1)}%`;
   if (typeof value === 'boolean') return value ? '是' : '否';
   return primitiveText(value);
+};
+
+const formatBytes = (value: unknown) => {
+  const bytes = numberValue(value);
+  if (bytes <= 0) return '-';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+};
+
+const downloadBlob = (blob: Blob, filename: string) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
 };
 
 const renderTransactionRows = (records: AnyRecord[]) => (
@@ -167,6 +190,31 @@ const renderReadableData = (data: unknown) => {
   return <p>{primitiveText(data, '')}</p>;
 };
 
+const renderDownloadData = (data: unknown, onDownload: (data: AnyRecord) => void) => {
+  if (!isDownloadResult(data)) return renderReadableData(data);
+
+  return (
+    <div className="everycent-download-card">
+      <dl className="everycent-result-summary">
+        <div>
+          <dt>导出范围</dt>
+          <dd>
+            {textValue(data.startDate)} 至 {textValue(data.endDate)}
+          </dd>
+        </div>
+        <div>
+          <dt>文件大小</dt>
+          <dd>{formatBytes(data.byteLength)}</dd>
+        </div>
+      </dl>
+      <button type="button" className="everycent-download-card__button" onClick={() => onDownload(data)}>
+        <FontAwesomeIcon icon="save" />
+        <span>下载账单</span>
+      </button>
+    </div>
+  );
+};
+
 const cardClassName = (type?: string) => `everycent-result-card everycent-result-card--${type ?? 'result'}`;
 
 const displayMessage = (content: string) => content.replace(/\s*\{\s*"mood"\s*:\s*\d+\s*,\s*"emoji"\s*:\s*"[^"]+"\s*\}\s*$/u, '').trim();
@@ -184,6 +232,16 @@ const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPrev
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [loading, messages]);
+
+  const downloadExport = async (data: AnyRecord) => {
+    const ledgerId = Number(data.ledgerId);
+    const startDate = textValue(data.startDate, '');
+    const endDate = textValue(data.endDate, '');
+    if (!Number.isFinite(ledgerId) || !startDate || !endDate) return;
+
+    const result = await exportLedgerTransactions(ledgerId, { startDate, endDate });
+    downloadBlob(result.blob, textValue(data.fileName, result.filename));
+  };
 
   return (
     <div className="everycent-chat__messages">
@@ -207,7 +265,7 @@ const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPrev
                   <h2>{card.title ?? '结果'}</h2>
                 </header>
                 {card.message && <p>{card.message}</p>}
-                {renderReadableData(card.data)}
+                {card.type === 'download_result' ? renderDownloadData(card.data, downloadExport) : renderReadableData(card.data)}
               </section>
             ))}
           </div>

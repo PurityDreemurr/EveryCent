@@ -38,15 +38,30 @@ public class ExportReadSkill implements Skill {
     public SkillResult execute(AssistantAction action, SkillExecutionContext context) {
         User user = currentUserResolver.resolve(context);
         ActionArgumentReader args = new ActionArgumentReader(action);
-        byte[] bytes = excelExportService.exportTransactions(
-            user,
-            args.longValue("ledgerId"),
-            args.dateValue("startDate"),
-            args.dateValue("endDate")
-        );
+        Long ledgerId = args.longValue("ledgerId");
+        java.time.LocalDate startDate = args.dateValue("startDate");
+        java.time.LocalDate endDate = args.dateValue("endDate");
+        byte[] bytes = excelExportService.exportTransactions(user, ledgerId, startDate, endDate);
         return SkillResult.success(
             action.getName(),
-            Map.of("downloadReady", true, "contentType", CONTENT_TYPE, "byteLength", bytes.length)
+            Map.of(
+                "downloadReady",
+                true,
+                "contentType",
+                CONTENT_TYPE,
+                "byteLength",
+                bytes.length,
+                "fileName",
+                "everycent-transactions.xlsx",
+                "ledgerId",
+                ledgerId,
+                "startDate",
+                startDate.toString(),
+                "endDate",
+                endDate.toString(),
+                "downloadUrl",
+                "/api/ledgers/" + ledgerId + "/transactions/export?startDate=" + startDate + "&endDate=" + endDate
+            )
         );
     }
 }

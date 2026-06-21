@@ -472,6 +472,34 @@
   color: var(--ec-danger);
 }
 
+.everycent-download-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.everycent-download-card__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: fit-content;
+  min-height: 40px;
+  padding: 0 0.9rem;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--ec-accent);
+  cursor: pointer;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.everycent-download-card__button:hover {
+  color: #fff;
+  background: color-mix(in srgb, var(--ec-accent) 86%, #000);
+  text-decoration: none;
+}
+
 .everycent-result-card pre {
   max-height: 240px;
   margin: 0;
