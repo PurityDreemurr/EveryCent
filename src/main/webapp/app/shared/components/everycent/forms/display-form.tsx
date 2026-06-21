@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import { previewSubmittedData } from './submission-preview';
+import { loadSettings, saveSettings } from './settings-storage';
 import './forms.scss';
 
 const sidebarItems = [
@@ -12,7 +12,6 @@ const sidebarItems = [
   { id: 'ledger', label: '账本' },
   { id: 'transactions', label: '收支记录' },
   { id: 'budget', label: '预算' },
-  { id: 'analytics', label: '数据分析' },
 ] as const;
 
 const displaySchema = z.object({
@@ -21,20 +20,29 @@ const displaySchema = z.object({
 
 type DisplayFormValues = z.infer<typeof displaySchema>;
 
+const defaultDisplayValues: DisplayFormValues = {
+  items: ['ai', 'dashboard', 'ledger', 'transactions', 'budget'],
+};
+
 const DisplayForm = () => {
+  const [saved, setSaved] = React.useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<DisplayFormValues>({
     resolver: zodResolver(displaySchema),
-    defaultValues: {
-      items: ['ai', 'dashboard', 'ledger'],
-    },
+    defaultValues: loadSettings('display', defaultDisplayValues),
   });
 
+  const handleSave = (values: DisplayFormValues) => {
+    saveSettings('display', values);
+    setSaved(true);
+  };
+
   return (
-    <form className="ec-form" onSubmit={handleSubmit(values => previewSubmittedData('display', values))}>
+    <form className="ec-form" onSubmit={handleSubmit(handleSave)}>
+      {saved && <div className="ec-form__success">显示设置已保存。</div>}
       <fieldset className="ec-checkbox-list">
         <legend>侧边栏</legend>
         <p>选择要显示在 EveryCent 侧边栏中的项目。</p>

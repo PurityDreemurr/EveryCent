@@ -92,7 +92,9 @@
 
 .everycent-chat--thread {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: calc(100vh - 170px);
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--ec-border);
   border-radius: 12px;
@@ -103,6 +105,7 @@
   display: grid;
   align-content: start;
   gap: 1rem;
+  min-height: 0;
   overflow: auto;
   padding: 1rem;
 }
@@ -403,6 +406,10 @@
   .everycent-ai-page,
   .everycent-chat {
     min-height: calc(100vh - 220px);
+  }
+
+  .everycent-chat--thread {
+    height: calc(100vh - 220px);
   }
 
   .everycent-chat-home {

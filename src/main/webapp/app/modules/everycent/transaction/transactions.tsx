@@ -138,6 +138,7 @@ const TransactionsPage = () => {
   const [loadingRecords, setLoadingRecords] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState<string | null>(null);
 
   const selectedLedger = useMemo(() => ledgers.find(ledger => ledger.id === selectedLedgerId), [ledgers, selectedLedgerId]);
   const totalPages = Math.max(Math.ceil(totalElements / size), 1);
@@ -263,6 +264,7 @@ const TransactionsPage = () => {
   const openCreateDialog = () => {
     setForm(defaultFormWithLoadedTags());
     setDetailRecord(null);
+    setDialogError(null);
     setDialogMode('create');
     setDialogOpen(true);
   };
@@ -270,6 +272,7 @@ const TransactionsPage = () => {
   const openEditDialog = async (record: TransactionRecord) => {
     setDialogMode('edit');
     setDetailRecord(null);
+    setDialogError(null);
     setError(null);
     try {
       const detail = await getTransaction(record.id);
@@ -305,28 +308,28 @@ const TransactionsPage = () => {
     event.preventDefault();
 
     if (!selectedLedgerId) {
-      setError('请先选择账本。');
+      setDialogError('请先选择账本。');
       return;
     }
 
     if (!form.amount.trim() || !form.description.trim() || !form.recordDate || !form.behaviorTagId || !form.emotionTagId) {
-      setError('请完整填写金额、描述、日期和标签。');
+      setDialogError('请完整填写金额、描述、日期和标签。');
       return;
     }
 
     const amount = Number(form.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError('金额必须是大于 0 的数字。');
+      setDialogError('金额必须是大于 0 的数字。');
       return;
     }
 
     if (!isKnownTagId(form.behaviorTagId, behaviorTags) || !isKnownTagId(form.emotionTagId, emotionTags)) {
-      setError('请选择有效的行为标签和情绪标签。');
+      setDialogError('请选择有效的行为标签和情绪标签。');
       return;
     }
 
     setSaving(true);
-    setError(null);
+    setDialogError(null);
     try {
       const payload = toPayload(form);
       if (dialogMode === 'edit' && form.id) {
@@ -338,7 +341,7 @@ const TransactionsPage = () => {
       setForm(defaultFormWithLoadedTags());
       await refreshCurrentPage();
     } catch (err) {
-      setError(messageForTransactionError(err, dialogMode === 'edit' ? '修改收支记录失败。' : '创建收支记录失败。'));
+      setDialogError(messageForTransactionError(err, dialogMode === 'edit' ? '修改收支记录失败。' : '创建收支记录失败。'));
     } finally {
       setSaving(false);
     }
@@ -598,6 +601,7 @@ const TransactionsPage = () => {
             </div>
           ) : (
             <form className="everycent-transactions-page__form" onSubmit={handleSubmit}>
+              {dialogError && <div className="everycent-transactions-page__dialog-alert">{dialogError}</div>}
               <label>
                 <span>类型</span>
                 <select value={form.type} onChange={event => setForm(current => ({ ...current, type: event.target.value }))}>
