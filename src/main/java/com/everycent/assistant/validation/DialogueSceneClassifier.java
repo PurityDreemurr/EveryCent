@@ -54,7 +54,29 @@ public class DialogueSceneClassifier {
         if (containsAny(text, "难受", "不开心", "低落", "焦虑", "压力", "安慰", "陪陪我", "陪我一下")) {
             return DialogueScene.EMOTION_LIGHT;
         }
-        if (containsAny(text, "怎么办", "怎么处理", "帮我", "帮忙", "怎么做", "分析一下")) {
+        if (
+            containsAny(
+                text,
+                "怎么办",
+                "怎么处理",
+                "帮我",
+                "帮忙",
+                "怎么做",
+                "分析一下",
+                "改成",
+                "改为",
+                "换成",
+                "实现",
+                "非递归",
+                "递归",
+                "代码",
+                "c++",
+                "cpp",
+                "c'p'p",
+                "python",
+                "java"
+            )
+        ) {
             return DialogueScene.TASK_HELP;
         }
         return DialogueScene.DAILY_CHAT;

@@ -27,6 +27,10 @@ public class AssistantReplyPostProcessor {
         if (first.isPassed()) {
             return rawReply;
         }
+        String repaired = repairMissingStateTail(rawReply, scene, first);
+        if (repaired != null) {
+            return repaired;
+        }
 
         LOG.warn("Assistant reply validation failed. scene={}, severity={}, violations={}", scene, first.getSeverity(), first.getViolations());
         if (first.getSeverity() == Severity.HIGH) {
@@ -50,6 +54,29 @@ public class AssistantReplyPostProcessor {
         }
 
         return fallback(scene);
+    }
+
+    private String repairMissingStateTail(String rawReply, DialogueScene scene, ReplyValidationResult validationResult) {
+        if (validationResult == null || !validationResult.getViolations().contains("MISSING_OR_INVALID_JSON_TAIL")) {
+            return null;
+        }
+        if (rawReply == null || rawReply.trim().isEmpty()) {
+            return null;
+        }
+        String repaired = rawReply.trim() + " " + stateTail(scene);
+        ReplyValidationResult repairedResult = validator.validate(repaired, scene);
+        return repairedResult.isPassed() ? repaired : null;
+    }
+
+    private String stateTail(DialogueScene scene) {
+        return switch (scene == null ? DialogueScene.UNKNOWN : scene) {
+            case ACHIEVEMENT_SHARE -> "{\"mood\":55,\"emoji\":\"happy\"}";
+            case JOKE -> "{\"mood\":52,\"emoji\":\"shy\"}";
+            case COLD_REPLY -> "{\"mood\":40,\"emoji\":\"speechless\"}";
+            case SELF_BLAME, LONELINESS, EMOTION_HEAVY -> "{\"mood\":50,\"emoji\":\"sad\"}";
+            case FATIGUE, EMOTION_LIGHT, ACCOUNTING, DAILY_CHAT, TASK_HELP, UNKNOWN -> "{\"mood\":40,\"emoji\":\"peace\"}";
+            case FRUSTRATION -> "{\"mood\":50,\"emoji\":\"speechless\"}";
+        };
     }
 
     private String fallback(DialogueScene scene) {

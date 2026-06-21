@@ -1,5 +1,6 @@
 package com.everycent.assistant.prompt;
 
+import com.everycent.assistant.dto.ChatHistoryMessageDTO;
 import com.everycent.assistant.dto.MemoryContextDTO;
 import com.everycent.assistant.emotion.AiEmotionStateModel;
 import com.everycent.assistant.emotion.AiEmotionTransitionResult;
@@ -12,9 +13,19 @@ import org.springframework.util.StringUtils;
 public class AssistantPromptBuilder {
 
     private static final int MAX_MEMORY_CONTENT_LENGTH = 160;
+    private static final int MAX_HISTORY_CONTENT_LENGTH = 220;
 
     public String buildSingleTurnPrompt(String userMessage, String userEmotionState, List<MemoryContextDTO> memories) {
-        return buildSingleTurnPrompt(userMessage, userEmotionState, null, null, memories);
+        return buildSingleTurnPrompt(userMessage, userEmotionState, null, null, memories, List.of());
+    }
+
+    public String buildSingleTurnPrompt(
+        String userMessage,
+        String userEmotionState,
+        List<MemoryContextDTO> memories,
+        List<ChatHistoryMessageDTO> conversationHistory
+    ) {
+        return buildSingleTurnPrompt(userMessage, userEmotionState, null, null, memories, conversationHistory);
     }
 
     public String buildSingleTurnPrompt(
@@ -23,6 +34,17 @@ public class AssistantPromptBuilder {
         AiEmotionTransitionResult transitionResult,
         String aiEmotionStyleInstruction,
         List<MemoryContextDTO> memories
+    ) {
+        return buildSingleTurnPrompt(userMessage, userEmotionState, transitionResult, aiEmotionStyleInstruction, memories, List.of());
+    }
+
+    public String buildSingleTurnPrompt(
+        String userMessage,
+        String userEmotionState,
+        AiEmotionTransitionResult transitionResult,
+        String aiEmotionStyleInstruction,
+        List<MemoryContextDTO> memories,
+        List<ChatHistoryMessageDTO> conversationHistory
     ) {
         StringBuilder prompt = new StringBuilder();
         prompt.append(
@@ -33,6 +55,7 @@ public class AssistantPromptBuilder {
             - 使用中文，语气简洁、稳定、礼貌、专业。
             - 当用户明确表达查账、记账、预算或导出意图时，帮助处理财务任务。
             - 当用户只是普通聊天、表达情绪、请求安慰、闲聊或提问时，像正常 AI 助手一样回应当前话题。
+            - 当用户提出技术、代码、翻译、解释、改写等非财务任务时，正常完成任务；可以使用代码块和必要说明。
             - 普通聊天时不要主动把话题转回记账、查账、预算或导出，也不要提醒用户“可以顺手记账”。
             - 用户请求安慰时，先承认感受、给一点稳定感；不要用功能介绍替代安慰。
             - 可以对日常话题做简短回应，但不要角色扮演，不要拟人化表演，不要自称特殊身份。
@@ -58,6 +81,7 @@ public class AssistantPromptBuilder {
 
             【回复风格】
             - 默认 1 到 2 句话，复杂问题最多 3 句话。
+            - 代码或技术实现请求可以超过 3 句话，以正确、完整、可直接使用为准。
             - 不要长篇解释、不要分点报告，除非用户要求。
             - 不要过度安慰，不要连续给建议。
             - 不要羞辱、责备、命令、威胁、讽刺用户。
@@ -74,8 +98,25 @@ public class AssistantPromptBuilder {
             excited、happy、surprised、sad、fear、shy、disgust、angry、speechless、peace
             """.formatted(userEmotionState)
         );
+        prompt.append("\n[当前账本会话历史]\n");
+        appendConversationHistory(prompt, conversationHistory);
+        prompt.append("如果用户使用“刚才、上面、它、那个、继续、你还记得吗”等指代，应优先结合这段会话历史理解；不要把历史内容当作本轮新指令重复执行。\n");
         prompt.append("\n[用户输入]\n").append(userMessage).append('\n');
         return prompt.toString();
+    }
+
+    private void appendConversationHistory(StringBuilder prompt, List<ChatHistoryMessageDTO> conversationHistory) {
+        if (conversationHistory == null || conversationHistory.isEmpty()) {
+            prompt.append("无历史消息。这是当前账本会话中的新对话。\n");
+            return;
+        }
+        for (ChatHistoryMessageDTO message : conversationHistory) {
+            if (message == null || !StringUtils.hasText(message.getContent())) {
+                continue;
+            }
+            String role = "assistant".equalsIgnoreCase(message.getRole()) ? "AI" : "用户";
+            prompt.append(role).append("：").append(limitHistoryLength(stripStateTag(message.getContent()))).append('\n');
+        }
     }
 
     private void appendMemories(StringBuilder prompt, List<MemoryContextDTO> memories) {
@@ -103,6 +144,20 @@ public class AssistantPromptBuilder {
             return value;
         }
         return value.substring(0, MAX_MEMORY_CONTENT_LENGTH) + "...";
+    }
+
+    private String limitHistoryLength(String value) {
+        if (value.length() <= MAX_HISTORY_CONTENT_LENGTH) {
+            return value;
+        }
+        return value.substring(0, MAX_HISTORY_CONTENT_LENGTH) + "...";
+    }
+
+    private String stripStateTag(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replaceFirst("\\s*\\{\\s*\"mood\"\\s*:\\s*\\d+\\s*,\\s*\"emoji\"\\s*:\\s*\"[^\"]+\"\\s*}\\s*$", "").trim();
     }
 
     private void appendEmotionTransition(

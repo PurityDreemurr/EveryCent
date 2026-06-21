@@ -232,7 +232,7 @@ app:
     provider: openai-compatible
     base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
     api-key: ${APP_LLM_API_KEY:}
-    model: qwen3.6-flash
+    model: ${APP_LLM_MODEL:qwen3.6-flash}
     timeout-seconds: 20
     min-confidence: 0.70
     max-input-length: 500

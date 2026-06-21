@@ -2,6 +2,7 @@ package com.everycent.assistant.prompt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.everycent.assistant.dto.ChatHistoryMessageDTO;
 import com.everycent.assistant.emotion.AiEmotionPromptAdapter;
 import com.everycent.assistant.emotion.AiEmotionStateModel;
 import com.everycent.assistant.emotion.AiEmotionTransitionResult;
@@ -82,6 +83,21 @@ class AssistantPromptBuilderMecotStyleTest {
         assertThat(prompt).doesNotContain("每次回复最多使用一个龙族元素");
     }
 
+    @Test
+    void shouldIncludeCurrentLedgerConversationHistoryInPrompt() {
+        ChatHistoryMessageDTO previousUser = historyMessage("user", "我今天心情不太好");
+        ChatHistoryMessageDTO previousAssistant = historyMessage("assistant", "听起来今天有点难熬，我在。 {\"mood\":35,\"emoji\":\"peace\"}");
+
+        String prompt = new AssistantPromptBuilder()
+            .buildSingleTurnPrompt("你还记得我刚才说什么吗", "中立", List.of(), List.of(previousUser, previousAssistant));
+
+        assertThat(prompt).contains("[当前账本会话历史]");
+        assertThat(prompt).contains("用户：我今天心情不太好");
+        assertThat(prompt).contains("AI：听起来今天有点难熬，我在。");
+        assertThat(prompt).contains("刚才、上面、它、那个、继续、你还记得吗");
+        assertThat(prompt).doesNotContain("{\"mood\":35");
+    }
+
     private EmotionTag emotionTag(String code) {
         EmotionTag tag = new EmotionTag();
         tag.setCode(code);
@@ -89,5 +105,12 @@ class AssistantPromptBuilderMecotStyleTest {
         tag.setValence(EmotionValence.NEGATIVE);
         tag.setSystemDefault(true);
         return tag;
+    }
+
+    private ChatHistoryMessageDTO historyMessage(String role, String content) {
+        ChatHistoryMessageDTO message = new ChatHistoryMessageDTO();
+        message.setRole(role);
+        message.setContent(content);
+        return message;
     }
 }

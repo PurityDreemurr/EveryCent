@@ -63,6 +63,35 @@ class AssistantReplyPostProcessorTest {
     }
 
     @Test
+    void shouldRepairMissingStateTailWithoutDiscardingTaskReply() {
+        AssistantReplyPostProcessor processor = new AssistantReplyPostProcessor(validator, rewriteService);
+        String rawReply = """
+            这是非递归实现：
+
+            ```cpp
+            int fibonacci(int n) {
+                int a = 0;
+                int b = 1;
+                for (int i = 0; i < n; ++i) {
+                    int next = a + b;
+                    a = b;
+                    b = next;
+                }
+                return a;
+            }
+            ```
+            """;
+
+        String result = processor.process("改成非递归实现", rawReply, DialogueScene.TASK_HELP);
+
+        assertThat(result).contains("非递归实现");
+        assertThat(result).contains("```cpp");
+        assertThat(result).contains("{\"mood\":40,\"emoji\":\"peace\"}");
+        assertThat(result).doesNotContain("好，那就先这样");
+        verify(rewriteService, never()).rewrite(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     void shouldFallbackWhenRewriteStillInvalid() {
         AssistantReplyPostProcessor processor = new AssistantReplyPostProcessor(validator, rewriteService);
         when(rewriteService.rewrite(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))

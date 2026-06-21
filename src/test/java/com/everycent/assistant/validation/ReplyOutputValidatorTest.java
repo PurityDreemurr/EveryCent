@@ -70,5 +70,7 @@ class ReplyOutputValidatorTest {
         assertThat(classifier.classify("你不能安慰我一下吗")).isEqualTo(DialogueScene.EMOTION_LIGHT);
         assertThat(classifier.classify("我做完了")).isEqualTo(DialogueScene.ACHIEVEMENT_SHARE);
         assertThat(classifier.classify("嗯")).isEqualTo(DialogueScene.COLD_REPLY);
+        assertThat(classifier.classify("改成非递归实现")).isEqualTo(DialogueScene.TASK_HELP);
+        assertThat(classifier.classify("改成c'p'p")).isEqualTo(DialogueScene.TASK_HELP);
     }
 }

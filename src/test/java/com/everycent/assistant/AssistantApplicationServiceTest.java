@@ -1,9 +1,11 @@
 package com.everycent.assistant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.everycent.assistant.dto.ChatHistoryMessageDTO;
 import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.skill.AssistantAction;
 import com.everycent.assistant.skill.AssistantIntent;
@@ -106,25 +108,41 @@ class AssistantApplicationServiceTest {
         AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
         SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
         AiAssistantOrchestrator orchestrator = org.mockito.Mockito.mock(AiAssistantOrchestrator.class);
+        AssistantConversationStore conversationStore = org.mockito.Mockito.mock(AssistantConversationStore.class);
         AssistantApplicationService service = new AssistantApplicationService(
             planner,
             router,
             new ResponseRenderer(),
             orchestrator,
-            org.mockito.Mockito.mock(AssistantConversationStore.class)
+            conversationStore
         );
         ChatRequestDTO request = request("我今天有点无聊", 10L);
         AssistantPlan dailyChatPlan = new AssistantPlan();
         dailyChatPlan.setIntent(AssistantIntent.DAILY_CHAT);
         com.everycent.assistant.dto.ChatResponseDTO llmResponse = new com.everycent.assistant.dto.ChatResponseDTO();
         llmResponse.setAssistantMessage("那我陪你待一会儿。{\"mood\":40,\"emoji\":\"peace\"}");
+        ChatHistoryMessageDTO previousMessage = new ChatHistoryMessageDTO();
+        previousMessage.setRole("user");
+        previousMessage.setContent("我今天心情不太好");
+        when(conversationStore.ensureConversation(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(88L);
+        when(conversationStore.recentMessagesForPrompt(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request)))
+            .thenReturn(java.util.List.of(previousMessage));
         when(planner.plan(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(dailyChatPlan);
-        when(orchestrator.chat(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(llmResponse);
+        when(
+                orchestrator.chat(
+                    org.mockito.ArgumentMatchers.any(),
+                    org.mockito.ArgumentMatchers.eq(request),
+                    org.mockito.ArgumentMatchers.eq(java.util.List.of(previousMessage))
+                )
+            )
+            .thenReturn(llmResponse);
 
         var response = service.chat(user(), request);
 
+        assertThat(request.getConversationId()).isEqualTo(88L);
         assertThat(response.getAssistantMessage()).contains("陪你");
         assertThat(response.getResponseType()).isEqualTo("message");
+        verify(conversationStore).recentMessagesForPrompt(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request));
         verifyNoInteractions(router);
     }
 

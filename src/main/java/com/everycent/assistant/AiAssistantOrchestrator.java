@@ -1,6 +1,7 @@
 package com.everycent.assistant;
 
 import com.everycent.assistant.dto.AccountingCaptureDTO;
+import com.everycent.assistant.dto.ChatHistoryMessageDTO;
 import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.assistant.memory.AiMemoryService;
@@ -50,6 +51,10 @@ public class AiAssistantOrchestrator {
     }
 
     public ChatResponseDTO chat(User currentUser, ChatRequestDTO request) {
+        return chat(currentUser, request, List.of());
+    }
+
+    public ChatResponseDTO chat(User currentUser, ChatRequestDTO request, List<ChatHistoryMessageDTO> conversationHistory) {
         Long userId = requireUserId(currentUser);
         String userMessage = requireMessage(request);
         Long conversationId = request.getConversationId() == null ? System.currentTimeMillis() : request.getConversationId();
@@ -58,7 +63,12 @@ public class AiAssistantOrchestrator {
         DialogueScene scene = dialogueSceneClassifier.classify(userMessage);
         String assistantMessage = simpleChatReplyService.reply(userMessage);
         if (assistantMessage == null) {
-            String prompt = assistantPromptBuilder.buildSingleTurnPrompt(userMessage, INITIAL_USER_EMOTION_STATE, List.of());
+            String prompt = assistantPromptBuilder.buildSingleTurnPrompt(
+                userMessage,
+                INITIAL_USER_EMOTION_STATE,
+                List.of(),
+                conversationHistory
+            );
             LOG.info("Assistant prompt built for userId={}, conversationId={}, rag=false, memoryPersist=false, mecot=false", userId, conversationId);
 
             String rawReply = llmClient.complete(prompt);
