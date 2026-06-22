@@ -92,12 +92,18 @@ public class DashboardService {
 
     public List<TagStatDTO> getBehaviorTagStats(User currentUser, Long ledgerId, String period, LocalDate date) {
         Ledger ledger = getReadableLedger(currentUser, ledgerId);
+        if (isAllPeriod(period)) {
+            return toTagStats(transactionRecordRepository.sumExpenseByBehaviorTag(ledger));
+        }
         DateRange range = resolvePeriod(period, date);
         return toTagStats(transactionRecordRepository.sumExpenseByBehaviorTag(ledger, range.start(), range.end()));
     }
 
     public List<TagStatDTO> getEmotionTagStats(User currentUser, Long ledgerId, String period, LocalDate date) {
         Ledger ledger = getReadableLedger(currentUser, ledgerId);
+        if (isAllPeriod(period)) {
+            return toTagStats(transactionRecordRepository.sumExpenseByEmotionTag(ledger));
+        }
         DateRange range = resolvePeriod(period, date);
         return toTagStats(transactionRecordRepository.sumExpenseByEmotionTag(ledger, range.start(), range.end()));
     }
@@ -165,6 +171,10 @@ public class DashboardService {
         }
         String firstPeriod = period.split(",")[0].trim();
         return firstPeriod.isBlank() ? "MONTH" : firstPeriod.toUpperCase();
+    }
+
+    private boolean isAllPeriod(String period) {
+        return "ALL".equals(normalizePeriod(period));
     }
 
     private DateRange validateRange(LocalDate startDate, LocalDate endDate) {

@@ -56,7 +56,13 @@ const budgetUrl = (budgetId: number) => `api/budgets/${budgetId}`;
 
 export const budgetLimit = (budget: Budget) => budget.limitAmount || budget.amount || budget.budgetAmount || '0';
 
-export const budgetUsageRate = (budget: Budget) => budget.usedRatio || budget.usageRate || '0';
+const formatBudgetRate = (value?: string) => {
+  const numericValue = Number(value || 0);
+  const percentValue = numericValue > 1 ? numericValue : numericValue * 100;
+  return `${percentValue.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}%`;
+};
+
+export const budgetUsageRate = (budget: Budget) => formatBudgetRate(budget.usedRatio || budget.usageRate);
 
 export const getBudgets = async (ledgerId: number) => {
   const response = await axios.get<Budget[]>(ledgerBudgetsUrl(ledgerId));
