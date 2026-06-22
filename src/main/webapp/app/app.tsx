@@ -34,12 +34,14 @@ const AppFrame = ({
 }) => {
   const location = useLocation();
   const isEveryCentPage = location.pathname.startsWith('/everycent');
+  const isEveryCentAccountPage = location.pathname === '/account/settings' || location.pathname === '/account/password';
+  const isEveryCentLayoutPage = isEveryCentPage || isEveryCentAccountPage;
   const isAuthPage = location.pathname === '/login';
 
   return (
-    <div className={`app-container${isEveryCentPage ? ' app-container--everycent' : ''}${isAuthPage ? ' app-container--auth' : ''}`}>
+    <div className={`app-container${isEveryCentLayoutPage ? ' app-container--everycent' : ''}${isAuthPage ? ' app-container--auth' : ''}`}>
       <ToastContainer position="top-left" className="toastify-container" toastClassName="toastify-toast" />
-      {!isEveryCentPage && !isAuthPage && (
+      {!isEveryCentLayoutPage && !isAuthPage && (
         <ErrorBoundary>
           <Header
             isAuthenticated={isAuthenticated}
@@ -51,7 +53,7 @@ const AppFrame = ({
         </ErrorBoundary>
       )}
       <div className="container-fluid view-container" id="app-view-container">
-        {isEveryCentPage || isAuthPage ? (
+        {isEveryCentLayoutPage || isAuthPage ? (
           <ErrorBoundary>
             <AppRoutes />
           </ErrorBoundary>
@@ -62,7 +64,7 @@ const AppFrame = ({
             </ErrorBoundary>
           </Card>
         )}
-        {!isEveryCentPage && !isAuthPage && <Footer />}
+        {!isEveryCentLayoutPage && !isAuthPage && <Footer />}
       </div>
     </div>
   );

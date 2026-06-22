@@ -60,6 +60,16 @@ const transactionTypeLabel = (type?: string) => {
   return type || '未知';
 };
 
+const recordSourceLabel = (source?: string) => {
+  if (source === 'MANUAL') {
+    return '手动录入';
+  }
+  if (source === 'NATURAL_LANGUAGE') {
+    return 'AI记账';
+  }
+  return source || '未知';
+};
+
 const DateFilterInput = ({ value, onChange }: { value?: string; onChange: (value: string) => void }) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -508,7 +518,7 @@ const TransactionsPage = () => {
                     <td>{record.description}</td>
                     <td>{record.behaviorTagName || record.behaviorTagId}</td>
                     <td>{record.emotionTagName || record.emotionTagId}</td>
-                    <td>{record.source}</td>
+                    <td>{recordSourceLabel(record.source)}</td>
                     <td>
                       <strong
                         className={`everycent-transactions-page__amount everycent-transactions-page__amount--${record.type.toLowerCase()}`}
@@ -592,7 +602,7 @@ const TransactionsPage = () => {
               </div>
               <div>
                 <span>来源</span>
-                <strong>{detailRecord.source}</strong>
+                <strong>{recordSourceLabel(detailRecord.source)}</strong>
               </div>
               <div>
                 <span>记录 ID</span>

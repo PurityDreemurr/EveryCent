@@ -79,6 +79,15 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
 
     @Query(
         "select tag.id as tagId, tag.name as tagName, coalesce(sum(record.amount), 0) as amount, count(record) as count " +
+        "from TransactionRecord record join record.behaviorTag tag " +
+        "where record.ledger = :ledger and record.type = com.everycent.domain.enumeration.TransactionType.EXPENSE " +
+        "group by tag.id, tag.name " +
+        "order by coalesce(sum(record.amount), 0) desc"
+    )
+    List<TagAmountProjection> sumExpenseByBehaviorTag(@Param("ledger") Ledger ledger);
+
+    @Query(
+        "select tag.id as tagId, tag.name as tagName, coalesce(sum(record.amount), 0) as amount, count(record) as count " +
         "from TransactionRecord record join record.emotionTag tag " +
         "where record.ledger = :ledger and record.type = com.everycent.domain.enumeration.TransactionType.EXPENSE " +
         "and record.transactionDate between :start and :end " +
@@ -90,6 +99,15 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
         @Param("start") LocalDate start,
         @Param("end") LocalDate end
     );
+
+    @Query(
+        "select tag.id as tagId, tag.name as tagName, coalesce(sum(record.amount), 0) as amount, count(record) as count " +
+        "from TransactionRecord record join record.emotionTag tag " +
+        "where record.ledger = :ledger and record.type = com.everycent.domain.enumeration.TransactionType.EXPENSE " +
+        "group by tag.id, tag.name " +
+        "order by coalesce(sum(record.amount), 0) desc"
+    )
+    List<TagAmountProjection> sumExpenseByEmotionTag(@Param("ledger") Ledger ledger);
 
     void deleteAllByLedger(Ledger ledger);
 }

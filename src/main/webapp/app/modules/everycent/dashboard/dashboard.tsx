@@ -42,6 +42,24 @@ const cyclePeriod = (activeTab: TabKey): DashboardPeriod => (activeTab === 'over
 
 const formatMoney = (value?: string | number) => Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
 
+const formatPercent = (value?: string | number) => `${(Number(value || 0) * 100).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}%`;
+
+const budgetAlertLevelLabel = (level?: string) => {
+  if (level === 'DANGER') {
+    return '已超支';
+  }
+  if (level === 'WARNING') {
+    return '接近上限';
+  }
+  if (level === 'INFO') {
+    return '正常';
+  }
+  if (level === 'NONE') {
+    return '暂无预算';
+  }
+  return level || '暂无预算';
+};
+
 const DashboardCard = ({
   title,
   description,
@@ -183,8 +201,8 @@ const Dashboard = () => {
         const [summaryData, trend, behavior, emotion] = await Promise.all([
           getDashboardSummary(selectedLedgerId, { period: cyclePeriod(activeTab) }),
           getDashboardTrend(selectedLedgerId, {}),
-          getBehaviorTagStats(selectedLedgerId, { period: cyclePeriod(activeTab) }),
-          getEmotionTagStats(selectedLedgerId, { period: cyclePeriod(activeTab) }),
+          getBehaviorTagStats(selectedLedgerId, { period: 'ALL' }),
+          getEmotionTagStats(selectedLedgerId, { period: 'ALL' }),
         ]);
 
         if (mounted) {
@@ -212,8 +230,8 @@ const Dashboard = () => {
             },
             {
               label: '预算状态',
-              value: String(summaryData.budgetAlertLevel || 'NONE'),
-              change: `使用率 ${formatMoney(summaryData.budgetUsedRate || summaryData.budgetUsedRatio)}%`,
+              value: budgetAlertLevelLabel(summaryData.budgetAlertLevel),
+              change: `使用率 ${formatPercent(summaryData.budgetUsedRate ?? summaryData.budgetUsedRatio)}`,
               icon: 'tasks' as IconProp,
               tone: 'neutral',
             },
@@ -338,14 +356,14 @@ const Dashboard = () => {
               {
                 label: '行为标签数',
                 value: `${behaviorStats.length}`,
-                change: '来自 /behavior-tags',
+                change: '历史所有记录',
                 icon: 'flag' as IconProp,
                 tone: 'accent',
               },
               {
                 label: '情绪标签数',
                 value: `${emotionStats.length}`,
-                change: '来自 /emotion-tags',
+                change: '历史所有记录',
                 icon: 'heart' as IconProp,
                 tone: 'success',
               },
@@ -376,10 +394,10 @@ const Dashboard = () => {
           </section>
 
           <section className="everycent-dashboard__main-grid">
-            <DashboardCard title="行为标签统计" description="接口：/dashboard/behavior-tags" className="everycent-dashboard__span-4">
+            <DashboardCard title="行为标签统计" description="历史所有记录" className="everycent-dashboard__span-4">
               <SimpleBarList items={behaviorStats} valueFormatter={value => `¥${value}`} />
             </DashboardCard>
-            <DashboardCard title="情绪标签统计" description="接口：/dashboard/emotion-tags" className="everycent-dashboard__span-3">
+            <DashboardCard title="情绪标签统计" description="历史所有记录" className="everycent-dashboard__span-3">
               <SimpleBarList items={emotionStats} valueFormatter={value => `¥${value}`} />
             </DashboardCard>
           </section>
