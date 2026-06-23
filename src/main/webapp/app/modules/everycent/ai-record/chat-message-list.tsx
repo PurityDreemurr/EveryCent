@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { AiChatMessage } from './ai-record-types';
+import EmotionTagBadge from '../shared/emotion-tag-badge';
 import { exportLedgerTransactions } from '../export/export-api';
 import ParsePreviewCard from './parse-preview-card';
 
@@ -83,6 +84,7 @@ const humanKey = (key: string) =>
 
 const formatReadableValue = (key: string, value: unknown) => {
   if (value === undefined || value === null || value === '') return '-';
+  if (/emotionTagName|emotionTag|moodTag/i.test(key)) return <EmotionTagBadge name={primitiveText(value)} size="sm" />;
   if (/amount|income|expense|balance/i.test(key)) return formatAmount(value);
   if (/ratio|rate|percentage/i.test(key)) return `${(numberValue(value) * 100).toFixed(1)}%`;
   if (typeof value === 'boolean') return value ? '是' : '否';
@@ -245,50 +247,39 @@ const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPrev
 
   return (
     <div className="everycent-chat__messages">
-      {messages.map(message => {
-        const hasStructuredContent = Boolean(message.preview || message.cards?.length);
-        const className = [
-          'everycent-chat-message',
-          `everycent-chat-message--${message.role}`,
-          hasStructuredContent ? 'everycent-chat-message--structured' : '',
-        ]
-          .filter(Boolean)
-          .join(' ');
-
-        return (
-          <article key={message.id} className={className}>
-            <div className="everycent-chat-message__avatar">
-              {message.role === 'assistant' ? <FontAwesomeIcon icon="pencil-alt" /> : 'U'}
-            </div>
-            <div className="everycent-chat-message__body">
-              <strong>{message.role === 'assistant' ? 'EveryCent AI' : '你'}</strong>
-              <p>{message.role === 'assistant' ? displayMessage(message.content) : message.content}</p>
-              {message.preview && (
-                <ParsePreviewCard
-                  confirming={confirmingMessageId === message.id}
-                  onConfirm={onConfirmPreview ? () => onConfirmPreview(message) : undefined}
-                  preview={message.preview}
-                />
-              )}
-              {message.cards?.map((card, index) => (
-                <section key={`${message.id}-card-${index}`} className={cardClassName(card.type)}>
-                  <header>
-                    <span>{card.type ?? 'result'}</span>
-                    <h2>{card.title ?? '结果'}</h2>
-                  </header>
-                  {card.message && <p>{card.message}</p>}
-                  {card.type === 'download_result' ? renderDownloadData(card.data, downloadExport) : renderReadableData(card.data)}
-                </section>
-              ))}
-            </div>
-          </article>
-        );
-      })}
+      {messages.map(message => (
+        <article key={message.id} className={`everycent-chat-message everycent-chat-message--${message.role}`}>
+          <div className="everycent-chat-message__avatar">
+            {message.role === 'assistant' ? <img src="/content/images/emotions/surprised.png" alt="EveryCent AI" /> : 'U'}
+          </div>
+          <div className="everycent-chat-message__body">
+            <strong>{message.role === 'assistant' ? 'EveryCent AI' : '你'}</strong>
+            <p>{message.role === 'assistant' ? displayMessage(message.content) : message.content}</p>
+            {message.preview && (
+              <ParsePreviewCard
+                confirming={confirmingMessageId === message.id}
+                onConfirm={onConfirmPreview ? () => onConfirmPreview(message) : undefined}
+                preview={message.preview}
+              />
+            )}
+            {message.cards?.map((card, index) => (
+              <section key={`${message.id}-card-${index}`} className={cardClassName(card.type)}>
+                <header>
+                  <span>{card.type ?? 'result'}</span>
+                  <h2>{card.title ?? '结果'}</h2>
+                </header>
+                {card.message && <p>{card.message}</p>}
+                {card.type === 'download_result' ? renderDownloadData(card.data, downloadExport) : renderReadableData(card.data)}
+              </section>
+            ))}
+          </div>
+        </article>
+      ))}
 
       {loading && (
         <article className="everycent-chat-message everycent-chat-message--assistant">
           <div className="everycent-chat-message__avatar">
-            <FontAwesomeIcon icon="pencil-alt" />
+            <img src="/content/images/emotions/surprised.png" alt="EveryCent AI" />
           </div>
           <div className="everycent-chat-message__body">
             <strong>EveryCent AI</strong>

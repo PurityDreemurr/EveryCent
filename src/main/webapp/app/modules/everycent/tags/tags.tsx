@@ -3,6 +3,7 @@ import './tags.scss';
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import EmotionTagBadge from '../shared/emotion-tag-badge';
 import { getBehaviorTags, getEmotionTags, TagOption } from '../transaction/tag-api';
 
 const TagList = ({
@@ -10,12 +11,14 @@ const TagList = ({
   title,
   description,
   loading,
+  variant,
   tags,
 }: {
   icon: 'flag' | 'heart';
   title: string;
   description: string;
   loading: boolean;
+  variant?: 'default' | 'emotion';
   tags: TagOption[];
 }) => (
   <article className="everycent-panel everycent-tags-page__panel">
@@ -36,9 +39,8 @@ const TagList = ({
     ) : (
       <div className="everycent-tags-page__items">
         {tags.map(tag => (
-          <span key={tag.id} className="everycent-tags-page__tag">
-            <em>#{tag.id}</em>
-            <strong>{tag.name}</strong>
+          <span key={tag.id} className={`everycent-tags-page__tag${variant === 'emotion' ? ' everycent-tags-page__tag--emotion' : ''}`}>
+            {variant === 'emotion' ? <EmotionTagBadge name={tag.name} size="lg" /> : <strong>{tag.name}</strong>}
           </span>
         ))}
       </div>
@@ -95,7 +97,14 @@ const TagsPage = () => {
 
       <section className="everycent-tags-page__grid">
         <TagList icon="flag" title="行为标签" description="用于描述消费或收入发生的场景。" loading={loading} tags={behaviorTags} />
-        <TagList icon="heart" title="情绪标签" description="用于记录一笔收支背后的情绪状态。" loading={loading} tags={emotionTags} />
+        <TagList
+          icon="heart"
+          title="情绪标签"
+          description="用于记录一笔收支背后的情绪状态。"
+          loading={loading}
+          tags={emotionTags}
+          variant="emotion"
+        />
       </section>
     </div>
   );

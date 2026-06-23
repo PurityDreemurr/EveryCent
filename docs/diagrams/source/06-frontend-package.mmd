@@ -1,0 +1,21 @@
+﻿flowchart TB
+    App[src/main/webapp/app]
+    App --> Config[config<br/>路由和环境配置]
+    App --> Shared[shared<br/>认证、布局、模型、工具]
+    App --> Modules[modules<br/>页面模块]
+
+    Modules --> Account[account<br/>账户信息]
+    Modules --> Admin[administration<br/>JHipster 管理页]
+    Modules --> Login[login<br/>登录]
+    Modules --> Home[home<br/>首页]
+    Modules --> EveryCent[everycent<br/>记账业务]
+
+    EveryCent --> LedgerPage[ledger<br/>账本列表和选择]
+    EveryCent --> SharedLedger[shared-ledger<br/>成员管理]
+    EveryCent --> TransactionPage[transaction<br/>交易记录]
+    EveryCent --> BudgetPage[budget<br/>预算管理]
+    EveryCent --> DashboardPage[dashboard<br/>统计看板]
+    EveryCent --> NotificationPage[notifications<br/>通知中心]
+    EveryCent --> AiRecordPage[ai-record<br/>AI 记账和聊天]
+    EveryCent --> ExportPage[export<br/>交易导出]
+    EveryCent --> TagsPage[tags<br/>标签展示]

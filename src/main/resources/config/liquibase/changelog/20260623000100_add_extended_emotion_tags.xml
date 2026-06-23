@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260623000100-1" author="everycent">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM emotion_tag WHERE code IN ('PLEASED', 'RELIEVED', 'SURPRISED', 'DISGUSTED', 'DEPRESSED', 'GRIEVED')</sqlCheck>
+        </preConditions>
+
+        <insert tableName="emotion_tag">
+            <column name="code" value="PLEASED"/>
+            <column name="name" value="满意"/>
+            <column name="valence" value="POSITIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="RELIEVED"/>
+            <column name="name" value="释然"/>
+            <column name="valence" value="POSITIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="SURPRISED"/>
+            <column name="name" value="惊讶"/>
+            <column name="valence" value="NEUTRAL"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="DISGUSTED"/>
+            <column name="name" value="厌恶"/>
+            <column name="valence" value="NEGATIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="DEPRESSED"/>
+            <column name="name" value="沮丧"/>
+            <column name="valence" value="NEGATIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+        <insert tableName="emotion_tag">
+            <column name="code" value="GRIEVED"/>
+            <column name="name" value="悲伤"/>
+            <column name="valence" value="NEGATIVE"/>
+            <column name="system_default" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export type DashboardPeriod = 'WEEK' | 'MONTH' | 'YEAR';
+export type DashboardPeriod = 'WEEK' | 'MONTH' | 'YEAR' | 'ALL';
 
 export interface DashboardSummary {
   totalIncome?: string;

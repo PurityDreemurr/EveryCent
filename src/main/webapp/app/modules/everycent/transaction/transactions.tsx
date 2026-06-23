@@ -7,6 +7,7 @@ import { getLedgers, Ledger } from 'app/modules/everycent/ledger/ledger-api';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from 'app/shared/components/everycent/overlays/dialog';
 
 import { messageForLedgerError, messageForTransactionError } from '../api-error';
+import EmotionTagBadge from '../shared/emotion-tag-badge';
 import {
   createTransaction,
   deleteTransaction,
@@ -58,6 +59,16 @@ const transactionTypeLabel = (type?: string) => {
     return '收入';
   }
   return type || '未知';
+};
+
+const recordSourceLabel = (source?: string) => {
+  if (source === 'MANUAL') {
+    return '手动录入';
+  }
+  if (source === 'NATURAL_LANGUAGE') {
+    return 'AI记账';
+  }
+  return source || '未知';
 };
 
 const DateFilterInput = ({ value, onChange }: { value?: string; onChange: (value: string) => void }) => {
@@ -118,6 +129,9 @@ const toPayload = (form: TransactionForm): TransactionPayload => ({
 });
 
 const isKnownTagId = (tagId: string, tags: TagOption[]) => tags.some(tag => String(tag.id) === tagId);
+
+const emotionTagDisplayName = (record: Pick<TransactionRecord, 'emotionTagId' | 'emotionTagName'>, tags: TagOption[]) =>
+  record.emotionTagName || tags.find(tag => tag.id === record.emotionTagId)?.name || record.emotionTagId;
 
 const TransactionsPage = () => {
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
@@ -507,8 +521,10 @@ const TransactionsPage = () => {
                     </td>
                     <td>{record.description}</td>
                     <td>{record.behaviorTagName || record.behaviorTagId}</td>
-                    <td>{record.emotionTagName || record.emotionTagId}</td>
-                    <td>{record.source}</td>
+                    <td>
+                      <EmotionTagBadge name={emotionTagDisplayName(record, emotionTags)} size="sm" />
+                    </td>
+                    <td>{recordSourceLabel(record.source)}</td>
                     <td>
                       <strong
                         className={`everycent-transactions-page__amount everycent-transactions-page__amount--${record.type.toLowerCase()}`}
@@ -588,11 +604,13 @@ const TransactionsPage = () => {
               </div>
               <div>
                 <span>情绪标签</span>
-                <strong>{detailRecord.emotionTagName || detailRecord.emotionTagId}</strong>
+                <strong>
+                  <EmotionTagBadge name={emotionTagDisplayName(detailRecord, emotionTags)} />
+                </strong>
               </div>
               <div>
                 <span>来源</span>
-                <strong>{detailRecord.source}</strong>
+                <strong>{recordSourceLabel(detailRecord.source)}</strong>
               </div>
               <div>
                 <span>记录 ID</span>
@@ -640,21 +658,25 @@ const TransactionsPage = () => {
                   ))}
                 </select>
               </label>
-              <label>
+              <fieldset className="everycent-transactions-page__emotion-picker">
                 <span>情绪标签</span>
-                <select
-                  value={form.emotionTagId}
-                  onChange={event => setForm(current => ({ ...current, emotionTagId: event.target.value }))}
-                  disabled={loadingTags || emotionTags.length === 0}
-                >
-                  <option value="">{loadingTags ? '标签加载中' : '请选择情绪标签'}</option>
-                  {emotionTags.map(tag => (
-                    <option key={tag.id} value={tag.id}>
-                      {tag.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                {loadingTags ? (
+                  <div className="everycent-transactions-page__emotion-empty">标签加载中</div>
+                ) : (
+                  <div className="everycent-transactions-page__emotion-options">
+                    {emotionTags.map(tag => (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        className={form.emotionTagId === String(tag.id) ? 'is-selected' : ''}
+                        onClick={() => setForm(current => ({ ...current, emotionTagId: String(tag.id) }))}
+                      >
+                        <EmotionTagBadge name={tag.name} size="lg" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </fieldset>
               <div className="everycent-transactions-page__form-actions">
                 <button type="button" onClick={() => setDialogOpen(false)}>
                   取消

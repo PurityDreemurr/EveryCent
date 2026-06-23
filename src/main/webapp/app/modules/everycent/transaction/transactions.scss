@@ -276,6 +276,55 @@
   gap: 0.5rem;
 }
 
+.everycent-transactions-page__emotion-picker {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.everycent-transactions-page__emotion-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 0.6rem;
+}
+
+.everycent-transactions-page__emotion-options button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 76px;
+  padding: 0.6rem;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-text);
+  background: var(--ec-panel);
+}
+
+.everycent-transactions-page__emotion-options button:hover,
+.everycent-transactions-page__emotion-options button.is-selected {
+  border-color: var(--ec-primary);
+  background: color-mix(in srgb, var(--ec-primary) 9%, var(--ec-panel));
+}
+
+.everycent-transactions-page__emotion-options button.is-selected {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ec-primary) 14%, transparent);
+}
+
+.everycent-transactions-page__emotion-empty {
+  min-height: 44px;
+  padding: 0.75rem;
+  border: 1px dashed var(--ec-border);
+  border-radius: 8px;
+  color: var(--ec-muted);
+  background: var(--ec-soft);
+  font-weight: 750;
+}
+
 .everycent-transactions-page__detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

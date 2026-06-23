@@ -1,0 +1,136 @@
+﻿erDiagram
+    JHI_USER {
+        bigint id PK
+        varchar login UK
+    }
+
+    LEDGER {
+        bigint id PK
+        varchar name
+    }
+
+    TRANSACTION_RECORD {
+        bigint id PK
+        decimal amount
+        varchar type
+    }
+
+    BEHAVIOR_TAG {
+        bigint id PK
+        varchar code UK
+        varchar name
+    }
+
+    EMOTION_TAG {
+        bigint id PK
+        varchar code UK
+        varchar name
+        varchar valence
+    }
+
+    AI_CONVERSATION {
+        bigint id PK
+        bigint user_id FK
+        bigint ledger_id FK
+        varchar title
+        varchar session_key
+        text summary
+        datetime created_date
+        datetime last_message_date
+        datetime last_modified_date
+        boolean archived
+    }
+
+    AI_MESSAGE {
+        bigint id PK
+        bigint conversation_id FK
+        bigint user_id FK
+        bigint ledger_id FK
+        varchar role
+        text content
+        bigint user_emotion_tag_id FK
+        decimal user_emotion_confidence
+        varchar ai_emotion_before
+        varchar ai_emotion_after
+        bigint extracted_transaction_id FK
+        varchar message_type
+        varchar response_type
+        longtext cards_json
+        longtext skill_results_json
+        longtext accounting_capture_json
+        longtext metadata_json
+        datetime created_date
+    }
+
+    AI_MEMORY {
+        bigint id PK
+        bigint user_id FK
+        bigint conversation_id FK
+        bigint message_id FK
+        varchar memory_type
+        text content
+        text source_text
+        bigint user_emotion_tag_id FK
+        decimal user_emotion_confidence
+        bigint behavior_tag_id FK
+        varchar vector_id UK
+        decimal importance_score
+        datetime created_date
+        datetime last_accessed_date
+        int access_count
+    }
+
+    AI_EMOTION_STATE {
+        bigint id PK
+        bigint user_id FK
+        varchar current_emotion
+        decimal valence
+        decimal arousal
+        text personality_weights_json
+        longtext transition_matrix_json
+        bigint last_user_emotion_tag_id FK
+        datetime updated_date
+    }
+
+    AI_ROLE_PROFILE {
+        bigint id PK
+        varchar code UK
+        varchar name
+        varchar description
+        text base_persona
+        text communication_style
+        text behavior_boundaries
+        boolean default_profile
+        boolean enabled
+        datetime created_date
+        datetime last_modified_date
+    }
+
+    AI_ROLE_KNOWLEDGE {
+        bigint id PK
+        bigint role_profile_id FK
+        varchar knowledge_type
+        varchar title
+        text content
+        varchar vector_id UK
+        int priority
+        boolean enabled
+        datetime created_date
+        datetime last_modified_date
+    }
+
+    JHI_USER ||--o{ AI_CONVERSATION : starts
+    LEDGER ||--o{ AI_CONVERSATION : scoped_to
+    AI_CONVERSATION ||--o{ AI_MESSAGE : contains
+    JHI_USER ||--o{ AI_MESSAGE : owns
+    LEDGER ||--o{ AI_MESSAGE : scoped_to
+    EMOTION_TAG ||--o{ AI_MESSAGE : user_emotion
+    TRANSACTION_RECORD ||--o{ AI_MESSAGE : extracted_from
+    JHI_USER ||--o{ AI_MEMORY : owns
+    AI_CONVERSATION ||--o{ AI_MEMORY : produces
+    AI_MESSAGE ||--o{ AI_MEMORY : source
+    EMOTION_TAG ||--o{ AI_MEMORY : emotion_context
+    BEHAVIOR_TAG ||--o{ AI_MEMORY : behavior_context
+    JHI_USER ||--|| AI_EMOTION_STATE : has_state
+    EMOTION_TAG ||--o{ AI_EMOTION_STATE : last_emotion
+    AI_ROLE_PROFILE ||--o{ AI_ROLE_KNOWLEDGE : contains
