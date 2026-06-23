@@ -249,7 +249,9 @@ const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPrev
     <div className="everycent-chat__messages">
       {messages.map(message => (
         <article key={message.id} className={`everycent-chat-message everycent-chat-message--${message.role}`}>
-          <div className="everycent-chat-message__avatar">{message.role === 'assistant' ? <FontAwesomeIcon icon="pencil-alt" /> : 'U'}</div>
+          <div className="everycent-chat-message__avatar">
+            {message.role === 'assistant' ? <img src="/content/images/emotions/surprised.png" alt="EveryCent AI" /> : 'U'}
+          </div>
           <div className="everycent-chat-message__body">
             <strong>{message.role === 'assistant' ? 'EveryCent AI' : '你'}</strong>
             <p>{message.role === 'assistant' ? displayMessage(message.content) : message.content}</p>
@@ -277,7 +279,7 @@ const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPrev
       {loading && (
         <article className="everycent-chat-message everycent-chat-message--assistant">
           <div className="everycent-chat-message__avatar">
-            <FontAwesomeIcon icon="pencil-alt" />
+            <img src="/content/images/emotions/surprised.png" alt="EveryCent AI" />
           </div>
           <div className="everycent-chat-message__body">
             <strong>EveryCent AI</strong>
