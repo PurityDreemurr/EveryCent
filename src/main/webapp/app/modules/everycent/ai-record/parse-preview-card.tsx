@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { TransactionParsePreview } from './ai-record-types';
+import EmotionTagBadge from '../shared/emotion-tag-badge';
 
 type ParsePreviewCardProps = {
   confirming?: boolean;
@@ -49,7 +50,7 @@ const ParsePreviewCard = ({ confirming, onConfirm, preview }: ParsePreviewCardPr
       </div>
       <div>
         <dt>情绪</dt>
-        <dd>{preview.moodTag ?? '-'}</dd>
+        <dd>{preview.moodTag ? <EmotionTagBadge name={preview.moodTag} size="sm" /> : '-'}</dd>
       </div>
       <div>
         <dt>日期</dt>

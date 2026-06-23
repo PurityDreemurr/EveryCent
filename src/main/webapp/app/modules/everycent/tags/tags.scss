@@ -74,14 +74,14 @@
   background: var(--ec-panel);
 }
 
-.everycent-tags-page__tag em {
-  color: var(--ec-muted);
-  font-style: normal;
-  font-weight: 800;
-}
-
 .everycent-tags-page__tag strong {
   font-weight: 850;
+}
+
+.everycent-tags-page__tag--emotion {
+  min-height: 74px;
+  min-width: 170px;
+  padding: 0.55rem 0.75rem;
 }
 
 .everycent-tags-page__empty {

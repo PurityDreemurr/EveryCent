@@ -1,0 +1,42 @@
+.everycent-emotion-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  color: var(--ec-text);
+  vertical-align: middle;
+}
+
+.everycent-emotion-badge img {
+  flex: 0 0 auto;
+  object-fit: contain;
+  display: block;
+}
+
+.everycent-emotion-badge strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: inherit;
+  font-weight: 850;
+}
+
+.everycent-emotion-badge--sm img {
+  width: 28px;
+  height: 28px;
+}
+
+.everycent-emotion-badge--md img {
+  width: 38px;
+  height: 38px;
+}
+
+.everycent-emotion-badge--lg {
+  gap: 0.65rem;
+}
+
+.everycent-emotion-badge--lg img {
+  width: 58px;
+  height: 58px;
+}
