@@ -7,6 +7,7 @@ import { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 import { getLedgers, Ledger } from 'app/modules/everycent/ledger/ledger-api';
 
+import EmotionTagBadge from '../shared/emotion-tag-badge';
 import {
   DashboardPeriod,
   TagStat,
@@ -120,7 +121,15 @@ const RecentRecords = ({ items }: { items: { name: string; amount: string }[] })
   </div>
 );
 
-const SimpleBarList = ({ items, valueFormatter }: { items: TagStat[]; valueFormatter: (value: number) => string }) => {
+const SimpleBarList = ({
+  items,
+  renderLabel,
+  valueFormatter,
+}: {
+  items: TagStat[];
+  renderLabel?: (item: TagStat) => React.ReactNode;
+  valueFormatter: (value: number) => string;
+}) => {
   const max = Math.max(...items.map(item => Number(item.amount || 0)), 1);
 
   return (
@@ -132,7 +141,7 @@ const SimpleBarList = ({ items, valueFormatter }: { items: TagStat[]; valueForma
         return (
           <li key={item.tagId}>
             <div className="everycent-simple-bars__row">
-              <span>{item.tagName}</span>
+              <span>{renderLabel ? renderLabel(item) : item.tagName}</span>
               <strong>{valueFormatter(value)}</strong>
             </div>
             <div className="everycent-simple-bars__track">
@@ -377,6 +386,7 @@ const Dashboard = () => {
               {
                 label: '最大情绪标签',
                 value: emotionStats[0]?.tagName || '暂无',
+                content: emotionStats[0] ? <EmotionTagBadge name={emotionStats[0].tagName} /> : null,
                 change: emotionStats[0] ? `¥${formatMoney(emotionStats[0].amount)}` : '等待数据',
                 icon: 'tasks' as IconProp,
                 tone: 'danger',
@@ -387,7 +397,7 @@ const Dashboard = () => {
                   <span>{card.label}</span>
                   <FontAwesomeIcon icon={card.icon} />
                 </header>
-                <strong>{card.value}</strong>
+                <strong>{card.content || card.value}</strong>
                 <small>{card.change}</small>
               </article>
             ))}
@@ -398,7 +408,11 @@ const Dashboard = () => {
               <SimpleBarList items={behaviorStats} valueFormatter={value => `¥${value}`} />
             </DashboardCard>
             <DashboardCard title="情绪标签统计" description="历史所有记录" className="everycent-dashboard__span-3">
-              <SimpleBarList items={emotionStats} valueFormatter={value => `¥${value}`} />
+              <SimpleBarList
+                items={emotionStats}
+                renderLabel={item => <EmotionTagBadge name={item.tagName} size="sm" />}
+                valueFormatter={value => `¥${value}`}
+              />
             </DashboardCard>
           </section>
         </div>

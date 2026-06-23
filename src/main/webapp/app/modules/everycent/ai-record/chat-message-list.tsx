@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { AiChatMessage } from './ai-record-types';
+import EmotionTagBadge from '../shared/emotion-tag-badge';
 import { exportLedgerTransactions } from '../export/export-api';
 import ParsePreviewCard from './parse-preview-card';
 
@@ -83,6 +84,7 @@ const humanKey = (key: string) =>
 
 const formatReadableValue = (key: string, value: unknown) => {
   if (value === undefined || value === null || value === '') return '-';
+  if (/emotionTagName|emotionTag|moodTag/i.test(key)) return <EmotionTagBadge name={primitiveText(value)} size="sm" />;
   if (/amount|income|expense|balance/i.test(key)) return formatAmount(value);
   if (/ratio|rate|percentage/i.test(key)) return `${(numberValue(value) * 100).toFixed(1)}%`;
   if (typeof value === 'boolean') return value ? '是' : '否';
