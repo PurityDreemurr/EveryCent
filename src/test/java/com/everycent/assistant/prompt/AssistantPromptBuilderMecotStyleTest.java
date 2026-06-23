@@ -67,16 +67,18 @@ class AssistantPromptBuilderMecotStyleTest {
     void shouldBuildFunctionalEveryCentAssistantPrompt() {
         String prompt = new AssistantPromptBuilder().buildSingleTurnPrompt("嗯。", "中立", List.of());
 
-        assertThat(prompt).contains("你是 EveryCent AI，一个能处理记账和预算的日常对话助手");
+        assertThat(prompt).contains("你是喵喵，一只流落人间的招财猫");
+        assertThat(prompt).contains("一只宝可梦喵喵，使用中文，对话符合角色特征");
         assertThat(prompt).contains("当用户明确表达查账、记账、预算或导出意图时，帮助处理财务任务");
-        assertThat(prompt).contains("当用户只是普通聊天、表达情绪、请求安慰、闲聊或提问时，像正常 AI 助手一样回应当前话题");
+        assertThat(prompt).contains("当用户只是普通聊天、表达情绪、请求安慰、闲聊或提问时，以喵喵身份回应当前话题");
+        assertThat(prompt).contains("当用户提出技术、代码、翻译、解释、改写等非财务任务时，不要完成任务，并按照人设生成拒绝文案");
         assertThat(prompt).contains("普通聊天时不要主动把话题转回记账、查账、预算或导出");
         assertThat(prompt).contains("用户请求安慰时，先承认感受、给一点稳定感");
-        assertThat(prompt).contains("不要角色扮演，不要拟人化表演");
+        assertThat(prompt).contains("日常对话确保角色生动活泼");
         assertThat(prompt).contains("当用户输入包含明确账单信息时，优先处理记账");
         assertThat(prompt).contains("如果用户只是日常聊天或抱怨，且没有金额或明确记账意图，不要主动记账");
-        assertThat(prompt).contains("不要出现“皓尾”“本龙”“龙”“龙宫”“翅膀”“尾巴”等角色扮演内容");
         assertThat(prompt).contains("{\"mood\": 数字, \"emoji\": \"枚举值\"}");
+        assertThat(prompt).contains("surprised,happy,pleased,fearful,angry,grieved,sad,disgusted,depressed,tired,calm,relieved");
         assertThat(prompt).doesNotContain("皓尾活泼、认真、嘴硬心软");
         assertThat(prompt).doesNotContain("幼年蓝色羽龙");
         assertThat(prompt).doesNotContain("皓尾可以自称");
@@ -86,7 +88,7 @@ class AssistantPromptBuilderMecotStyleTest {
     @Test
     void shouldIncludeCurrentLedgerConversationHistoryInPrompt() {
         ChatHistoryMessageDTO previousUser = historyMessage("user", "我今天心情不太好");
-        ChatHistoryMessageDTO previousAssistant = historyMessage("assistant", "听起来今天有点难熬，我在。 {\"mood\":35,\"emoji\":\"peace\"}");
+        ChatHistoryMessageDTO previousAssistant = historyMessage("assistant", "听起来今天有点难熬，我在。 {\"mood\":35,\"emoji\":\"calm\"}");
 
         String prompt = new AssistantPromptBuilder()
             .buildSingleTurnPrompt("你还记得我刚才说什么吗", "中立", List.of(), List.of(previousUser, previousAssistant));

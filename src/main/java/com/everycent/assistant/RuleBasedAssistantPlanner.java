@@ -122,7 +122,7 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
         plan.getReplyStyle().setDialogueAct(act);
         plan.getReplyStyle().setTone("concise");
         plan.getReplyStyle().setMood(35);
-        plan.getReplyStyle().setEmoji("peace");
+        plan.getReplyStyle().setEmoji("calm");
         return plan;
     }
 

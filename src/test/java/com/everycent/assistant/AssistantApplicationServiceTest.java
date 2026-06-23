@@ -120,7 +120,7 @@ class AssistantApplicationServiceTest {
         AssistantPlan dailyChatPlan = new AssistantPlan();
         dailyChatPlan.setIntent(AssistantIntent.DAILY_CHAT);
         com.everycent.assistant.dto.ChatResponseDTO llmResponse = new com.everycent.assistant.dto.ChatResponseDTO();
-        llmResponse.setAssistantMessage("那我陪你待一会儿。{\"mood\":40,\"emoji\":\"peace\"}");
+        llmResponse.setAssistantMessage("那我陪你待一会儿。{\"mood\":40,\"emoji\":\"calm\"}");
         ChatHistoryMessageDTO previousMessage = new ChatHistoryMessageDTO();
         previousMessage.setRole("user");
         previousMessage.setContent("我今天心情不太好");

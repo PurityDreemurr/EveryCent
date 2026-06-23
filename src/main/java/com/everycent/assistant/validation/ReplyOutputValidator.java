@@ -18,16 +18,18 @@ public class ReplyOutputValidator {
     );
 
     private static final Set<String> VALID_EMOJIS = Set.of(
-        "excited",
-        "happy",
         "surprised",
-        "sad",
-        "fear",
-        "shy",
-        "disgust",
+        "happy",
+        "pleased",
+        "fearful",
         "angry",
-        "speechless",
-        "peace"
+        "grieved",
+        "sad",
+        "disgusted",
+        "depressed",
+        "tired",
+        "calm",
+        "relieved"
     );
 
     private static final List<String> FORBIDDEN_PHRASES = List.of(
