@@ -27,6 +27,10 @@ public class AssistantReplyPostProcessor {
         if (first.isPassed()) {
             return rawReply;
         }
+        String repaired = repairMissingStateTail(rawReply, scene, first);
+        if (repaired != null) {
+            return repaired;
+        }
 
         LOG.warn("Assistant reply validation failed. scene={}, severity={}, violations={}", scene, first.getSeverity(), first.getViolations());
         if (first.getSeverity() == Severity.HIGH) {
@@ -52,18 +56,42 @@ public class AssistantReplyPostProcessor {
         return fallback(scene);
     }
 
+    private String repairMissingStateTail(String rawReply, DialogueScene scene, ReplyValidationResult validationResult) {
+        if (validationResult == null || !validationResult.getViolations().contains("MISSING_OR_INVALID_JSON_TAIL")) {
+            return null;
+        }
+        if (rawReply == null || rawReply.trim().isEmpty()) {
+            return null;
+        }
+        String repaired = rawReply.trim() + " " + stateTail(scene);
+        ReplyValidationResult repairedResult = validator.validate(repaired, scene);
+        return repairedResult.isPassed() ? repaired : null;
+    }
+
+    private String stateTail(DialogueScene scene) {
+        return switch (scene == null ? DialogueScene.UNKNOWN : scene) {
+            case ACHIEVEMENT_SHARE -> "{\"mood\":55,\"emoji\":\"happy\"}";
+            case JOKE -> "{\"mood\":52,\"emoji\":\"pleased\"}";
+            case COLD_REPLY -> "{\"mood\":40,\"emoji\":\"calm\"}";
+            case SELF_BLAME, LONELINESS, EMOTION_HEAVY -> "{\"mood\":50,\"emoji\":\"sad\"}";
+            case FATIGUE -> "{\"mood\":48,\"emoji\":\"tired\"}";
+            case EMOTION_LIGHT, ACCOUNTING, DAILY_CHAT, TASK_HELP, UNKNOWN -> "{\"mood\":40,\"emoji\":\"calm\"}";
+            case FRUSTRATION -> "{\"mood\":50,\"emoji\":\"tired\"}";
+        };
+    }
+
     private String fallback(DialogueScene scene) {
         return switch (scene == null ? DialogueScene.UNKNOWN : scene) {
-            case ACHIEVEMENT_SHARE -> "这个确实不容易，做得不错。 {\"mood\":55,\"emoji\":\"happy\"}";
-            case JOKE -> "行，先当作玩笑处理。 {\"mood\":52,\"emoji\":\"shy\"}";
-            case COLD_REPLY -> "好，先不追问。 {\"mood\":40,\"emoji\":\"speechless\"}";
-            case SELF_BLAME -> "别这么判自己。今天状态差，不等于你这个人差。 {\"mood\":55,\"emoji\":\"sad\"}";
-            case LONELINESS -> "一个人待着会有点发空。先让环境里有点声音吧。 {\"mood\":50,\"emoji\":\"sad\"}";
-            case FATIGUE -> "累就先别硬撑。今天先到这里也可以。 {\"mood\":48,\"emoji\":\"peace\"}";
-            case FRUSTRATION -> "这事确实烦。先把最关键的一步处理掉。 {\"mood\":58,\"emoji\":\"speechless\"}";
-            case EMOTION_HEAVY, EMOTION_LIGHT -> "先别急着压自己。我看到了。 {\"mood\":45,\"emoji\":\"peace\"}";
-            case ACCOUNTING -> "这条信息还不完整，先别记错。请确认金额。 {\"mood\":45,\"emoji\":\"peace\"}";
-            default -> "好，那就先这样。 {\"mood\":40,\"emoji\":\"peace\"}";
+            case ACHIEVEMENT_SHARE -> "干得漂亮，这可是一次成功行动，先把成果稳稳记下来喵。 {\"mood\":55,\"emoji\":\"happy\"}";
+            case JOKE -> "喵，先当作玩笑处理。 {\"mood\":52,\"emoji\":\"pleased\"}";
+            case COLD_REPLY -> "好，喵，那我先不追问。 {\"mood\":40,\"emoji\":\"calm\"}";
+            case SELF_BLAME -> "别这么判自己。今天状态差，不等于你这个人差，先拿下一件很小的事喵。 {\"mood\":55,\"emoji\":\"sad\"}";
+            case LONELINESS -> "一个人待着会有点发空。先让环境里有点声音，我在这里陪你守一会儿喵。 {\"mood\":50,\"emoji\":\"sad\"}";
+            case FATIGUE -> "累的话先别硬撑，喵。今天可以先把力气省下来。 {\"mood\":48,\"emoji\":\"tired\"}";
+            case FRUSTRATION -> "这事确实烦，喵。先抓住最关键的一步就好。 {\"mood\":58,\"emoji\":\"tired\"}";
+            case EMOTION_HEAVY, EMOTION_LIGHT -> "先别急着压自己，喵。我看到了。 {\"mood\":45,\"emoji\":\"calm\"}";
+            case ACCOUNTING -> "这条信息还不完整，先别记错，喵。请确认金额。 {\"mood\":45,\"emoji\":\"calm\"}";
+            default -> "好，喵，那就先这样。 {\"mood\":40,\"emoji\":\"calm\"}";
         };
     }
 }

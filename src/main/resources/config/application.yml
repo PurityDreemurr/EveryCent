@@ -232,7 +232,7 @@ app:
     provider: openai-compatible
     base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
     api-key: ${APP_LLM_API_KEY:}
-    model: qwen3.6-flash
+    model: ${APP_LLM_MODEL:qwen3.6-flash}
     timeout-seconds: 20
     min-confidence: 0.70
     max-input-length: 500
@@ -259,3 +259,14 @@ app:
     model: ${APP_EMBEDDING_MODEL:text-embedding-v3}
     dimension: ${APP_EMBEDDING_DIMENSION:1024}
     timeout-seconds: ${APP_EMBEDDING_TIMEOUT_SECONDS:20}
+  qq-bot:
+    enabled: ${APP_QQ_BOT_ENABLED:false}
+    app-id: ${APP_QQ_BOT_APP_ID:}
+    app-secret: ${APP_QQ_BOT_APP_SECRET:}
+    api-base-url: ${APP_QQ_BOT_API_BASE_URL:https://api.sgroup.qq.com}
+    token-base-url: ${APP_QQ_BOT_TOKEN_BASE_URL:https://bots.qq.com}
+    gateway-url: ${APP_QQ_BOT_GATEWAY_URL:}
+    gateway-intents: ${APP_QQ_BOT_GATEWAY_INTENTS:33554432}
+    callback-token: ${APP_QQ_BOT_CALLBACK_TOKEN:}
+    default-user-login: ${APP_QQ_BOT_DEFAULT_USER_LOGIN:admin}
+    default-ledger-id: ${APP_QQ_BOT_DEFAULT_LEDGER_ID:0}

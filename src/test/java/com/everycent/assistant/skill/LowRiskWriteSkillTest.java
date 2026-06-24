@@ -207,6 +207,55 @@ class LowRiskWriteSkillTest {
     }
 
     @Test
+    void recentTransactionCorrectionSkillShouldUpdateBestMatchedRecentRecord() {
+        TransactionRecordService transactionService = org.mockito.Mockito.mock(TransactionRecordService.class);
+        RecentTransactionCorrectionSkill skill = new RecentTransactionCorrectionSkill(transactionService, currentUserResolver);
+        TransactionRecordDTO lunch = transactionRecord(100L, "午餐", "15.00");
+        TransactionRecordDTO taxi = transactionRecord(101L, "打车", "36.00");
+        when(transactionService.findRecentByLedger(user, 10L, 20)).thenReturn(List.of(taxi, lunch));
+        when(transactionService.update(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.eq(100L), org.mockito.ArgumentMatchers.any()))
+            .thenAnswer(invocation -> invocation.getArgument(2));
+
+        SkillResult result = skill.execute(
+            new AssistantAction(
+                "transaction.correct_recent",
+                Map.of("ledgerId", 10L, "text", "对了，今天中午的午餐还花了5元买水，应该是20元", "limit", 20)
+            ),
+            context
+        );
+
+        assertThat(result.getSuccess()).isTrue();
+        assertThat(result.getData()).isInstanceOf(TransactionRecordDTO.class);
+        assertThat(((TransactionRecordDTO) result.getData()).getAmount()).isEqualByComparingTo("20");
+        verify(transactionService)
+            .update(
+                org.mockito.ArgumentMatchers.eq(user),
+                org.mockito.ArgumentMatchers.eq(100L),
+                org.mockito.ArgumentMatchers.argThat(dto ->
+                    dto instanceof TransactionRecordDTO
+                        && ((TransactionRecordDTO) dto).getAmount().compareTo(new BigDecimal("20")) == 0
+                        && "午餐".equals(((TransactionRecordDTO) dto).getDescription())
+                        && ((TransactionRecordDTO) dto).getTransactionDate().equals(LocalDate.of(2026, 6, 24))
+                )
+            );
+    }
+
+    @Test
+    void recentTransactionCorrectionSkillShouldFailWhenNoRecentRecordMatches() {
+        TransactionRecordService transactionService = org.mockito.Mockito.mock(TransactionRecordService.class);
+        RecentTransactionCorrectionSkill skill = new RecentTransactionCorrectionSkill(transactionService, currentUserResolver);
+        when(transactionService.findRecentByLedger(user, 10L, 20)).thenReturn(List.of(transactionRecord(101L, "打车", "36.00")));
+
+        SkillResult result = skill.execute(
+            new AssistantAction("transaction.correct_recent", Map.of("ledgerId", 10L, "text", "午餐应该是20元", "limit", 20)),
+            context
+        );
+
+        assertThat(result.getSuccess()).isFalse();
+        assertThat(result.getErrorCode()).isEqualTo("CORRECTION_TARGET_NOT_FOUND");
+    }
+
+    @Test
     void routerShouldExecuteLowRiskWriteSkillButStillBlockDeleteAndAccountActions() {
         LedgerService ledgerService = org.mockito.Mockito.mock(LedgerService.class);
         when(ledgerService.createLedger(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any())).thenReturn(new LedgerDTO());
@@ -245,5 +294,17 @@ class LowRiskWriteSkillTest {
             && dto.getLimitAmount().compareTo(new BigDecimal("3000.00")) == 0
             && dto.getAlertThreshold().compareTo(new BigDecimal("0.80")) == 0
             && Boolean.TRUE.equals(dto.getEnabled());
+    }
+
+    private TransactionRecordDTO transactionRecord(Long id, String description, String amount) {
+        TransactionRecordDTO dto = new TransactionRecordDTO();
+        dto.setId(id);
+        dto.setLedgerId(10L);
+        dto.setDescription(description);
+        dto.setAmount(new BigDecimal(amount));
+        dto.setType(TransactionType.EXPENSE);
+        dto.setTransactionDate(LocalDate.of(2026, 6, 24));
+        dto.setSource(RecordSource.NATURAL_LANGUAGE);
+        return dto;
     }
 }

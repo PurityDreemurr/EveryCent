@@ -39,8 +39,20 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
         if (isDeleteRequest(text)) {
             return oneAction(AssistantIntent.TRANSACTION_MODIFY, SceneType.ACCOUNTING, DialogueAct.POLICY_BLOCKED, "transaction.delete", Map.of());
         }
+        if (isTechnicalHelpRequest(text)) {
+            return oneAction(AssistantIntent.TASK_HELP, SceneType.TASK_HELP, DialogueAct.POLICY_BLOCKED, "assistant.technical_help", Map.of());
+        }
         if (ledgerId == null && needsLedger(text)) {
             return oneAction(AssistantIntent.CLARIFICATION, SceneType.CLARIFICATION, DialogueAct.ASK_CLARIFICATION, "ledger.list", Map.of());
+        }
+        if (isTransactionCorrectionRequest(text)) {
+            return oneAction(
+                AssistantIntent.TRANSACTION_MODIFY,
+                SceneType.ACCOUNTING,
+                DialogueAct.CONFIRM_SUCCESS,
+                "transaction.correct_recent",
+                Map.of("ledgerId", ledgerId, "text", text, "limit", 20)
+            );
         }
         if (isExportRequest(text)) {
             return oneAction(
@@ -90,7 +102,7 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
                 SceneType.TRANSACTION_QUERY,
                 DialogueAct.SUMMARIZE_RESULT,
                 "transaction.list",
-                Map.of("ledgerId", ledgerId, "page", 0, "size", 20, "startDate", monthStart(), "endDate", monthEnd())
+                Map.of("ledgerId", ledgerId, "page", 0, "size", 100, "includeAll", true, "startDate", monthStart(), "endDate", monthEnd())
             );
         }
         if (accountingIntentService.isAccountingIntent(text)) {
@@ -122,12 +134,18 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
         plan.getReplyStyle().setDialogueAct(act);
         plan.getReplyStyle().setTone("concise");
         plan.getReplyStyle().setMood(35);
-        plan.getReplyStyle().setEmoji("peace");
+        plan.getReplyStyle().setEmoji("calm");
         return plan;
     }
 
     private boolean needsLedger(String text) {
-        return accountingIntentService.isAccountingIntent(text) || isTransactionQuery(text) || text.contains("预算") || isExportRequest(text);
+        return (
+            accountingIntentService.isAccountingIntent(text) ||
+            isTransactionCorrectionRequest(text) ||
+            isTransactionQuery(text) ||
+            text.contains("预算") ||
+            isExportRequest(text)
+        );
     }
 
     private boolean isAccountRequest(String text) {
@@ -139,7 +157,7 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
     }
 
     private boolean isExportRequest(String text) {
-        return containsAny(text, "导出", "下载账单", "下载明细");
+        return containsAny(text, "导出", "下载账单", "下载帐单", "下载明细");
     }
 
     private boolean isBudgetStatusRequest(String text) {
@@ -151,7 +169,32 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
     }
 
     private boolean isTransactionQuery(String text) {
-        return containsAny(text, "查账", "查一下", "账单", "明细", "花了多少", "消费记录", "支出记录", "收入记录");
+        return containsAny(text, "查账", "查帐", "查一下", "账单", "帐单", "明细", "花了多少", "消费记录", "支出记录", "收入记录");
+    }
+
+    private boolean isTransactionCorrectionRequest(String text) {
+        boolean hasCorrectionMarker = containsAny(text, "记错", "错了", "不对", "应该是", "应为", "改成", "改为", "修改为", "修正为");
+        boolean hasAccountingMarker = containsAny(text, "账", "帐", "记", "花了", "午餐", "午饭", "晚餐", "早餐", "买", "消费", "支出", "收入");
+        return hasCorrectionMarker && (hasAccountingMarker || AMOUNT_PATTERN.matcher(text).find());
+    }
+
+    private boolean isTechnicalHelpRequest(String text) {
+        String lowerText = text.toLowerCase();
+        boolean hasTechnicalTask = containsAny(lowerText, "代码", "程序", "函数", "实现", "递归", "算法", "debug", "bug", "报错", "调试", "编程");
+        boolean hasProgrammingLanguage = containsAny(
+            lowerText,
+            "python",
+            "java",
+            "javascript",
+            "typescript",
+            "c++",
+            "cpp",
+            "c'p'p",
+            "sql",
+            "html",
+            "css"
+        );
+        return hasTechnicalTask || (hasProgrammingLanguage && containsAny(lowerText, "写", "改", "怎么", "如何", "实现", "调试", "报错"));
     }
 
     private boolean containsAny(String text, String... keywords) {

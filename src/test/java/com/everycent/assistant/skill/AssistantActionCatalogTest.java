@@ -11,11 +11,13 @@ class AssistantActionCatalogTest {
     void shouldAllowOnlyDocumentedPlannerActions() {
         assertThat(AssistantActionCatalog.isAllowed("ledger.list")).isTrue();
         assertThat(AssistantActionCatalog.isAllowed("transaction.create_from_text")).isTrue();
+        assertThat(AssistantActionCatalog.isAllowed("transaction.correct_recent")).isTrue();
         assertThat(AssistantActionCatalog.isAllowed("budget.alert.generate")).isTrue();
         assertThat(AssistantActionCatalog.isAllowed("chat.ask_clarification")).isTrue();
 
         assertThat(AssistantActionCatalog.isAllowed("transaction.delete")).isFalse();
         assertThat(AssistantActionCatalog.isAllowed("account.update")).isFalse();
+        assertThat(AssistantActionCatalog.isAllowed("assistant.technical_help")).isFalse();
         assertThat(AssistantActionCatalog.isAllowed("repository.execute")).isFalse();
     }
 
@@ -52,11 +54,20 @@ class AssistantActionCatalogTest {
     }
 
     @Test
+    void shouldTreatTechnicalHelpAsForbidden() {
+        assertThat(AssistantActionCatalog.FORBIDDEN_ASSISTANT_ACTIONS).containsExactly("assistant.technical_help");
+        assertThat(AssistantActionCatalog.isForbidden("assistant.technical_help")).isTrue();
+        assertThat(AssistantActionCatalog.isAllowed("assistant.technical_help")).isFalse();
+    }
+
+    @Test
     void shouldClassifyRiskLevels() {
         assertThat(AssistantActionCatalog.riskLevel("dashboard.summary")).isEqualTo(RiskLevel.AUTO_EXECUTE);
         assertThat(AssistantActionCatalog.riskLevel("budget.create")).isEqualTo(RiskLevel.EXPLICIT_REQUEST);
+        assertThat(AssistantActionCatalog.riskLevel("transaction.correct_recent")).isEqualTo(RiskLevel.EXPLICIT_REQUEST);
         assertThat(AssistantActionCatalog.riskLevel("transaction.update")).isEqualTo(RiskLevel.REQUIRE_CONFIRMATION);
         assertThat(AssistantActionCatalog.riskLevel("ledger.delete")).isEqualTo(RiskLevel.FORBIDDEN);
+        assertThat(AssistantActionCatalog.riskLevel("assistant.technical_help")).isEqualTo(RiskLevel.FORBIDDEN);
         assertThat(AssistantActionCatalog.riskLevel("java.lang.Runtime.exec")).isEqualTo(RiskLevel.FORBIDDEN);
     }
 

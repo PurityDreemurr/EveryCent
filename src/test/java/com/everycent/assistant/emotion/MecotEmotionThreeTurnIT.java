@@ -33,7 +33,7 @@ class MecotEmotionThreeTurnIT {
         OpenAiCompatibleLlmClient llmClient = llmClient();
 
         List<Turn> turns = List.of(
-            new Turn("STRESSED", EmotionValence.NEGATIVE, "皓尾，我今天加班好累，晚饭花了28元。"),
+            new Turn("STRESSED", EmotionValence.NEGATIVE, "喵喵，我今天加班好累，晚饭花了28元。"),
             new Turn("REGRET", EmotionValence.NEGATIVE, "我有点后悔，下午又买了杯奶茶，18元。"),
             new Turn("HAPPY", EmotionValence.POSITIVE, "不过刚才收到报销120元，心情好一点了。")
         );

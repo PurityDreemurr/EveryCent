@@ -158,7 +158,7 @@ public final class AssistantChatCli {
 
     private void validateReply(String reply) {
         if (!StringUtils.hasText(reply)) {
-            System.out.println("用法：/validate 回复内容{\"mood\":40,\"emoji\":\"peace\"}");
+            System.out.println("用法：/validate 回复内容{\"mood\":40,\"emoji\":\"calm\"}");
             return;
         }
         ReplyValidationResult result = replyOutputValidator.validate(reply, DialogueScene.DAILY_CHAT);
