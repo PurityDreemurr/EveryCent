@@ -43,7 +43,7 @@ describe('Creating account tests', () => {
     ).toEqual({
       ...initialState,
       registrationSuccess: true,
-      successMessage: 'Registration saved! Please check your email for confirmation.',
+      successMessage: '注册成功，现在可以登录了。',
     });
   });
 
