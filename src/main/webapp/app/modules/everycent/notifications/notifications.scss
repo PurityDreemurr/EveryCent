@@ -213,4 +213,9 @@
   .everycent-notifications-page__actions {
     justify-content: flex-end;
   }
+
+  .everycent-notifications-page__toolbar button,
+  .everycent-notifications-page__pagination button {
+    width: 100%;
+  }
 }

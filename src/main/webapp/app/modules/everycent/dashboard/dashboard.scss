@@ -334,7 +334,26 @@
     flex-direction: column;
   }
 
+  .everycent-dashboard__download,
+  .everycent-dashboard__toolbar {
+    width: 100%;
+    max-width: none;
+  }
+
+  .everycent-dashboard__tabs,
+  .everycent-dashboard__tabs button {
+    width: 100%;
+  }
+
   .everycent-dashboard__summary {
     grid-template-columns: 1fr;
+  }
+
+  .everycent-chart {
+    overflow-x: auto;
+  }
+
+  .everycent-chart .recharts-responsive-container {
+    min-width: 520px;
   }
 }
