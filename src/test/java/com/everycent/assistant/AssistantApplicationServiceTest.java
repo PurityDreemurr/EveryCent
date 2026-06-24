@@ -42,7 +42,7 @@ class AssistantApplicationServiceTest {
 
         var response = service.chat(user(), request);
 
-        assertThat(response.getAssistantMessage()).isEqualTo("已记账。");
+        assertThat(response.getAssistantMessage()).contains("已记账").contains("喵").contains("{\"mood\"");
         assertThat(response.getResponseType()).isEqualTo("transaction_created");
         assertThat(response.getCards()).hasSize(1);
         assertThat(response.getCards().get(0).getType()).isEqualTo("transaction_created");
@@ -74,7 +74,7 @@ class AssistantApplicationServiceTest {
 
         var response = service.chat(user(), request);
 
-        assertThat(response.getAssistantMessage()).isEqualTo("已记账 2 笔。");
+        assertThat(response.getAssistantMessage()).contains("已记账 2 笔").contains("喵").contains("{\"mood\"");
         assertThat(response.getCards().get(0).getType()).isEqualTo("transaction_created");
         assertThat(response.getAccountingCapture().getCreated()).isTrue();
         assertThat(response.getAccountingCapture().getTransactionId()).isEqualTo(99L);
@@ -99,8 +99,30 @@ class AssistantApplicationServiceTest {
         var response = service.chat(user(), request);
 
         assertThat(response.getResponseType()).isEqualTo("policy_blocked");
-        assertThat(response.getAssistantMessage()).contains("不能由 AI 助手执行");
+        assertThat(response.getAssistantMessage()).contains("不能直接替你下手").contains("喵").contains("{\"mood\"");
         assertThat(response.getCards().get(0).getMessage()).contains("手动删除");
+    }
+
+    @Test
+    void shouldRenderTechnicalHelpBlockWithRoleplayTone() {
+        AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
+        SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
+        AssistantApplicationService service = new AssistantApplicationService(
+            planner,
+            router,
+            new ResponseRenderer(),
+            org.mockito.Mockito.mock(AiAssistantOrchestrator.class),
+            org.mockito.Mockito.mock(AssistantConversationStore.class)
+        );
+        ChatRequestDTO request = request("帮我写一段 Java 代码", 10L);
+        when(planner.plan(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(plan("assistant.technical_help"));
+        when(router.route(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+            .thenReturn(SkillResult.blocked("assistant.technical_help", "Action forbidden"));
+
+        var response = service.chat(user(), request);
+
+        assertThat(response.getResponseType()).isEqualTo("policy_blocked");
+        assertThat(response.getAssistantMessage()).contains("不能接招喵").contains("记账").contains("{\"mood\"");
     }
 
     @Test

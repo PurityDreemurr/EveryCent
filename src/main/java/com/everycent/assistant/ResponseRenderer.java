@@ -56,40 +56,44 @@ public class ResponseRenderer {
 
     private String messageFor(AssistantPlan plan, List<SkillResult> results) {
         if (results.isEmpty()) {
-            return "我在。你可以直接告诉我要查账、记账、设置预算，或者先聊聊。";
+            return withState("我在，喵。你可以直接告诉我要查账、记账、设置预算，或者先聊聊喵。", 40, "calm");
         }
         SkillResult first = results.get(0);
         if (Boolean.TRUE.equals(first.getBlockedByPolicy())) {
             return blockedMessage(first);
         }
         if (Boolean.TRUE.equals(first.getNeedUserConfirmation())) {
-            return first.getMessage();
+            return withState(first.getMessage() == null ? "这个行动还需要你确认一下喵。" : ensureMeow(first.getMessage()), 42, "calm");
         }
         if (!Boolean.TRUE.equals(first.getSuccess())) {
-            return first.getMessage() == null ? "这次没有执行成功，请检查信息是否完整。" : first.getMessage();
+            return withState(
+                first.getMessage() == null ? "这次行动没有执行成功，先检查一下信息是不是完整喵。" : ensureMeow(first.getMessage()),
+                45,
+                "tired"
+            );
         }
         return switch (first.getActionName()) {
             case "transaction.create_from_text", "transaction.create" -> transactionCreatedMessage(first.getData());
-            case "transaction.list" -> "已查询账单。";
-            case "budget.create", "budget.update" -> "预算已设置。";
-            case "budget.status" -> "已查询预算状态。";
-            case "export.transactions" -> "导出结果已准备。";
-            default -> "已完成。";
+            case "transaction.list" -> withState("账单查好了，明细我已经排在下面喵。", 42, "pleased");
+            case "budget.create", "budget.update" -> withState("预算已经设置好了，这一步算是稳稳落地喵。", 45, "pleased");
+            case "budget.status" -> withState("预算状态查好了，数字我放在下面喵。", 42, "calm");
+            case "export.transactions" -> withState("导出结果准备好了，链接在下面喵。", 42, "calm");
+            default -> withState("操作已经完成喵。", 40, "calm");
         };
     }
 
     private String blockedMessage(SkillResult result) {
         String actionName = result.getActionName();
         if (actionName != null && actionName.contains("delete")) {
-            return "删除类操作不能由 AI 助手执行。我可以先帮你查出候选记录，请到交易详情页或账单列表页手动删除。";
+            return withState("删除这类动作我不能直接替你下手，爪子得收住喵。你可以先让我查出候选记录，再到交易详情页或账单列表页手动删除喵。", 48, "calm");
         }
         if (actionName != null && actionName.startsWith("account.")) {
-            return "账号和账户权限相关操作不能由 AI 助手代办。请到账号设置页面手动处理。";
+            return withState("账号和权限这种要紧地方，我不能替你代办喵。请到账号设置页面自己确认后再处理喵。", 48, "calm");
         }
         if ("assistant.technical_help".equals(actionName)) {
-            return "我不能解答写代码、程序实现、调试或算法类技术问题。你可以继续让我帮你记账、查账单、看预算或导出账单。";
+            return withState("写代码、程序实现、调试和算法题这类技术行动，我不能接招喵。你可以继续让我帮你记账、查账单、看预算或导出账单喵。", 46, "calm");
         }
-        return result.getMessage() == null ? "这个操作不能由 AI 助手执行。" : result.getMessage();
+        return withState(result.getMessage() == null ? "这个操作我不能执行，先把爪子收住喵。" : ensureMeow(result.getMessage()), 45, "calm");
     }
 
     private AccountingCaptureDTO accountingCapture(List<SkillResult> results) {
@@ -133,9 +137,24 @@ public class ResponseRenderer {
 
     private String transactionCreatedMessage(Object data) {
         if (data instanceof List<?> records && records.size() > 1) {
-            return "已记账 " + records.size() + " 笔。";
+            return withState("已记账 " + records.size() + " 笔，这几笔我都按计划收好了喵。", 48, "pleased");
         }
-        return "已记账。";
+        return withState("已记账，这笔我收好了喵。", 45, "pleased");
+    }
+
+    private String ensureMeow(String message) {
+        if (message == null || message.contains("喵")) {
+            return message;
+        }
+        String trimmed = message.trim();
+        if (trimmed.endsWith("。") || trimmed.endsWith("！") || trimmed.endsWith("？")) {
+            return trimmed.substring(0, trimmed.length() - 1) + "喵。";
+        }
+        return trimmed + "喵。";
+    }
+
+    private String withState(String message, int mood, String emoji) {
+        return ensureMeow(message) + " {\"mood\":" + mood + ",\"emoji\":\"" + emoji + "\"}";
     }
 
     public record RenderedAssistantResponse(
