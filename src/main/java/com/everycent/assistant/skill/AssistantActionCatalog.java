@@ -30,6 +30,7 @@ public final class AssistantActionCatalog {
         "ledger.update",
         "transaction.create",
         "transaction.create_from_text",
+        "transaction.correct_recent",
         "budget.create",
         "budget.update",
         "notification.mark_read",

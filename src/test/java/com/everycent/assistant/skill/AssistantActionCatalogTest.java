@@ -11,6 +11,7 @@ class AssistantActionCatalogTest {
     void shouldAllowOnlyDocumentedPlannerActions() {
         assertThat(AssistantActionCatalog.isAllowed("ledger.list")).isTrue();
         assertThat(AssistantActionCatalog.isAllowed("transaction.create_from_text")).isTrue();
+        assertThat(AssistantActionCatalog.isAllowed("transaction.correct_recent")).isTrue();
         assertThat(AssistantActionCatalog.isAllowed("budget.alert.generate")).isTrue();
         assertThat(AssistantActionCatalog.isAllowed("chat.ask_clarification")).isTrue();
 
@@ -63,6 +64,7 @@ class AssistantActionCatalogTest {
     void shouldClassifyRiskLevels() {
         assertThat(AssistantActionCatalog.riskLevel("dashboard.summary")).isEqualTo(RiskLevel.AUTO_EXECUTE);
         assertThat(AssistantActionCatalog.riskLevel("budget.create")).isEqualTo(RiskLevel.EXPLICIT_REQUEST);
+        assertThat(AssistantActionCatalog.riskLevel("transaction.correct_recent")).isEqualTo(RiskLevel.EXPLICIT_REQUEST);
         assertThat(AssistantActionCatalog.riskLevel("transaction.update")).isEqualTo(RiskLevel.REQUIRE_CONFIRMATION);
         assertThat(AssistantActionCatalog.riskLevel("ledger.delete")).isEqualTo(RiskLevel.FORBIDDEN);
         assertThat(AssistantActionCatalog.riskLevel("assistant.technical_help")).isEqualTo(RiskLevel.FORBIDDEN);

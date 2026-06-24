@@ -48,6 +48,7 @@ public class QqAssistantReplyRenderer {
         JsonNode data = objectMapper.valueToTree(card.getData());
         return switch (card.getType() == null ? "" : card.getType()) {
             case "transaction_created" -> renderCreated(data);
+            case "transaction_updated" -> "修改后记录：\n1. " + transactionLine(data);
             case "query_result" -> renderQuery(data);
             case "budget_saved" -> renderBudgetSaved(data);
             case "download_result" -> renderDownload(data);

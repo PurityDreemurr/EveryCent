@@ -14,8 +14,11 @@ import com.everycent.assistant.skill.SkillExecutionContext;
 import com.everycent.assistant.skill.SkillResult;
 import com.everycent.assistant.skill.SkillRouter;
 import com.everycent.domain.User;
+import com.everycent.domain.enumeration.TransactionType;
 import com.everycent.llm.dto.NaturalLanguageTransactionCreateResultDTO;
+import com.everycent.service.dto.TransactionRecordDTO;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 class AssistantApplicationServiceTest {
@@ -78,6 +81,35 @@ class AssistantApplicationServiceTest {
         assertThat(response.getCards().get(0).getType()).isEqualTo("transaction_created");
         assertThat(response.getAccountingCapture().getCreated()).isTrue();
         assertThat(response.getAccountingCapture().getTransactionId()).isEqualTo(99L);
+    }
+
+    @Test
+    void shouldRenderRecentTransactionCorrection() {
+        AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
+        SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
+        AssistantApplicationService service = new AssistantApplicationService(
+            planner,
+            router,
+            new ResponseRenderer(),
+            org.mockito.Mockito.mock(AiAssistantOrchestrator.class),
+            org.mockito.Mockito.mock(AssistantConversationStore.class)
+        );
+        ChatRequestDTO request = request("对了，今天中午的午餐还花了5元买水，应该是20元", 10L);
+        TransactionRecordDTO updated = new TransactionRecordDTO();
+        updated.setId(99L);
+        updated.setDescription("午餐");
+        updated.setAmount(new BigDecimal("20.00"));
+        updated.setType(TransactionType.EXPENSE);
+        updated.setTransactionDate(LocalDate.of(2026, 6, 24));
+        when(planner.plan(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(plan("transaction.correct_recent"));
+        when(router.route(org.mockito.ArgumentMatchers.any(AssistantAction.class), org.mockito.ArgumentMatchers.any(SkillExecutionContext.class)))
+            .thenReturn(SkillResult.success("transaction.correct_recent", updated));
+
+        var response = service.chat(user(), request);
+
+        assertThat(response.getAssistantMessage()).contains("已修改午餐为20元").contains("喵").contains("{\"mood\"");
+        assertThat(response.getResponseType()).isEqualTo("transaction_updated");
+        assertThat(response.getCards().get(0).getType()).isEqualTo("transaction_updated");
     }
 
     @Test

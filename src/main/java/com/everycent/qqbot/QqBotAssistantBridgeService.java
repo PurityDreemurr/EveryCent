@@ -309,7 +309,13 @@ public class QqBotAssistantBridgeService {
                 .stream()
                 .anyMatch(card -> {
                     String type = card.getType();
-                    return "transaction_created".equals(type) || "query_result".equals(type) || "budget_saved".equals(type) || "download_result".equals(type);
+                    return (
+                        "transaction_created".equals(type) ||
+                        "transaction_updated".equals(type) ||
+                        "query_result".equals(type) ||
+                        "budget_saved".equals(type) ||
+                        "download_result".equals(type)
+                    );
                 });
             if (hasLedgerCard) {
                 return true;

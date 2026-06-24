@@ -9,6 +9,7 @@ import com.everycent.repository.projection.TagAmountProjection;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -26,6 +27,8 @@ public interface TransactionRecordRepository extends JpaRepository<TransactionRe
     );
 
     List<TransactionRecord> findAllByCreatorAndTransactionDateBetween(User creator, LocalDate start, LocalDate end);
+
+    List<TransactionRecord> findAllByLedgerIdOrderByCreatedDateDescIdDesc(Long ledgerId, Pageable pageable);
 
     List<TransactionRecord> findAllByLedgerAndTypeAndTransactionDateBetween(
         Ledger ledger,

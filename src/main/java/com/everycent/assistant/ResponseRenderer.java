@@ -41,6 +41,12 @@ public class ResponseRenderer {
                 "这笔记录已经入账。",
                 result.getData()
             );
+            case "transaction.correct_recent" -> new AssistantResponseCardDTO(
+                "transaction_updated",
+                "记账已修改",
+                "这笔记录已经修改。",
+                result.getData()
+            );
             case "transaction.list", "budget.status", "dashboard.summary", "dashboard.behavior_tags", "dashboard.emotion_tags" -> new AssistantResponseCardDTO(
                 "query_result",
                 "查询结果",
@@ -74,6 +80,7 @@ public class ResponseRenderer {
         }
         return switch (first.getActionName()) {
             case "transaction.create_from_text", "transaction.create" -> transactionCreatedMessage(first.getData());
+            case "transaction.correct_recent" -> transactionCorrectedMessage(first.getData());
             case "transaction.list" -> withState("账单查好了，明细我已经排在下面喵。", 42, "pleased");
             case "budget.create", "budget.update" -> withState("预算已经设置好了，这一步算是稳稳落地喵。", 45, "pleased");
             case "budget.status" -> withState("预算状态查好了，数字我放在下面喵。", 42, "calm");
@@ -140,6 +147,19 @@ public class ResponseRenderer {
             return withState("已记账 " + records.size() + " 笔，这几笔我都按计划收好了喵。", 48, "pleased");
         }
         return withState("已记账，这笔我收好了喵。", 45, "pleased");
+    }
+
+    private String transactionCorrectedMessage(Object data) {
+        if (data instanceof TransactionRecordDTO record) {
+            String description = record.getDescription() == null || record.getDescription().isBlank() ? "这笔账" : record.getDescription();
+            String amount = record.getAmount() == null ? "" : stripTrailingZeros(record.getAmount());
+            return withState("已修改" + description + (amount.isBlank() ? "" : "为" + amount + "元") + "。", 46, "pleased");
+        }
+        return withState("已修改这笔账。", 46, "pleased");
+    }
+
+    private String stripTrailingZeros(java.math.BigDecimal amount) {
+        return amount.stripTrailingZeros().toPlainString();
     }
 
     private String ensureMeow(String message) {

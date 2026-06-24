@@ -24,6 +24,16 @@ class RuleBasedAssistantPlannerTest {
     }
 
     @Test
+    void shouldPlanRecentTransactionCorrectionBeforeNewAccounting() {
+        var action = planner.plan(null, request("对了，今天中午的午餐还花了5元买水，应该是20元", 10L)).getActions().get(0);
+
+        assertThat(action.getName()).isEqualTo("transaction.correct_recent");
+        assertThat(action.getArguments()).containsEntry("ledgerId", 10L).containsEntry("limit", 20);
+        assertThat(action.getArguments()).containsEntry("text", "对了，今天中午的午餐还花了5元买水，应该是20元");
+        assertThat(planner.plan(null, request("咖啡应该是18元", 10L)).getActions().get(0).getName()).isEqualTo("transaction.correct_recent");
+    }
+
+    @Test
     void shouldPlanQueriesBudgetsExportAndLowRiskBudgetWrite() {
         var transactionQueryAction = planner.plan(null, request("查一下本月账单", 10L)).getActions().get(0);
         assertThat(transactionQueryAction.getName()).isEqualTo("transaction.list");

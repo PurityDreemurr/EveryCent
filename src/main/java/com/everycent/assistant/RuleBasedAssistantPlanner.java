@@ -45,6 +45,15 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
         if (ledgerId == null && needsLedger(text)) {
             return oneAction(AssistantIntent.CLARIFICATION, SceneType.CLARIFICATION, DialogueAct.ASK_CLARIFICATION, "ledger.list", Map.of());
         }
+        if (isTransactionCorrectionRequest(text)) {
+            return oneAction(
+                AssistantIntent.TRANSACTION_MODIFY,
+                SceneType.ACCOUNTING,
+                DialogueAct.CONFIRM_SUCCESS,
+                "transaction.correct_recent",
+                Map.of("ledgerId", ledgerId, "text", text, "limit", 20)
+            );
+        }
         if (isExportRequest(text)) {
             return oneAction(
                 AssistantIntent.EXPORT_DATA,
@@ -130,7 +139,13 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
     }
 
     private boolean needsLedger(String text) {
-        return accountingIntentService.isAccountingIntent(text) || isTransactionQuery(text) || text.contains("预算") || isExportRequest(text);
+        return (
+            accountingIntentService.isAccountingIntent(text) ||
+            isTransactionCorrectionRequest(text) ||
+            isTransactionQuery(text) ||
+            text.contains("预算") ||
+            isExportRequest(text)
+        );
     }
 
     private boolean isAccountRequest(String text) {
@@ -155,6 +170,12 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
 
     private boolean isTransactionQuery(String text) {
         return containsAny(text, "查账", "查帐", "查一下", "账单", "帐单", "明细", "花了多少", "消费记录", "支出记录", "收入记录");
+    }
+
+    private boolean isTransactionCorrectionRequest(String text) {
+        boolean hasCorrectionMarker = containsAny(text, "记错", "错了", "不对", "应该是", "应为", "改成", "改为", "修改为", "修正为");
+        boolean hasAccountingMarker = containsAny(text, "账", "帐", "记", "花了", "午餐", "午饭", "晚餐", "早餐", "买", "消费", "支出", "收入");
+        return hasCorrectionMarker && (hasAccountingMarker || AMOUNT_PATTERN.matcher(text).find());
     }
 
     private boolean isTechnicalHelpRequest(String text) {

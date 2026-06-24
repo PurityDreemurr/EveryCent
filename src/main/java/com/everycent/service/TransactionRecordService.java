@@ -15,6 +15,7 @@ import com.everycent.service.dto.TransactionRecordDTO;
 import com.everycent.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -100,6 +101,17 @@ public class TransactionRecordService {
         monthlyBalanceService.recalculate(saved.getLedger(), saved.getTransactionDate());
         budgetAlertService.checkBudgetAlerts(currentUser, saved.getLedger(), saved.getTransactionDate());
         return toDTO(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransactionRecordDTO> findRecentByLedger(User currentUser, Long ledgerId, int limit) {
+        ledgerPermissionService.checkReadPermission(currentUser, ledgerId);
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+        return transactionRecordRepository
+            .findAllByLedgerIdOrderByCreatedDateDescIdDesc(ledgerId, PageRequest.of(0, safeLimit))
+            .stream()
+            .map(this::toDTO)
+            .toList();
     }
 
     @Transactional(readOnly = true)
