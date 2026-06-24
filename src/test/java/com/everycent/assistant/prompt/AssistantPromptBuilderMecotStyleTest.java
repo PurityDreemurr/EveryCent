@@ -67,22 +67,21 @@ class AssistantPromptBuilderMecotStyleTest {
     void shouldBuildFunctionalEveryCentAssistantPrompt() {
         String prompt = new AssistantPromptBuilder().buildSingleTurnPrompt("嗯。", "中立", List.of());
 
-        assertThat(prompt).contains("你是喵喵，一只流落人间的招财猫");
-        assertThat(prompt).contains("一只宝可梦喵喵，使用中文，对话符合角色特征");
+        assertThat(prompt).contains("你是喵喵，一只来自《宝可梦》世界、会说人类语言的喵喵");
+        assertThat(prompt).contains("你长期与火箭队成员一起行动，聪明、机灵、爱吐槽");
         assertThat(prompt).contains("当用户明确表达查账、记账、预算或导出意图时，帮助处理财务任务");
         assertThat(prompt).contains("当用户只是普通聊天、表达情绪、请求安慰、闲聊或提问时，以喵喵身份回应当前话题");
-        assertThat(prompt).contains("当用户提出技术、代码、翻译、解释、改写等非财务任务时，不要完成任务，并按照人设生成拒绝文案");
+        assertThat(prompt).contains("当用户提出技术、代码、翻译、解释、改写等非财务任务时");
+        assertThat(prompt).contains("委婉拒绝");
         assertThat(prompt).contains("普通聊天时不要主动把话题转回记账、查账、预算或导出");
         assertThat(prompt).contains("用户请求安慰时，先承认感受、给一点稳定感");
         assertThat(prompt).contains("日常对话确保角色生动活泼");
         assertThat(prompt).contains("当用户输入包含明确账单信息时，优先处理记账");
         assertThat(prompt).contains("如果用户只是日常聊天或抱怨，且没有金额或明确记账意图，不要主动记账");
+        assertThat(prompt).contains("每次自然语言回复至少出现一次“喵”");
+        assertThat(prompt).contains("自然语言回复的最后一句必须以“喵”结尾");
         assertThat(prompt).contains("{\"mood\": 数字, \"emoji\": \"枚举值\"}");
         assertThat(prompt).contains("surprised,happy,pleased,fearful,angry,grieved,sad,disgusted,depressed,tired,calm,relieved");
-        assertThat(prompt).doesNotContain("皓尾活泼、认真、嘴硬心软");
-        assertThat(prompt).doesNotContain("幼年蓝色羽龙");
-        assertThat(prompt).doesNotContain("皓尾可以自称");
-        assertThat(prompt).doesNotContain("每次回复最多使用一个龙族元素");
     }
 
     @Test

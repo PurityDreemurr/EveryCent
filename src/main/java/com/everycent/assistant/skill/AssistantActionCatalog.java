@@ -63,6 +63,8 @@ public final class AssistantActionCatalog {
         "authenticate.logout"
     );
 
+    public static final Set<String> FORBIDDEN_ASSISTANT_ACTIONS = Set.of("assistant.technical_help");
+
     public static final Set<String> ALLOWED_ACTIONS = union(
         AUTO_EXECUTE_ACTIONS,
         EXPLICIT_REQUEST_ACTIONS,
@@ -71,7 +73,8 @@ public final class AssistantActionCatalog {
 
     public static final Set<String> FORBIDDEN_ACTIONS = union(
         FORBIDDEN_DELETE_ACTIONS,
-        FORBIDDEN_ACCOUNT_ACTIONS
+        FORBIDDEN_ACCOUNT_ACTIONS,
+        FORBIDDEN_ASSISTANT_ACTIONS
     );
 
     private AssistantActionCatalog() {}

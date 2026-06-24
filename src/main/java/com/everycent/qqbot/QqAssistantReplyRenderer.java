@@ -14,8 +14,6 @@ import org.springframework.util.StringUtils;
 @Component
 public class QqAssistantReplyRenderer {
 
-    private static final int MAX_TRANSACTION_ROWS = 10;
-
     private final ObjectMapper objectMapper;
 
     public QqAssistantReplyRenderer(ObjectMapper objectMapper) {
@@ -86,7 +84,7 @@ public class QqAssistantReplyRenderer {
 
     private String renderTransactions(JsonNode data, List<JsonNode> records) {
         List<String> lines = new ArrayList<>();
-        lines.add("账单明细：共 " + longValue(data, "totalElements", records.size()) + " 条，当前展示 " + records.size() + " 条");
+        lines.add("账单明细：共 " + longValue(data, "totalElements", records.size()) + " 条");
         BigDecimal income = BigDecimal.ZERO;
         BigDecimal expense = BigDecimal.ZERO;
         int index = 1;
@@ -97,16 +95,11 @@ public class QqAssistantReplyRenderer {
             } else {
                 expense = expense.add(amount);
             }
-            if (index <= MAX_TRANSACTION_ROWS) {
-                lines.add(index + ". " + transactionLine(record));
-            }
+            lines.add(index + ". " + transactionLine(record));
             index++;
         }
         lines.add("收入合计：" + money(income));
         lines.add("支出合计：" + money(expense));
-        if (records.size() > MAX_TRANSACTION_ROWS) {
-            lines.add("其余 " + (records.size() - MAX_TRANSACTION_ROWS) + " 条请到 EveryCent 前端查看。");
-        }
         return String.join("\n", lines);
     }
 

@@ -128,6 +128,21 @@ class ReadOnlySkillTest {
     }
 
     @Test
+    void transactionReadSkillShouldFetchAllPagesWhenRequested() {
+        TransactionRecordService transactionService = org.mockito.Mockito.mock(TransactionRecordService.class);
+        LlmParsingService llmParsingService = org.mockito.Mockito.mock(LlmParsingService.class);
+        TransactionReadSkill skill = new TransactionReadSkill(transactionService, llmParsingService, currentUserResolver);
+        when(transactionService.findByLedger(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.any()))
+            .thenReturn(transactionPage(100, 150), transactionPage(50, 150));
+
+        SkillResult result = skill.execute(new AssistantAction("transaction.list", Map.of("ledgerId", 10L, "includeAll", true)), context);
+
+        assertThat(((TransactionPageDTO) result.getData()).getContent()).hasSize(150);
+        verify(transactionService, org.mockito.Mockito.times(2))
+            .findByLedger(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     void budgetReadSkillShouldDelegateListAndStatus() {
         BudgetService service = org.mockito.Mockito.mock(BudgetService.class);
         BudgetReadSkill skill = new BudgetReadSkill(service, currentUserResolver);
@@ -144,6 +159,17 @@ class ReadOnlySkillTest {
 
         verify(service).findByLedger(user, 10L);
         verify(service).getStatus(user, 10L, BudgetCycle.MONTHLY, LocalDate.of(2026, 6, 18));
+    }
+
+    private TransactionPageDTO transactionPage(int count, long totalElements) {
+        TransactionPageDTO page = new TransactionPageDTO();
+        java.util.ArrayList<TransactionRecordDTO> records = new java.util.ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            records.add(new TransactionRecordDTO());
+        }
+        page.setContent(records);
+        page.setTotalElements(totalElements);
+        return page;
     }
 
     @Test

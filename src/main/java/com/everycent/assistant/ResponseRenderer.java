@@ -86,6 +86,9 @@ public class ResponseRenderer {
         if (actionName != null && actionName.startsWith("account.")) {
             return "账号和账户权限相关操作不能由 AI 助手代办。请到账号设置页面手动处理。";
         }
+        if ("assistant.technical_help".equals(actionName)) {
+            return "我不能解答写代码、程序实现、调试或算法类技术问题。你可以继续让我帮你记账、查账单、看预算或导出账单。";
+        }
         return result.getMessage() == null ? "这个操作不能由 AI 助手执行。" : result.getMessage();
     }
 

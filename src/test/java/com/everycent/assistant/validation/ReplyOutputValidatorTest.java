@@ -52,11 +52,9 @@ class ReplyOutputValidatorTest {
     }
 
     @Test
-    void shouldFailOnRoleplayLeak() {
+    void shouldAllowOldRoleWordsWhenOtherwiseValid() {
         ReplyValidationResult result = validator.validate("本龙先按这条记下来了。{\"mood\":45,\"emoji\":\"calm\"}", DialogueScene.ACCOUNTING);
-        assertThat(result.isPassed()).isFalse();
-        assertThat(result.getViolations()).contains("ROLEPLAY_LEAK:本龙");
-        assertThat(result.getSeverity()).isEqualTo(ReplyValidationResult.Severity.HIGH);
+        assertThat(result.isPassed()).isTrue();
     }
 
     @Test
