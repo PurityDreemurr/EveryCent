@@ -263,6 +263,63 @@ class QqBotAssistantBridgeServiceTest {
     }
 
     @Test
+    void shouldResetSenderStateAndContinueReplyingWhenAssistantChatTimesOut() throws Exception {
+        properties.setReplyTimeoutSeconds(1);
+        User user = new User();
+        user.setLogin("admin");
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
+        when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
+        java.util.concurrent.atomic.AtomicInteger chatCalls = new java.util.concurrent.atomic.AtomicInteger();
+        when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class)))
+            .thenAnswer(invocation -> {
+                if (chatCalls.incrementAndGet() == 1) {
+                    Thread.sleep(1500);
+                    ChatResponseDTO slowResponse = new ChatResponseDTO();
+                    slowResponse.setAssistantMessage("这条回复太慢了喵。");
+                    return slowResponse;
+                }
+                ChatResponseDTO response = new ChatResponseDTO();
+                response.setAssistantMessage("后续消息已经正常处理喵。{\"mood\":42,\"emoji\":\"calm\"}");
+                return response;
+            });
+
+        QqOfficialEvent listEvent = c2cMessage("账本列表");
+        service.handleEvent(listEvent);
+        QqOfficialEvent timeoutEvent = c2cMessage("查账单");
+        service.handleEvent(timeoutEvent);
+        QqOfficialEvent nextEvent = c2cMessage("2");
+        service.handleEvent(nextEvent);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(timeoutEvent),
+                org.mockito.ArgumentMatchers.argThat(reply -> reply.contains("超过 1 秒") && reply.contains("状态重置"))
+            );
+        verify(qqOfficialBotClient)
+            .sendReply(org.mockito.ArgumentMatchers.eq(nextEvent), org.mockito.ArgumentMatchers.contains("后续消息已经正常处理喵"));
+    }
+
+    @Test
+    void shouldResetSenderStateAndReplyWhenAssistantChatFails() throws Exception {
+        User user = new User();
+        user.setLogin("admin");
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
+        when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class)))
+            .thenThrow(new IllegalStateException("boom"));
+
+        QqOfficialEvent event = c2cMessage("查账单");
+        service.handleEvent(event);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(event),
+                org.mockito.ArgumentMatchers.argThat(reply -> reply.contains("处理失败") && reply.contains("状态重置") && reply.contains("喵"))
+            );
+    }
+
+    @Test
     void shouldPromptWhenQqOpenIdIsNotBound() throws Exception {
         when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.empty());
 

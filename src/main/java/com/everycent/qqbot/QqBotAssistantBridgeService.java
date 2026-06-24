@@ -13,7 +13,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -70,6 +74,20 @@ public class QqBotAssistantBridgeService {
         }
         String qqOpenId = senderOpenId(event);
         String senderKey = senderKey(event);
+        try {
+            handleMessage(event, text, qqOpenId, senderKey);
+        } catch (QqReplyTimeoutException e) {
+            LOG.warn("QQ bot reply generation timed out; senderKey={}", senderKey);
+            resetSenderState(senderKey);
+            sendControlReply(event, "这条回复生成超过 " + replyTimeoutSeconds() + " 秒了，我先把本次状态重置了喵。请再发一次，后续消息可以继续处理喵。");
+        } catch (RuntimeException e) {
+            LOG.warn("QQ bot message handling failed; senderKey={}, error={}", senderKey, e.getClass().getSimpleName(), e);
+            resetSenderState(senderKey);
+            sendControlReply(event, "这条消息处理失败了，我先把本次状态重置了喵。请稍后再试或换个说法喵。");
+        }
+    }
+
+    private void handleMessage(QqOfficialEvent event, String text, String qqOpenId, String senderKey) {
         String bindingCode = parseBindingCode(text);
         if (bindingCode != null) {
             QqBotBindingService.BindResult result = qqBotBindingService.bind(bindingCode, qqOpenId);
@@ -99,8 +117,33 @@ public class QqBotAssistantBridgeService {
         ChatRequestDTO request = new ChatRequestDTO();
         request.setLedgerId(currentLedger.getId());
         request.setMessage(text);
-        ChatResponseDTO response = aiAssistantService.chat(user, request);
+        ChatResponseDTO response = chatWithTimeout(user, request);
         qqOfficialBotClient.sendReply(event, replyRenderer.render(response, currentLedger.getName(), isLedgerOperation(text, response)));
+    }
+
+    private ChatResponseDTO chatWithTimeout(User user, ChatRequestDTO request) {
+        CompletableFuture<ChatResponseDTO> future = CompletableFuture.supplyAsync(() -> aiAssistantService.chat(user, request));
+        try {
+            return future.get(replyTimeoutSeconds(), TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            throw new QqReplyTimeoutException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            future.cancel(true);
+            throw new QqReplyGenerationException(e);
+        } catch (ExecutionException e) {
+            throw new QqReplyGenerationException(e.getCause());
+        }
+    }
+
+    private long replyTimeoutSeconds() {
+        return Math.max(1, properties.getReplyTimeoutSeconds());
+    }
+
+    private void resetSenderState(String senderKey) {
+        currentLedgerIds.remove(senderKey);
+        pendingLedgerSelections.remove(senderKey);
     }
 
     private boolean isSupportedMessage(QqOfficialEvent event) {
@@ -380,4 +423,18 @@ public class QqBotAssistantBridgeService {
     private record LedgerSwitchRequest(String ledgerName) {}
 
     private record LedgerSelection(LedgerDTO ledger) {}
+
+    private static class QqReplyTimeoutException extends RuntimeException {
+
+        private QqReplyTimeoutException(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    private static class QqReplyGenerationException extends RuntimeException {
+
+        private QqReplyGenerationException(Throwable cause) {
+            super(cause);
+        }
+    }
 }

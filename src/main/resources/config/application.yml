@@ -271,3 +271,4 @@ app:
     default-user-login: ${APP_QQ_BOT_DEFAULT_USER_LOGIN:admin}
     default-ledger-id: ${APP_QQ_BOT_DEFAULT_LEDGER_ID:0}
     public-base-url: ${APP_QQ_BOT_PUBLIC_BASE_URL:}
+    reply-timeout-seconds: ${APP_QQ_BOT_REPLY_TIMEOUT_SECONDS:10}
