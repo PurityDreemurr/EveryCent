@@ -36,7 +36,7 @@ const AppFrame = ({
   const isEveryCentPage = location.pathname.startsWith('/everycent');
   const isEveryCentAccountPage = location.pathname === '/account/settings' || location.pathname === '/account/password';
   const isEveryCentLayoutPage = isEveryCentPage || isEveryCentAccountPage;
-  const isAuthPage = location.pathname === '/login';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/account/register';
 
   return (
     <div className={`app-container${isEveryCentLayoutPage ? ' app-container--everycent' : ''}${isAuthPage ? ' app-container--auth' : ''}`}>
