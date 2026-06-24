@@ -12,9 +12,12 @@ import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.config.QqBotProperties;
 import com.everycent.domain.User;
 import com.everycent.repository.UserRepository;
+import com.everycent.service.LedgerService;
+import com.everycent.service.dto.LedgerDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +28,7 @@ class QqBotAssistantBridgeServiceTest {
     private final UserRepository userRepository = org.mockito.Mockito.mock(UserRepository.class);
     private final AiAssistantService aiAssistantService = org.mockito.Mockito.mock(AiAssistantService.class);
     private final QqOfficialBotClient qqOfficialBotClient = org.mockito.Mockito.mock(QqOfficialBotClient.class);
+    private final LedgerService ledgerService = org.mockito.Mockito.mock(LedgerService.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final QqAssistantReplyRenderer replyRenderer = new QqAssistantReplyRenderer(objectMapper);
     private final QqBotAssistantBridgeService service = new QqBotAssistantBridgeService(
@@ -32,7 +36,8 @@ class QqBotAssistantBridgeServiceTest {
         userRepository,
         aiAssistantService,
         qqOfficialBotClient,
-        replyRenderer
+        replyRenderer,
+        ledgerService
     );
 
     @Test
@@ -40,6 +45,7 @@ class QqBotAssistantBridgeServiceTest {
         User user = new User();
         user.setLogin("admin");
         when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已为您查询账单。{\"mood\":50,\"emoji\":\"peace\"}");
         when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class))).thenReturn(response);
@@ -51,7 +57,7 @@ class QqBotAssistantBridgeServiceTest {
         verify(aiAssistantService).chat(org.mockito.ArgumentMatchers.eq(user), requestCaptor.capture());
         assertThat(requestCaptor.getValue().getLedgerId()).isEqualTo(10L);
         assertThat(requestCaptor.getValue().getMessage()).isEqualTo("查账单");
-        verify(qqOfficialBotClient).sendReply(event, "已为您查询账单。");
+        verify(qqOfficialBotClient).sendReply(event, "已为您查询账单。\n\n当前账本：日常账本");
     }
 
     @Test
@@ -59,6 +65,7 @@ class QqBotAssistantBridgeServiceTest {
         User user = new User();
         user.setLogin("admin");
         when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已查询账单。");
         response.setCards(
@@ -93,7 +100,7 @@ class QqBotAssistantBridgeServiceTest {
 
         ArgumentCaptor<String> replyCaptor = ArgumentCaptor.forClass(String.class);
         verify(qqOfficialBotClient).sendReply(org.mockito.ArgumentMatchers.eq(event), replyCaptor.capture());
-        assertThat(replyCaptor.getValue()).contains("账单明细").contains("午餐").contains("¥20.00").contains("餐饮");
+        assertThat(replyCaptor.getValue()).contains("当前账本：日常账本").contains("账单明细").contains("午餐").contains("¥20.00").contains("餐饮");
     }
 
     @Test
@@ -101,6 +108,7 @@ class QqBotAssistantBridgeServiceTest {
         User user = new User();
         user.setLogin("admin");
         when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已查询账单。");
         response.setCards(
@@ -118,13 +126,72 @@ class QqBotAssistantBridgeServiceTest {
     }
 
     @Test
+    void shouldSwitchLedgerByNaturalLanguageAndUseItForNextRequest() throws Exception {
+        User user = new User();
+        user.setLogin("admin");
+        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
+        when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
+        ChatResponseDTO response = new ChatResponseDTO();
+        response.setAssistantMessage("账单查好了，明细我已经排在下面喵。{\"mood\":42,\"emoji\":\"pleased\"}");
+        when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class))).thenReturn(response);
+
+        QqOfficialEvent switchEvent = c2cMessage("切换到旅行账本");
+        service.handleEvent(switchEvent);
+        QqOfficialEvent queryEvent = c2cMessage("查账单");
+        service.handleEvent(queryEvent);
+
+        verify(qqOfficialBotClient)
+            .sendReply(org.mockito.ArgumentMatchers.eq(switchEvent), org.mockito.ArgumentMatchers.contains("已切换到当前账本「旅行账本」"));
+        ArgumentCaptor<ChatRequestDTO> requestCaptor = ArgumentCaptor.forClass(ChatRequestDTO.class);
+        verify(aiAssistantService).chat(org.mockito.ArgumentMatchers.eq(user), requestCaptor.capture());
+        assertThat(requestCaptor.getValue().getLedgerId()).isEqualTo(20L);
+        verify(qqOfficialBotClient)
+            .sendReply(org.mockito.ArgumentMatchers.eq(queryEvent), org.mockito.ArgumentMatchers.contains("当前账本：旅行账本"));
+    }
+
+    @Test
+    void shouldListLedgersAndSwitchByReplyingIndex() throws Exception {
+        User user = new User();
+        user.setLogin("admin");
+        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
+        when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
+        ChatResponseDTO response = new ChatResponseDTO();
+        response.setAssistantMessage("账单查好了，明细我已经排在下面喵。{\"mood\":42,\"emoji\":\"pleased\"}");
+        when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class))).thenReturn(response);
+
+        QqOfficialEvent listEvent = c2cMessage("当前都有什么账本");
+        service.handleEvent(listEvent);
+        QqOfficialEvent selectEvent = c2cMessage("2");
+        service.handleEvent(selectEvent);
+        QqOfficialEvent queryEvent = c2cMessage("查账单");
+        service.handleEvent(queryEvent);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(listEvent),
+                org.mockito.ArgumentMatchers.argThat(reply -> reply.contains("1. 日常账本") && reply.contains("2. 旅行账本"))
+            );
+        verify(qqOfficialBotClient)
+            .sendReply(org.mockito.ArgumentMatchers.eq(selectEvent), org.mockito.ArgumentMatchers.contains("已切换到当前账本「旅行账本」"));
+        ArgumentCaptor<ChatRequestDTO> requestCaptor = ArgumentCaptor.forClass(ChatRequestDTO.class);
+        verify(aiAssistantService).chat(org.mockito.ArgumentMatchers.eq(user), requestCaptor.capture());
+        assertThat(requestCaptor.getValue().getLedgerId()).isEqualTo(20L);
+        verify(qqOfficialBotClient)
+            .sendReply(org.mockito.ArgumentMatchers.eq(queryEvent), org.mockito.ArgumentMatchers.contains("当前账本：旅行账本"));
+    }
+
+    @Test
     void shouldIgnoreNonMessageEvent() {
         QqOfficialEvent event = new QqOfficialEvent();
         event.setT("READY");
 
         service.handleEvent(event);
 
-        verifyNoInteractions(userRepository, aiAssistantService, qqOfficialBotClient);
+        verifyNoInteractions(userRepository, aiAssistantService, qqOfficialBotClient, ledgerService);
     }
 
     private QqOfficialEvent c2cMessage(String text) throws Exception {
@@ -147,6 +214,13 @@ class QqBotAssistantBridgeServiceTest {
             record.put("behaviorTagName", "餐饮");
         }
         return page;
+    }
+
+    private LedgerDTO ledger(Long id, String name) {
+        LedgerDTO ledger = new LedgerDTO();
+        ledger.setId(id);
+        ledger.setName(name);
+        return ledger;
     }
 
     private QqBotProperties properties() {

@@ -21,10 +21,17 @@ public class QqAssistantReplyRenderer {
     }
 
     public String render(ChatResponseDTO response) {
+        return render(response, null, false);
+    }
+
+    public String render(ChatResponseDTO response, String ledgerName, boolean includeLedgerName) {
         if (response == null) {
             return null;
         }
         StringBuilder text = new StringBuilder(clean(response.getAssistantMessage()));
+        if (includeLedgerName && StringUtils.hasText(ledgerName)) {
+            appendBlock(text, "当前账本：" + ledgerName);
+        }
         for (AssistantResponseCardDTO card : response.getCards()) {
             String renderedCard = renderCard(card);
             if (StringUtils.hasText(renderedCard) && !text.toString().contains(renderedCard)) {
