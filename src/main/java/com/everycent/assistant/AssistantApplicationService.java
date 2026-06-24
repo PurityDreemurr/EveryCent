@@ -3,9 +3,9 @@ package com.everycent.assistant;
 import com.everycent.assistant.ResponseRenderer.RenderedAssistantResponse;
 import com.everycent.assistant.dto.AssistantSkillResultDTO;
 import com.everycent.assistant.dto.ChatHistoryDTO;
+import com.everycent.assistant.dto.ChatHistoryMessageDTO;
 import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.dto.ChatResponseDTO;
-import com.everycent.assistant.dto.MemoryContextDTO;
 import com.everycent.assistant.skill.AssistantAction;
 import com.everycent.assistant.skill.AssistantPlan;
 import com.everycent.assistant.skill.SkillExecutionContext;
@@ -59,7 +59,8 @@ public class AssistantApplicationService {
         ChatResponseDTO response;
         if (plan.getActions().isEmpty()) {
             LOG.info("Assistant plan has no skill actions; fallback to LLM chat. intent={}", plan.getIntent());
-            response = aiAssistantOrchestrator.chat(currentUser, request);
+            List<ChatHistoryMessageDTO> conversationHistory = conversationStore.recentMessagesForPrompt(currentUser, request);
+            response = aiAssistantOrchestrator.chat(currentUser, request, conversationHistory);
             response.setResponseType("message");
             persistExchange(currentUser, request, response);
             return response;

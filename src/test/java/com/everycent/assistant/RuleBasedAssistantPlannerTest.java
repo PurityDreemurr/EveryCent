@@ -24,17 +24,40 @@ class RuleBasedAssistantPlannerTest {
     }
 
     @Test
+    void shouldPlanRecentTransactionCorrectionBeforeNewAccounting() {
+        var action = planner.plan(null, request("对了，今天中午的午餐还花了5元买水，应该是20元", 10L)).getActions().get(0);
+
+        assertThat(action.getName()).isEqualTo("transaction.correct_recent");
+        assertThat(action.getArguments()).containsEntry("ledgerId", 10L).containsEntry("limit", 20);
+        assertThat(action.getArguments()).containsEntry("text", "对了，今天中午的午餐还花了5元买水，应该是20元");
+        assertThat(planner.plan(null, request("咖啡应该是18元", 10L)).getActions().get(0).getName()).isEqualTo("transaction.correct_recent");
+    }
+
+    @Test
     void shouldPlanQueriesBudgetsExportAndLowRiskBudgetWrite() {
-        assertThat(planner.plan(null, request("查一下本月账单", 10L)).getActions().get(0).getName()).isEqualTo("transaction.list");
+        var transactionQueryAction = planner.plan(null, request("查一下本月账单", 10L)).getActions().get(0);
+        assertThat(transactionQueryAction.getName()).isEqualTo("transaction.list");
+        assertThat(transactionQueryAction.getArguments()).containsEntry("includeAll", true).containsEntry("size", 100);
+        assertThat(planner.plan(null, request("查一下本月帐单", 10L)).getActions().get(0).getName()).isEqualTo("transaction.list");
         assertThat(planner.plan(null, request("这个月预算还剩多少", 10L)).getActions().get(0).getName()).isEqualTo("budget.status");
         assertThat(planner.plan(null, request("这个月预算设成3000，80%提醒", 10L)).getActions().get(0).getName()).isEqualTo("budget.create");
         assertThat(planner.plan(null, request("导出本月账单", 10L)).getActions().get(0).getName()).isEqualTo("export.transactions");
+        assertThat(planner.plan(null, request("导出本月帐单", 10L)).getActions().get(0).getName()).isEqualTo("export.transactions");
     }
 
     @Test
     void shouldPlanForbiddenRequestsSoPolicyCanBlockThem() {
         assertThat(planner.plan(null, request("删掉刚才那笔午饭", 10L)).getActions().get(0).getName()).isEqualTo("transaction.delete");
         assertThat(planner.plan(null, request("帮我改一下账号密码", 10L)).getActions().get(0).getName()).isEqualTo("account.update");
+    }
+
+    @Test
+    void shouldBlockTechnicalHelpRequests() {
+        var plan = planner.plan(null, request("帮我写一段 Java 代码实现二分查找", 10L));
+
+        assertThat(plan.getIntent()).isEqualTo(AssistantIntent.TASK_HELP);
+        assertThat(plan.getActions()).hasSize(1);
+        assertThat(plan.getActions().get(0).getName()).isEqualTo("assistant.technical_help");
     }
 
     @Test

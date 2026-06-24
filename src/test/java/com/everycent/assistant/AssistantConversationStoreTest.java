@@ -121,6 +121,66 @@ class AssistantConversationStoreTest {
     }
 
     @Test
+    void shouldLoadRecentMessagesForPromptFromCurrentConversation() {
+        User user = user();
+        Ledger ledger = ledger();
+        AiConversation conversation = conversation(user, ledger);
+        ChatRequestDTO request = request("你还记得吗", 10L, 99L);
+        AiMessage userMessage = message(conversation, user, ledger, 100L, "USER", "我喜欢简短回复", null);
+        AiMessage assistantMessage = message(conversation, user, ledger, 101L, "ASSISTANT", "记住了，我会简短一点。", null);
+        when(ledgerPermissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
+        when(conversationRepository.findOneByIdAndUserAndLedgerAndArchivedFalse(99L, user, ledger)).thenReturn(Optional.of(conversation));
+        when(messageRepository.findTop12ByConversationOrderByCreatedDateDescIdDesc(conversation)).thenReturn(List.of(assistantMessage, userMessage));
+
+        var messages = store.recentMessagesForPrompt(user, request);
+
+        assertThat(messages).hasSize(2);
+        assertThat(messages.get(0).getRole()).isEqualTo("user");
+        assertThat(messages.get(0).getContent()).isEqualTo("我喜欢简短回复");
+        assertThat(messages.get(1).getRole()).isEqualTo("assistant");
+    }
+
+    @Test
+    void shouldNotRestoreStaleConversationHistory() {
+        User user = user();
+        Ledger ledger = ledger();
+        AiConversation staleConversation = conversation(user, ledger);
+        staleConversation.setLastMessageDate(Instant.now().minus(java.time.Duration.ofHours(25)));
+        when(ledgerPermissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
+        when(conversationRepository.findFirstByUserAndLedgerAndArchivedFalseOrderByLastMessageDateDescIdDesc(user, ledger))
+            .thenReturn(Optional.of(staleConversation));
+
+        var history = store.latestHistory(user, 10L);
+
+        assertThat(history.getConversationId()).isNull();
+        assertThat(history.getMessages()).isEmpty();
+    }
+
+    @Test
+    void shouldCreateNewConversationWhenRequestedConversationIsStale() {
+        User user = user();
+        Ledger ledger = ledger();
+        AiConversation staleConversation = conversation(user, ledger);
+        staleConversation.setLastMessageDate(Instant.now().minus(java.time.Duration.ofHours(25)));
+        ChatRequestDTO request = request("重新开始", 10L, 99L);
+        when(ledgerPermissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
+        when(conversationRepository.findOneByIdAndUserAndLedgerAndArchivedFalse(99L, user, ledger)).thenReturn(Optional.of(staleConversation));
+        when(conversationRepository.save(any(AiConversation.class))).thenAnswer(invocation -> {
+            AiConversation conversation = invocation.getArgument(0);
+            conversation.setId(120L);
+            return conversation;
+        });
+
+        Long conversationId = store.ensureConversation(user, request);
+
+        assertThat(conversationId).isEqualTo(120L);
+        ArgumentCaptor<AiConversation> captor = ArgumentCaptor.forClass(AiConversation.class);
+        verify(conversationRepository).save(captor.capture());
+        assertThat(captor.getValue()).isNotSameAs(staleConversation);
+        assertThat(captor.getValue().getSessionKey()).isNotBlank();
+    }
+
+    @Test
     void shouldArchiveCurrentUserLedgerConversationsWhenClearingHistory() {
         User user = user();
         Ledger ledger = ledger();

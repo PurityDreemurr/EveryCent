@@ -61,7 +61,6 @@ public class ReplyValidationResult {
                     || violation.startsWith("SELF_CENTERED_REPLY")
                     || violation.startsWith("THIRD_PARTY_MOCKING")
                     || violation.startsWith("COMMANDING_TONE")
-                    || violation.startsWith("ROLEPLAY_LEAK")
             ) {
                 return Severity.HIGH;
             }

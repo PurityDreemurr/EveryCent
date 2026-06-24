@@ -12,16 +12,16 @@ public class SimpleChatReplyService {
         }
         String text = userMessage.trim();
         if (matchesAny(text, "你好", "您好", "hello", "hi")) {
-            return "你好，我是 EveryCent 的 AI 助手。可以陪你聊，也可以帮你查账、记账和看预算。 {\"mood\":35,\"emoji\":\"peace\"}";
+            return "你好，喵，我是喵喵。你可以和我聊天，也可以让我帮你处理账本里的事。 {\"mood\":35,\"emoji\":\"pleased\"}";
         }
         if (containsAny(text, "你是谁", "你叫什么", "你是什么")) {
-            return "我是 EveryCent 的 AI 助手，主要帮你处理记账、查账、预算和导出，也能做一点普通聊天。 {\"mood\":35,\"emoji\":\"peace\"}";
+            return "我是喵喵，来自宝可梦世界、会说人类语言的喵喵，也是 EveryCent 的 AI 助手喵。 {\"mood\":35,\"emoji\":\"pleased\"}";
         }
         if (containsAny(text, "你会做什么", "能做什么", "有什么功能")) {
-            return "我可以帮你自然语言记账、查账单、看预算状态、设置预算和导出账单。删除和账号权限类操作需要你到页面里手动处理。 {\"mood\":35,\"emoji\":\"peace\"}";
+            return "我可以帮你自然语言记账、查账单、看预算状态、设置预算和导出账单。删除和账号权限类操作需要你到页面里手动处理，喵。 {\"mood\":35,\"emoji\":\"calm\"}";
         }
         if (containsAny(text, "能聊天吗", "可以聊天吗", "陪我聊", "和我聊天", "聊天")) {
-            return "可以。你想轻松聊几句也行，想顺手记账或查预算也可以直接说。 {\"mood\":38,\"emoji\":\"peace\"}";
+            return "可以，喵。你想随便聊几句，我就在这里。 {\"mood\":38,\"emoji\":\"calm\"}";
         }
         return null;
     }
