@@ -185,6 +185,52 @@ class QqBotAssistantBridgeServiceTest {
     }
 
     @Test
+    void shouldRecognizeLedgerTypoForListAndSwitchCommands() throws Exception {
+        User user = new User();
+        user.setLogin("admin");
+        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
+        when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
+
+        QqOfficialEvent listEvent = c2cMessage("当前都有什么帐本");
+        service.handleEvent(listEvent);
+        QqOfficialEvent switchEvent = c2cMessage("切换到旅行帐本");
+        service.handleEvent(switchEvent);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(listEvent),
+                org.mockito.ArgumentMatchers.argThat(reply -> reply.contains("1. 日常账本") && reply.contains("2. 旅行账本"))
+            );
+        verify(qqOfficialBotClient)
+            .sendReply(org.mockito.ArgumentMatchers.eq(switchEvent), org.mockito.ArgumentMatchers.contains("已切换到当前账本「旅行账本」"));
+    }
+
+    @Test
+    void shouldListLedgersEvenWhenDefaultLedgerIsNotConfigured() throws Exception {
+        properties.setDefaultLedgerId(0L);
+        User user = new User();
+        user.setLogin("admin");
+        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
+
+        QqOfficialEvent listEvent = c2cMessage("账本列表");
+        service.handleEvent(listEvent);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(listEvent),
+                org.mockito.ArgumentMatchers.argThat(reply ->
+                    reply.contains("当前可用账本如下") &&
+                    reply.contains("1. 日常账本") &&
+                    reply.contains("2. 旅行账本") &&
+                    !reply.contains("\"mood\"")
+                )
+            );
+        verifyNoInteractions(aiAssistantService);
+    }
+
+    @Test
     void shouldIgnoreNonMessageEvent() {
         QqOfficialEvent event = new QqOfficialEvent();
         event.setT("READY");

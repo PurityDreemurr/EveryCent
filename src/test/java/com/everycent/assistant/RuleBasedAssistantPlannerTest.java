@@ -28,9 +28,11 @@ class RuleBasedAssistantPlannerTest {
         var transactionQueryAction = planner.plan(null, request("查一下本月账单", 10L)).getActions().get(0);
         assertThat(transactionQueryAction.getName()).isEqualTo("transaction.list");
         assertThat(transactionQueryAction.getArguments()).containsEntry("includeAll", true).containsEntry("size", 100);
+        assertThat(planner.plan(null, request("查一下本月帐单", 10L)).getActions().get(0).getName()).isEqualTo("transaction.list");
         assertThat(planner.plan(null, request("这个月预算还剩多少", 10L)).getActions().get(0).getName()).isEqualTo("budget.status");
         assertThat(planner.plan(null, request("这个月预算设成3000，80%提醒", 10L)).getActions().get(0).getName()).isEqualTo("budget.create");
         assertThat(planner.plan(null, request("导出本月账单", 10L)).getActions().get(0).getName()).isEqualTo("export.transactions");
+        assertThat(planner.plan(null, request("导出本月帐单", 10L)).getActions().get(0).getName()).isEqualTo("export.transactions");
     }
 
     @Test

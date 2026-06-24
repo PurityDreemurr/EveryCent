@@ -67,25 +67,24 @@ public class QqBotAssistantBridgeService {
         if (!StringUtils.hasText(text)) {
             return;
         }
-        if (properties.getDefaultLedgerId() == null || properties.getDefaultLedgerId() <= 0) {
-            throw new BadRequestAlertException("QQ bot default ledger id is not configured", ENTITY_NAME, "defaultledgernotconfigured");
-        }
-
         User user = defaultUser();
         String senderKey = senderKey(event);
         LedgerSelection selection = parseLedgerSelection(text, senderKey);
         if (selection != null) {
-            qqOfficialBotClient.sendReply(event, switchLedger(user, senderKey, selection.ledger()));
+            sendControlReply(event, switchLedger(user, senderKey, selection.ledger()));
             return;
         }
         if (isLedgerListRequest(text)) {
-            qqOfficialBotClient.sendReply(event, renderLedgerList(user, senderKey));
+            sendControlReply(event, renderLedgerList(user, senderKey));
             return;
         }
         LedgerSwitchRequest switchRequest = parseLedgerSwitch(text);
         if (switchRequest != null) {
-            qqOfficialBotClient.sendReply(event, switchLedger(user, senderKey, switchRequest.ledgerName()));
+            sendControlReply(event, switchLedger(user, senderKey, switchRequest.ledgerName()));
             return;
+        }
+        if (properties.getDefaultLedgerId() == null || properties.getDefaultLedgerId() <= 0) {
+            throw new BadRequestAlertException("QQ bot default ledger id is not configured", ENTITY_NAME, "defaultledgernotconfigured");
         }
 
         LedgerDTO currentLedger = currentLedger(user, senderKey);
@@ -148,7 +147,7 @@ public class QqBotAssistantBridgeService {
 
     private String switchLedger(User user, String senderKey, LedgerDTO ledger) {
         if (ledger == null || ledger.getId() == null) {
-            return "这个账本信息不完整，暂时切不过去喵。 {\"mood\":45,\"emoji\":\"calm\"}";
+            return "这个序号没有对应到可用账本，先重新问我账本列表再选一次喵。 {\"mood\":45,\"emoji\":\"calm\"}";
         }
         ledgerService.findOne(user, ledger.getId());
         currentLedgerIds.put(senderKey, ledger.getId());
@@ -187,9 +186,21 @@ public class QqBotAssistantBridgeService {
         }
         String normalized = text.trim();
         return (
-            (normalized.contains("账本") || normalized.contains("账单")) &&
-            (normalized.contains("哪些") || normalized.contains("什么") || normalized.contains("列表") || normalized.contains("都有") || normalized.contains("所有"))
-        ) || normalized.matches("^(列出|查看|显示).*(账本|账单).*$");
+            containsLedgerWord(normalized) &&
+            (
+                normalized.contains("哪些") ||
+                normalized.contains("什么") ||
+                normalized.contains("列表") ||
+                normalized.contains("都有") ||
+                normalized.contains("所有") ||
+                normalized.contains("可用") ||
+                normalized.contains("几个")
+            )
+        ) || normalized.matches("^(列出|查看|显示|看看).*[账帐][本单].*$");
+    }
+
+    private boolean containsLedgerWord(String text) {
+        return StringUtils.hasText(text) && (text.contains("账本") || text.contains("账单") || text.contains("帐本") || text.contains("帐单"));
     }
 
     private String renderLedgerList(User user, String senderKey) {
@@ -202,7 +213,10 @@ public class QqBotAssistantBridgeService {
             return "你现在还没有可用账本喵。 {\"mood\":40,\"emoji\":\"calm\"}";
         }
         pendingLedgerSelections.put(senderKey, ledgers);
-        Long currentLedgerId = currentLedgerIds.getOrDefault(senderKey, properties.getDefaultLedgerId());
+        Long currentLedgerId = currentLedgerIds.get(senderKey);
+        if (currentLedgerId == null && properties.getDefaultLedgerId() != null && properties.getDefaultLedgerId() > 0) {
+            currentLedgerId = properties.getDefaultLedgerId();
+        }
         List<String> lines = new java.util.ArrayList<>();
         lines.add("当前可用账本如下，回复序号就能切换喵：");
         for (int i = 0; i < ledgers.size(); i++) {
@@ -229,13 +243,24 @@ public class QqBotAssistantBridgeService {
         return new LedgerSelection(ledgers.get(index));
     }
 
+    private void sendControlReply(QqOfficialEvent event, String message) {
+        qqOfficialBotClient.sendReply(event, cleanStateTail(message));
+    }
+
+    private String cleanStateTail(String message) {
+        if (!StringUtils.hasText(message)) {
+            return message;
+        }
+        return message.replaceAll("\\s*\\{\\s*\"mood\"\\s*:\\s*\\d+\\s*,\\s*\"emoji\"\\s*:\\s*\"[^\"]+\"\\s*}\\s*$", "").trim();
+    }
+
     private List<Pattern> switchPatterns() {
         return List.of(
-            Pattern.compile("切换(?:到|为)?账[本单][「『“\\\"]?(.+?)[」』”\\\"]?$"),
-            Pattern.compile("切换(?:到|为)[「『“\\\"]?(.+?)[」』”\\\"]?账[本单]?$"),
-            Pattern.compile("(?:更换|换)(?:到|为)?账[本单][「『“\\\"]?(.+?)[」』”\\\"]?$"),
-            Pattern.compile("(?:使用|用)账[本单][「『“\\\"]?(.+?)[」』”\\\"]?$"),
-            Pattern.compile("(?:使用|用)[「『“\\\"]?(.+?)[」』”\\\"]?账[本单]$")
+            Pattern.compile("切换(?:到|为)?[账帐][本单][「『“\\\"]?(.+?)[」』”\\\"]?$"),
+            Pattern.compile("切换(?:到|为)[「『“\\\"]?(.+?)[」』”\\\"]?[账帐][本单]?$"),
+            Pattern.compile("(?:更换|换)(?:到|为)?[账帐][本单][「『“\\\"]?(.+?)[」』”\\\"]?$"),
+            Pattern.compile("(?:使用|用)[账帐][本单][「『“\\\"]?(.+?)[」』”\\\"]?$"),
+            Pattern.compile("(?:使用|用)[「『“\\\"]?(.+?)[」』”\\\"]?[账帐][本单]$")
         );
     }
 
@@ -292,6 +317,7 @@ public class QqBotAssistantBridgeService {
         }
         return StringUtils.hasText(text) && (
             text.contains("账") ||
+            text.contains("帐") ||
             text.contains("预算") ||
             text.contains("导出") ||
             text.contains("收入") ||

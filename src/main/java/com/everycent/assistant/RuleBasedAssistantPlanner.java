@@ -142,7 +142,7 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
     }
 
     private boolean isExportRequest(String text) {
-        return containsAny(text, "导出", "下载账单", "下载明细");
+        return containsAny(text, "导出", "下载账单", "下载帐单", "下载明细");
     }
 
     private boolean isBudgetStatusRequest(String text) {
@@ -154,7 +154,7 @@ public class RuleBasedAssistantPlanner implements AssistantPlanner {
     }
 
     private boolean isTransactionQuery(String text) {
-        return containsAny(text, "查账", "查一下", "账单", "明细", "花了多少", "消费记录", "支出记录", "收入记录");
+        return containsAny(text, "查账", "查帐", "查一下", "账单", "帐单", "明细", "花了多少", "消费记录", "支出记录", "收入记录");
     }
 
     private boolean isTechnicalHelpRequest(String text) {
