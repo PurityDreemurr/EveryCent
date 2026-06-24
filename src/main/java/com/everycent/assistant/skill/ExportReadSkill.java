@@ -6,6 +6,7 @@ import com.everycent.service.ExportDownloadTokenService;
 import com.everycent.service.ExcelExportService;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+import tech.jhipster.config.JHipsterProperties;
 
 @Component
 public class ExportReadSkill implements Skill {
@@ -20,16 +21,20 @@ public class ExportReadSkill implements Skill {
 
     private final QqBotProperties qqBotProperties;
 
+    private final JHipsterProperties jHipsterProperties;
+
     public ExportReadSkill(
         ExcelExportService excelExportService,
         SkillCurrentUserResolver currentUserResolver,
         ExportDownloadTokenService exportDownloadTokenService,
-        QqBotProperties qqBotProperties
+        QqBotProperties qqBotProperties,
+        JHipsterProperties jHipsterProperties
     ) {
         this.excelExportService = excelExportService;
         this.currentUserResolver = currentUserResolver;
         this.exportDownloadTokenService = exportDownloadTokenService;
         this.qqBotProperties = qqBotProperties;
+        this.jHipsterProperties = jHipsterProperties;
     }
 
     @Override
@@ -83,10 +88,22 @@ public class ExportReadSkill implements Skill {
     }
 
     private String absoluteUrl(String path) {
-        String baseUrl = qqBotProperties == null ? null : qqBotProperties.getPublicBaseUrl();
+        String baseUrl = firstText(
+            qqBotProperties == null ? null : qqBotProperties.getPublicBaseUrl(),
+            jHipsterProperties == null || jHipsterProperties.getMail() == null ? null : jHipsterProperties.getMail().getBaseUrl()
+        );
         if (baseUrl == null || baseUrl.isBlank()) {
             return path;
         }
         return baseUrl.replaceAll("/+$", "") + path;
+    }
+
+    private String firstText(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 }
