@@ -15,9 +15,13 @@ import com.everycent.service.LedgerPermissionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,6 +31,7 @@ import org.springframework.util.StringUtils;
 public class AssistantConversationStore {
 
     private static final int TITLE_MAX_LENGTH = 200;
+    private static final Duration CONVERSATION_IDLE_TIMEOUT = Duration.ofHours(24);
     private static final TypeReference<List<AssistantResponseCardDTO>> CARD_LIST_TYPE = new TypeReference<>() {};
     private static final Set<String> ALLOWED_AI_EMOTIONS = Set.of(
         "surprised",
@@ -72,6 +77,21 @@ public class AssistantConversationStore {
         return conversationRepository.save(conversation).getId();
     }
 
+    @Transactional(readOnly = true)
+    public List<ChatHistoryMessageDTO> recentMessagesForPrompt(User user, ChatRequestDTO request) {
+        if (user == null || request == null || request.getLedgerId() == null || request.getConversationId() == null) {
+            return List.of();
+        }
+        Ledger ledger = readableLedger(user, request.getLedgerId());
+        AiConversation conversation = findConversation(user, ledger, request.getConversationId());
+        if (conversation == null) {
+            return List.of();
+        }
+        List<AiMessage> messages = new ArrayList<>(messageRepository.findTop12ByConversationOrderByCreatedDateDescIdDesc(conversation));
+        Collections.reverse(messages);
+        return messages.stream().map(this::toMessageDTO).toList();
+    }
+
     public Long appendExchange(User user, ChatRequestDTO request, ChatResponseDTO response) {
         if (user == null || request == null || response == null || request.getLedgerId() == null || response.getConversationId() == null) {
             return response == null ? null : response.getMessageId();
@@ -102,6 +122,7 @@ public class AssistantConversationStore {
         Ledger ledger = readableLedger(user, ledgerId);
         return conversationRepository
             .findFirstByUserAndLedgerAndArchivedFalseOrderByLastMessageDateDescIdDesc(user, ledger)
+            .filter(this::isActiveConversation)
             .map(conversation -> toHistory(conversation, ledgerId))
             .orElse(history);
     }
@@ -122,9 +143,15 @@ public class AssistantConversationStore {
 
     private AiConversation findConversation(User user, Ledger ledger, Long conversationId) {
         if (conversationId != null) {
-            return conversationRepository.findOneByIdAndUserAndLedgerAndArchivedFalse(conversationId, user, ledger).orElse(null);
+            return conversationRepository
+                .findOneByIdAndUserAndLedgerAndArchivedFalse(conversationId, user, ledger)
+                .filter(this::isActiveConversation)
+                .orElse(null);
         }
-        return conversationRepository.findFirstByUserAndLedgerAndArchivedFalseOrderByLastMessageDateDescIdDesc(user, ledger).orElse(null);
+        return conversationRepository
+            .findFirstByUserAndLedgerAndArchivedFalseOrderByLastMessageDateDescIdDesc(user, ledger)
+            .filter(this::isActiveConversation)
+            .orElse(null);
     }
 
     private AiConversation newConversation(User user, Ledger ledger, String message) {
@@ -133,6 +160,7 @@ public class AssistantConversationStore {
         conversation.setUser(user);
         conversation.setLedger(ledger);
         conversation.setTitle(title(message));
+        conversation.setSessionKey(UUID.randomUUID().toString());
         conversation.setCreatedDate(now);
         conversation.setLastMessageDate(now);
         conversation.setLastModifiedDate(now);
@@ -185,6 +213,17 @@ public class AssistantConversationStore {
         dto.setCreatedAt(message.getCreatedDate() == null ? null : message.getCreatedDate().toString());
         dto.setCards(cards(message.getCardsJson()));
         return dto;
+    }
+
+    private boolean isActiveConversation(AiConversation conversation) {
+        if (conversation == null || Boolean.TRUE.equals(conversation.getArchived())) {
+            return false;
+        }
+        Instant lastMessageDate = conversation.getLastMessageDate();
+        if (lastMessageDate == null) {
+            return true;
+        }
+        return lastMessageDate.isAfter(Instant.now().minus(CONVERSATION_IDLE_TIMEOUT));
     }
 
     private Ledger readableLedger(User user, Long ledgerId) {

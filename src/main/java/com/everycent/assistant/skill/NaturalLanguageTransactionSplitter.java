@@ -125,6 +125,6 @@ public class NaturalLanguageTransactionSplitter {
         if (text == null) {
             return "";
         }
-        return text.trim().replaceAll("^(还有|再加|另外|另|和)\\s*", "").replaceAll("\\s*(帮我)?(记账|记一下|入账|记录一下)$", "");
+        return text.trim().replaceAll("^(还有|再加|另外|另|和)\\s*", "").replaceAll("\\s*(帮我)?(记账|记帐|记一下|入账|入帐|记录一下)$", "");
     }
 }

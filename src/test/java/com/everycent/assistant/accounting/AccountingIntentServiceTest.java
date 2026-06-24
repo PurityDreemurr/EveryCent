@@ -12,14 +12,18 @@ class AccountingIntentServiceTest {
     void shouldAcceptExplicitAccountingRequests() {
         assertThat(service.isAccountingIntent("帮我记一下外卖 28")).isTrue();
         assertThat(service.isAccountingIntent("午饭28，记到账本1")).isTrue();
+        assertThat(service.isAccountingIntent("午饭28，记到帐本1")).isTrue();
         assertThat(service.isAccountingIntent("记录一下今天这笔支出")).isTrue();
+        assertThat(service.isAccountingIntent("帮我记帐外卖 28")).isTrue();
     }
 
     @Test
     void shouldAcceptAmountWithFinanceAction() {
         assertThat(service.isAccountingIntent("外卖花了28，结果还送错了")).isTrue();
         assertThat(service.isAccountingIntent("工资到账5000")).isTrue();
+        assertThat(service.isAccountingIntent("工资到帐5000")).isTrue();
         assertThat(service.isAccountingIntent("报销 120 元")).isTrue();
+        assertThat(service.isAccountingIntent("转帐 120 元")).isTrue();
         assertThat(service.isAccountingIntent("买了咖啡18块")).isTrue();
     }
 

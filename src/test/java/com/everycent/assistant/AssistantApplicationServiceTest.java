@@ -1,9 +1,11 @@
 package com.everycent.assistant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.everycent.assistant.dto.ChatHistoryMessageDTO;
 import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.skill.AssistantAction;
 import com.everycent.assistant.skill.AssistantIntent;
@@ -12,8 +14,11 @@ import com.everycent.assistant.skill.SkillExecutionContext;
 import com.everycent.assistant.skill.SkillResult;
 import com.everycent.assistant.skill.SkillRouter;
 import com.everycent.domain.User;
+import com.everycent.domain.enumeration.TransactionType;
 import com.everycent.llm.dto.NaturalLanguageTransactionCreateResultDTO;
+import com.everycent.service.dto.TransactionRecordDTO;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 class AssistantApplicationServiceTest {
@@ -40,7 +45,7 @@ class AssistantApplicationServiceTest {
 
         var response = service.chat(user(), request);
 
-        assertThat(response.getAssistantMessage()).isEqualTo("已记账。");
+        assertThat(response.getAssistantMessage()).contains("已记账").contains("喵").contains("{\"mood\"");
         assertThat(response.getResponseType()).isEqualTo("transaction_created");
         assertThat(response.getCards()).hasSize(1);
         assertThat(response.getCards().get(0).getType()).isEqualTo("transaction_created");
@@ -72,10 +77,39 @@ class AssistantApplicationServiceTest {
 
         var response = service.chat(user(), request);
 
-        assertThat(response.getAssistantMessage()).isEqualTo("已记账 2 笔。");
+        assertThat(response.getAssistantMessage()).contains("已记账 2 笔").contains("喵").contains("{\"mood\"");
         assertThat(response.getCards().get(0).getType()).isEqualTo("transaction_created");
         assertThat(response.getAccountingCapture().getCreated()).isTrue();
         assertThat(response.getAccountingCapture().getTransactionId()).isEqualTo(99L);
+    }
+
+    @Test
+    void shouldRenderRecentTransactionCorrection() {
+        AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
+        SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
+        AssistantApplicationService service = new AssistantApplicationService(
+            planner,
+            router,
+            new ResponseRenderer(),
+            org.mockito.Mockito.mock(AiAssistantOrchestrator.class),
+            org.mockito.Mockito.mock(AssistantConversationStore.class)
+        );
+        ChatRequestDTO request = request("对了，今天中午的午餐还花了5元买水，应该是20元", 10L);
+        TransactionRecordDTO updated = new TransactionRecordDTO();
+        updated.setId(99L);
+        updated.setDescription("午餐");
+        updated.setAmount(new BigDecimal("20.00"));
+        updated.setType(TransactionType.EXPENSE);
+        updated.setTransactionDate(LocalDate.of(2026, 6, 24));
+        when(planner.plan(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(plan("transaction.correct_recent"));
+        when(router.route(org.mockito.ArgumentMatchers.any(AssistantAction.class), org.mockito.ArgumentMatchers.any(SkillExecutionContext.class)))
+            .thenReturn(SkillResult.success("transaction.correct_recent", updated));
+
+        var response = service.chat(user(), request);
+
+        assertThat(response.getAssistantMessage()).contains("已修改午餐为20元").contains("喵").contains("{\"mood\"");
+        assertThat(response.getResponseType()).isEqualTo("transaction_updated");
+        assertThat(response.getCards().get(0).getType()).isEqualTo("transaction_updated");
     }
 
     @Test
@@ -97,8 +131,30 @@ class AssistantApplicationServiceTest {
         var response = service.chat(user(), request);
 
         assertThat(response.getResponseType()).isEqualTo("policy_blocked");
-        assertThat(response.getAssistantMessage()).contains("不能由 AI 助手执行");
+        assertThat(response.getAssistantMessage()).contains("不能直接替你下手").contains("喵").contains("{\"mood\"");
         assertThat(response.getCards().get(0).getMessage()).contains("手动删除");
+    }
+
+    @Test
+    void shouldRenderTechnicalHelpBlockWithRoleplayTone() {
+        AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
+        SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
+        AssistantApplicationService service = new AssistantApplicationService(
+            planner,
+            router,
+            new ResponseRenderer(),
+            org.mockito.Mockito.mock(AiAssistantOrchestrator.class),
+            org.mockito.Mockito.mock(AssistantConversationStore.class)
+        );
+        ChatRequestDTO request = request("帮我写一段 Java 代码", 10L);
+        when(planner.plan(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(plan("assistant.technical_help"));
+        when(router.route(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+            .thenReturn(SkillResult.blocked("assistant.technical_help", "Action forbidden"));
+
+        var response = service.chat(user(), request);
+
+        assertThat(response.getResponseType()).isEqualTo("policy_blocked");
+        assertThat(response.getAssistantMessage()).contains("不能接招喵").contains("记账").contains("{\"mood\"");
     }
 
     @Test
@@ -106,25 +162,41 @@ class AssistantApplicationServiceTest {
         AssistantPlanner planner = org.mockito.Mockito.mock(AssistantPlanner.class);
         SkillRouter router = org.mockito.Mockito.mock(SkillRouter.class);
         AiAssistantOrchestrator orchestrator = org.mockito.Mockito.mock(AiAssistantOrchestrator.class);
+        AssistantConversationStore conversationStore = org.mockito.Mockito.mock(AssistantConversationStore.class);
         AssistantApplicationService service = new AssistantApplicationService(
             planner,
             router,
             new ResponseRenderer(),
             orchestrator,
-            org.mockito.Mockito.mock(AssistantConversationStore.class)
+            conversationStore
         );
         ChatRequestDTO request = request("我今天有点无聊", 10L);
         AssistantPlan dailyChatPlan = new AssistantPlan();
         dailyChatPlan.setIntent(AssistantIntent.DAILY_CHAT);
         com.everycent.assistant.dto.ChatResponseDTO llmResponse = new com.everycent.assistant.dto.ChatResponseDTO();
-        llmResponse.setAssistantMessage("那我陪你待一会儿。{\"mood\":40,\"emoji\":\"peace\"}");
+        llmResponse.setAssistantMessage("那我陪你待一会儿。{\"mood\":40,\"emoji\":\"calm\"}");
+        ChatHistoryMessageDTO previousMessage = new ChatHistoryMessageDTO();
+        previousMessage.setRole("user");
+        previousMessage.setContent("我今天心情不太好");
+        when(conversationStore.ensureConversation(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(88L);
+        when(conversationStore.recentMessagesForPrompt(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request)))
+            .thenReturn(java.util.List.of(previousMessage));
         when(planner.plan(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(dailyChatPlan);
-        when(orchestrator.chat(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request))).thenReturn(llmResponse);
+        when(
+                orchestrator.chat(
+                    org.mockito.ArgumentMatchers.any(),
+                    org.mockito.ArgumentMatchers.eq(request),
+                    org.mockito.ArgumentMatchers.eq(java.util.List.of(previousMessage))
+                )
+            )
+            .thenReturn(llmResponse);
 
         var response = service.chat(user(), request);
 
+        assertThat(request.getConversationId()).isEqualTo(88L);
         assertThat(response.getAssistantMessage()).contains("陪你");
         assertThat(response.getResponseType()).isEqualTo("message");
+        verify(conversationStore).recentMessagesForPrompt(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request));
         verifyNoInteractions(router);
     }
 

@@ -11,10 +11,10 @@ public class AccountingIntentService {
         "(?i)(\\d+(\\.\\d+)?\\s*(元|块|rmb|¥)?|[一二两三四五六七八九十百千万]+[块元])"
     );
     private static final Pattern EXPLICIT_ACCOUNTING_PATTERN = Pattern.compile(
-        ".*(记账|帮我记|帮忙记|记一下|记一笔|记录一下|入账|记到账|记到.+账本).*"
+        ".*(记账|记帐|帮我记|帮忙记|记一下|记一笔|记录一下|入账|入帐|记到账|记到帐|记到.+[账帐]本).*"
     );
     private static final Pattern FINANCE_ACTION_PATTERN = Pattern.compile(
-        ".*(花了|花掉|付了|付款|买了|消费|支出|收入|工资|到账|退款|报销|转账|收了).*"
+        ".*(花了|花掉|付了|付款|买了|消费|支出|收入|工资|到账|到帐|退款|报销|转账|转帐|收了).*"
     );
     private static final Pattern SHORT_TRANSACTION_ITEM_PATTERN = Pattern.compile(
         ".*[\\p{IsHan}A-Za-z]{1,12}\\s*\\d+(\\.\\d+)?\\s*(元|块|rmb|RMB|¥)?.*"

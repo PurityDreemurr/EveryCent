@@ -2,6 +2,7 @@ package com.everycent;
 
 import com.everycent.config.ApplicationProperties;
 import com.everycent.config.CRLFLogConverter;
+import com.everycent.config.QqBotProperties;
 import jakarta.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -20,7 +21,7 @@ import tech.jhipster.config.DefaultProfileUtil;
 import tech.jhipster.config.JHipsterConstants;
 
 @SpringBootApplication
-@EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class })
+@EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class, QqBotProperties.class })
 public class EveryCentApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(EveryCentApp.class);

@@ -2,6 +2,7 @@ package com.everycent.assistant.prompt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.everycent.assistant.dto.ChatHistoryMessageDTO;
 import com.everycent.assistant.emotion.AiEmotionPromptAdapter;
 import com.everycent.assistant.emotion.AiEmotionStateModel;
 import com.everycent.assistant.emotion.AiEmotionTransitionResult;
@@ -66,18 +67,36 @@ class AssistantPromptBuilderMecotStyleTest {
     void shouldBuildFunctionalEveryCentAssistantPrompt() {
         String prompt = new AssistantPromptBuilder().buildSingleTurnPrompt("嗯。", "中立", List.of());
 
-        assertThat(prompt).contains("你是 EveryCent 财务助手");
-        assertThat(prompt).contains("功能型记账与预算辅助 AI");
-        assertThat(prompt).contains("优先帮助用户记录账单、识别收支、整理备注、提醒预算风险");
-        assertThat(prompt).contains("不要角色扮演，不要拟人化表演");
+        assertThat(prompt).contains("你是喵喵，一只来自《宝可梦》世界、会说人类语言的喵喵");
+        assertThat(prompt).contains("你长期与火箭队成员一起行动，聪明、机灵、爱吐槽");
+        assertThat(prompt).contains("当用户明确表达查账、记账、预算或导出意图时，帮助处理财务任务");
+        assertThat(prompt).contains("当用户只是普通聊天、表达情绪、请求安慰、闲聊或提问时，以喵喵身份回应当前话题");
+        assertThat(prompt).contains("当用户提出技术、代码、翻译、解释、改写等非财务任务时");
+        assertThat(prompt).contains("委婉拒绝");
+        assertThat(prompt).contains("普通聊天时不要主动把话题转回记账、查账、预算或导出");
+        assertThat(prompt).contains("用户请求安慰时，先承认感受、给一点稳定感");
+        assertThat(prompt).contains("日常对话确保角色生动活泼");
         assertThat(prompt).contains("当用户输入包含明确账单信息时，优先处理记账");
         assertThat(prompt).contains("如果用户只是日常聊天或抱怨，且没有金额或明确记账意图，不要主动记账");
-        assertThat(prompt).contains("不要出现“皓尾”“本龙”“龙”“龙宫”“翅膀”“尾巴”等角色扮演内容");
+        assertThat(prompt).contains("每次自然语言回复至少出现一次“喵”");
+        assertThat(prompt).contains("自然语言回复的最后一句必须以“喵”结尾");
         assertThat(prompt).contains("{\"mood\": 数字, \"emoji\": \"枚举值\"}");
-        assertThat(prompt).doesNotContain("皓尾活泼、认真、嘴硬心软");
-        assertThat(prompt).doesNotContain("幼年蓝色羽龙");
-        assertThat(prompt).doesNotContain("皓尾可以自称");
-        assertThat(prompt).doesNotContain("每次回复最多使用一个龙族元素");
+        assertThat(prompt).contains("surprised,happy,pleased,fearful,angry,grieved,sad,disgusted,depressed,tired,calm,relieved");
+    }
+
+    @Test
+    void shouldIncludeCurrentLedgerConversationHistoryInPrompt() {
+        ChatHistoryMessageDTO previousUser = historyMessage("user", "我今天心情不太好");
+        ChatHistoryMessageDTO previousAssistant = historyMessage("assistant", "听起来今天有点难熬，我在。 {\"mood\":35,\"emoji\":\"calm\"}");
+
+        String prompt = new AssistantPromptBuilder()
+            .buildSingleTurnPrompt("你还记得我刚才说什么吗", "中立", List.of(), List.of(previousUser, previousAssistant));
+
+        assertThat(prompt).contains("[当前账本会话历史]");
+        assertThat(prompt).contains("用户：我今天心情不太好");
+        assertThat(prompt).contains("AI：听起来今天有点难熬，我在。");
+        assertThat(prompt).contains("刚才、上面、它、那个、继续、你还记得吗");
+        assertThat(prompt).doesNotContain("{\"mood\":35");
     }
 
     private EmotionTag emotionTag(String code) {
@@ -87,5 +106,12 @@ class AssistantPromptBuilderMecotStyleTest {
         tag.setValence(EmotionValence.NEGATIVE);
         tag.setSystemDefault(true);
         return tag;
+    }
+
+    private ChatHistoryMessageDTO historyMessage(String role, String content) {
+        ChatHistoryMessageDTO message = new ChatHistoryMessageDTO();
+        message.setRole(role);
+        message.setContent(content);
+        return message;
     }
 }

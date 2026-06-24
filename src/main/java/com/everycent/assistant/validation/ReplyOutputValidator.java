@@ -18,16 +18,18 @@ public class ReplyOutputValidator {
     );
 
     private static final Set<String> VALID_EMOJIS = Set.of(
-        "excited",
-        "happy",
         "surprised",
-        "sad",
-        "fear",
-        "shy",
-        "disgust",
+        "happy",
+        "pleased",
+        "fearful",
         "angry",
-        "speechless",
-        "peace"
+        "grieved",
+        "sad",
+        "disgusted",
+        "depressed",
+        "tired",
+        "calm",
+        "relieved"
     );
 
     private static final List<String> FORBIDDEN_PHRASES = List.of(
@@ -78,6 +80,19 @@ public class ReplyOutputValidator {
 
     private static final List<String> ACCOUNTING_WORDS = List.of("记账", "账单", "消费", "收入", "报数", "入账", "支出");
 
+    private static final List<String> ACCOUNTING_PUSH_MARKERS = List.of(
+        "直接报数",
+        "顺手记账",
+        "要查账",
+        "要记账",
+        "查账、记账",
+        "记账、查账",
+        "消费或收入",
+        "想起什么消费",
+        "告诉我要查账",
+        "告诉我要记账"
+    );
+
     private static final List<String> ADVICE_MARKERS = List.of(
         "要不",
         "建议",
@@ -93,10 +108,6 @@ public class ReplyOutputValidator {
         "去阳台",
         "下楼"
     );
-
-    private static final List<String> ROLE_OVERLOAD_WORDS = List.of("翅膀", "尾巴", "龙宫", "换羽期", "逆潮", "小海兽", "龙息", "鳞片");
-
-    private static final List<String> ROLEPLAY_LEAK_PHRASES = List.of("皓尾", "本龙", "幼龙", "羽龙", "龙族", "龙宫", "翅膀", "尾巴", "鳞片", "龙息");
 
     private static final List<String> INVALIDATE_FEELING_PHRASES = List.of(
         "这理由本龙可不信",
@@ -159,9 +170,7 @@ public class ReplyOutputValidator {
         validateBelittlingPraise(reply, resolvedScene, violations);
         validateAccountingLeak(reply, resolvedScene, violations);
         validateAdviceOveruse(reply, resolvedScene, violations);
-        validateRoleOverload(reply, violations);
         validateSemanticRisks(reply, resolvedScene, violations);
-        validateRoleplayLeak(reply, violations);
 
         return violations.isEmpty() ? ReplyValidationResult.pass() : ReplyValidationResult.fail(violations);
     }
@@ -236,6 +245,10 @@ public class ReplyOutputValidator {
         if (scene == DialogueScene.ACCOUNTING) {
             return;
         }
+        if (scene == DialogueScene.DAILY_CHAT || scene == DialogueScene.TASK_HELP || scene == DialogueScene.UNKNOWN) {
+            addViolationOnAny(reply, ACCOUNTING_PUSH_MARKERS, "ACCOUNTING_PUSH", violations);
+            return;
+        }
         for (String word : ACCOUNTING_WORDS) {
             if (reply.contains(word)) {
                 violations.add("ACCOUNTING_LEAK:" + word);
@@ -257,22 +270,6 @@ public class ReplyOutputValidator {
         if (isEmotionScene(scene) && count >= 2) {
             violations.add("ADVICE_OVERUSE");
         }
-    }
-
-    private void validateRoleOverload(String reply, List<String> violations) {
-        int count = 0;
-        for (String word : ROLE_OVERLOAD_WORDS) {
-            if (reply.contains(word)) {
-                count++;
-            }
-        }
-        if (count >= 2) {
-            violations.add("ROLE_OVERLOAD");
-        }
-    }
-
-    private void validateRoleplayLeak(String reply, List<String> violations) {
-        addViolationOnAny(reply, ROLEPLAY_LEAK_PHRASES, "ROLEPLAY_LEAK", violations);
     }
 
     private boolean isEmotionScene(DialogueScene scene) {
