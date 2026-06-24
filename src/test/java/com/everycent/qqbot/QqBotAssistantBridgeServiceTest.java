@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -123,6 +124,37 @@ class QqBotAssistantBridgeServiceTest {
         verify(qqOfficialBotClient).sendReply(org.mockito.ArgumentMatchers.eq(event), replyCaptor.capture());
         assertThat(replyCaptor.getValue()).contains("账单明细：共 12 条").contains("12. 2026-06-12 支出 第12笔 ¥12.00 [餐饮]");
         assertThat(replyCaptor.getValue()).doesNotContain("前端查看");
+    }
+
+    @Test
+    void shouldRenderExportDownloadLinkForQqReply() throws Exception {
+        User user = new User();
+        user.setLogin("admin");
+        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
+        ChatResponseDTO response = new ChatResponseDTO();
+        response.setAssistantMessage("导出结果准备好了，链接在下面喵。{\"mood\":42,\"emoji\":\"calm\"}");
+        response.setCards(
+            List.of(
+                new AssistantResponseCardDTO(
+                    "download_result",
+                    "导出已准备",
+                    "账单导出已准备好。",
+                    Map.of("downloadUrl", "https://everycent.example.com/api/public/exports/transactions/token-1", "byteLength", 3)
+                )
+            )
+        );
+        when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class))).thenReturn(response);
+
+        QqOfficialEvent event = c2cMessage("导出本月账单");
+        service.handleEvent(event);
+
+        ArgumentCaptor<String> replyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(qqOfficialBotClient).sendReply(org.mockito.ArgumentMatchers.eq(event), replyCaptor.capture());
+        assertThat(replyCaptor.getValue())
+            .contains("下载链接：https://everycent.example.com/api/public/exports/transactions/token-1")
+            .doesNotContain("byteLength")
+            .doesNotContain("/api/ledgers/10/transactions/export");
     }
 
     @Test

@@ -31,6 +31,8 @@ public class QqBotProperties {
 
     private Long defaultLedgerId;
 
+    private String publicBaseUrl;
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -133,5 +135,13 @@ public class QqBotProperties {
 
     public void setDefaultLedgerId(Long defaultLedgerId) {
         this.defaultLedgerId = defaultLedgerId;
+    }
+
+    public String getPublicBaseUrl() {
+        return publicBaseUrl;
+    }
+
+    public void setPublicBaseUrl(String publicBaseUrl) {
+        this.publicBaseUrl = publicBaseUrl;
     }
 }

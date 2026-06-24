@@ -1,6 +1,8 @@
 package com.everycent.assistant.skill;
 
+import com.everycent.config.QqBotProperties;
 import com.everycent.domain.User;
+import com.everycent.service.ExportDownloadTokenService;
 import com.everycent.service.ExcelExportService;
 import java.util.Map;
 import org.springframework.stereotype.Component;
@@ -14,9 +16,20 @@ public class ExportReadSkill implements Skill {
 
     private final SkillCurrentUserResolver currentUserResolver;
 
-    public ExportReadSkill(ExcelExportService excelExportService, SkillCurrentUserResolver currentUserResolver) {
+    private final ExportDownloadTokenService exportDownloadTokenService;
+
+    private final QqBotProperties qqBotProperties;
+
+    public ExportReadSkill(
+        ExcelExportService excelExportService,
+        SkillCurrentUserResolver currentUserResolver,
+        ExportDownloadTokenService exportDownloadTokenService,
+        QqBotProperties qqBotProperties
+    ) {
         this.excelExportService = excelExportService;
         this.currentUserResolver = currentUserResolver;
+        this.exportDownloadTokenService = exportDownloadTokenService;
+        this.qqBotProperties = qqBotProperties;
     }
 
     @Override
@@ -42,6 +55,8 @@ public class ExportReadSkill implements Skill {
         java.time.LocalDate startDate = args.dateValue("startDate");
         java.time.LocalDate endDate = args.dateValue("endDate");
         byte[] bytes = excelExportService.exportTransactions(user, ledgerId, startDate, endDate);
+        String token = exportDownloadTokenService.create(user.getId(), ledgerId, startDate, endDate);
+        String downloadPath = "/api/public/exports/transactions/" + token;
         return SkillResult.success(
             action.getName(),
             Map.of(
@@ -60,8 +75,18 @@ public class ExportReadSkill implements Skill {
                 "endDate",
                 endDate.toString(),
                 "downloadUrl",
-                "/api/ledgers/" + ledgerId + "/transactions/export?startDate=" + startDate + "&endDate=" + endDate
+                absoluteUrl(downloadPath),
+                "expiresInMinutes",
+                30
             )
         );
+    }
+
+    private String absoluteUrl(String path) {
+        String baseUrl = qqBotProperties == null ? null : qqBotProperties.getPublicBaseUrl();
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return path;
+        }
+        return baseUrl.replaceAll("/+$", "") + path;
     }
 }
