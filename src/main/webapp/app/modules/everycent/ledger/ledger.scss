@@ -205,3 +205,23 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 640px) {
+  .everycent-ledger-page__primary,
+  .everycent-ledger-page__section-header button {
+    width: 100%;
+  }
+
+  .everycent-ledger-page__section-header,
+  .everycent-ledger-page__form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .everycent-ledger-page__actions,
+  .everycent-ledger-page__form-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+}

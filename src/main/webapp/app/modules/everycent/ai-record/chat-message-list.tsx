@@ -250,10 +250,10 @@ const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPrev
       {messages.map(message => (
         <article key={message.id} className={`everycent-chat-message everycent-chat-message--${message.role}`}>
           <div className="everycent-chat-message__avatar">
-            {message.role === 'assistant' ? <img src="/content/images/emotions/surprised.png" alt="EveryCent AI" /> : 'U'}
+            {message.role === 'assistant' ? <img src="/content/images/emotions/surprised.png" alt="喵喵" /> : 'U'}
           </div>
           <div className="everycent-chat-message__body">
-            <strong>{message.role === 'assistant' ? 'EveryCent AI' : '你'}</strong>
+            <strong>{message.role === 'assistant' ? '喵喵' : '你'}</strong>
             <p>{message.role === 'assistant' ? displayMessage(message.content) : message.content}</p>
             {message.preview && (
               <ParsePreviewCard
@@ -279,10 +279,10 @@ const ChatMessageList = ({ confirmingMessageId, loading, messages, onConfirmPrev
       {loading && (
         <article className="everycent-chat-message everycent-chat-message--assistant">
           <div className="everycent-chat-message__avatar">
-            <img src="/content/images/emotions/surprised.png" alt="EveryCent AI" />
+            <img src="/content/images/emotions/surprised.png" alt="喵喵" />
           </div>
           <div className="everycent-chat-message__body">
-            <strong>EveryCent AI</strong>
+            <strong>喵喵</strong>
             <p>正在处理你的请求...</p>
           </div>
         </article>

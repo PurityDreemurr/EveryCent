@@ -264,6 +264,19 @@
     grid-template-columns: 1fr;
   }
 
+  .everycent-budgets-page__item-actions,
+  .everycent-budgets-page__form-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .everycent-budgets-page__item-actions button,
+  .everycent-budgets-page__form-actions button,
+  .everycent-budgets-page__primary {
+    width: 100%;
+  }
+
   .everycent-budgets-page__ai-alert header,
   .everycent-budgets-page__ai-alert footer {
     align-items: flex-start;

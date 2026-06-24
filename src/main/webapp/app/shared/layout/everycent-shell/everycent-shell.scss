@@ -873,27 +873,188 @@
   .everycent-shell,
   .everycent-shell--collapsed {
     grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
   }
 
   .everycent-sidebar {
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem 0.65rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--ec-border);
+    overflow: hidden;
   }
 
-  .everycent-sidebar.is-collapsed .everycent-sidebar__nav {
+  .everycent-sidebar__team {
+    min-height: 0;
+    padding: 0;
+  }
+
+  .everycent-sidebar__team-button {
+    min-height: 40px;
+    width: auto;
+  }
+
+  .everycent-sidebar__mark {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .everycent-sidebar__team-copy {
     display: none;
   }
 
+  .everycent-sidebar__nav {
+    display: flex;
+    gap: 0.35rem;
+    min-width: 0;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .everycent-sidebar__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .everycent-sidebar__group {
+    display: contents;
+  }
+
+  .everycent-sidebar__group-title,
+  .everycent-sidebar__chevron,
+  .everycent-sidebar__badge,
+  .everycent-sidebar__subnav,
+  .everycent-sidebar__flyout {
+    display: none !important;
+  }
+
+  .everycent-sidebar__group-items {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .everycent-sidebar__collapsible {
+    display: contents;
+  }
+
+  .everycent-sidebar__link {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 0 0.75rem;
+    white-space: nowrap;
+  }
+
+  .everycent-sidebar__link span {
+    display: inline;
+  }
+
+  .everycent-sidebar__user {
+    position: relative;
+    padding: 0;
+    border-top: 0;
+  }
+
+  .everycent-sidebar__user-button {
+    justify-content: center;
+    width: 40px;
+    min-height: 40px;
+  }
+
+  .everycent-sidebar__user-copy,
+  .everycent-sidebar__team-caret {
+    display: none;
+  }
+
+  .everycent-sidebar__menu--user {
+    right: 0;
+    bottom: auto;
+    top: calc(100% + 0.5rem);
+    width: min(260px, calc(100vw - 1rem));
+  }
+
+  .everycent-sidebar.is-collapsed .everycent-sidebar__nav {
+    display: flex;
+  }
+
   .everycent-sidebar.is-collapsed .everycent-sidebar__team-copy {
-    display: grid;
+    display: none;
   }
 
   .everycent-sidebar.is-collapsed .everycent-sidebar__team {
     justify-content: flex-start;
   }
 
+  .everycent-shell__main {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .everycent-topbar {
+    position: sticky;
+    top: 53px;
+    z-index: 20;
+    min-height: 52px;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .everycent-topbar__separator {
+    display: none;
+  }
+
+  .everycent-search-button {
+    min-width: 0;
+  }
+
+  .everycent-search-button--grow {
+    flex: 1 1 auto;
+  }
+
+  .everycent-search-button kbd {
+    display: none;
+  }
+
+  .everycent-topbar__actions {
+    gap: 0.35rem;
+  }
+
+  .everycent-topbar__actions .everycent-search-button {
+    display: none;
+  }
+
+  .everycent-topbar__menu {
+    right: 0;
+    width: min(280px, calc(100vw - 1rem));
+  }
+
+  .everycent-shell__content {
+    min-height: auto;
+    padding: 0.75rem;
+    overflow: visible;
+  }
+
   .everycent-page__header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .everycent-page__title {
+    font-size: 1.2rem;
+  }
+
+  .everycent-page__subtitle {
+    font-size: 0.9rem;
   }
 
   .everycent-topnav__links {
