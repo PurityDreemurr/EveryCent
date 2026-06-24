@@ -219,7 +219,7 @@ const Dashboard = () => {
             {
               label: '账本数量',
               value: ledgerLoading ? '加载中' : `${ledgers.length}`,
-              change: ledgerError || '来自 /api/ledgers',
+              change: ledgerError || '当前可用账本',
               icon: 'book' as IconProp,
               tone: 'neutral',
             },
@@ -356,7 +356,7 @@ const Dashboard = () => {
 
       {activeTab === 'analytics' && (
         <div className="everycent-dashboard__tab-panel">
-          <DashboardCard title="财务趋势" description="接口返回的趋势数据。">
+          <DashboardCard title="财务趋势" description="按日期展示收入与支出变化。">
             <AnalyticsChart data={trendData} />
           </DashboardCard>
 
