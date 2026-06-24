@@ -4,9 +4,11 @@ import com.everycent.domain.User;
 import com.everycent.repository.UserRepository;
 import com.everycent.security.SecurityUtils;
 import com.everycent.service.MailService;
+import com.everycent.service.QqBotBindingService;
 import com.everycent.service.UserService;
 import com.everycent.service.dto.AdminUserDTO;
 import com.everycent.service.dto.PasswordChangeDTO;
+import com.everycent.service.dto.QqBotBindingDTO;
 import com.everycent.web.rest.errors.*;
 import com.everycent.web.rest.vm.KeyAndPasswordVM;
 import com.everycent.web.rest.vm.ManagedUserVM;
@@ -40,10 +42,18 @@ public class AccountResource {
 
     private final MailService mailService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    private final QqBotBindingService qqBotBindingService;
+
+    public AccountResource(
+        UserRepository userRepository,
+        UserService userService,
+        MailService mailService,
+        QqBotBindingService qqBotBindingService
+    ) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.qqBotBindingService = qqBotBindingService;
     }
 
     /**
@@ -90,6 +100,16 @@ public class AccountResource {
             .getUserWithAuthorities()
             .map(AdminUserDTO::new)
             .orElseThrow(() -> new AccountResourceException("User could not be found"));
+    }
+
+    @GetMapping("/account/qq-bot-binding")
+    public QqBotBindingDTO getQqBotBinding() {
+        return qqBotBindingService.getOrCreateBinding(currentUser());
+    }
+
+    @DeleteMapping("/account/qq-bot-binding")
+    public QqBotBindingDTO resetQqBotBinding() {
+        return qqBotBindingService.resetBinding(currentUser());
     }
 
     /**
@@ -176,5 +196,11 @@ public class AccountResource {
             password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
             password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
         );
+    }
+
+    private User currentUser() {
+        String userLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccountResourceException("Current user login not found"));
+        return userRepository.findOneByLogin(userLogin).orElseThrow(() -> new AccountResourceException("User could not be found"));
     }
 }

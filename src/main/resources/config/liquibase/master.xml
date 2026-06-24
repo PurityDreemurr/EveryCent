@@ -18,6 +18,7 @@
     <include file="config/liquibase/changelog/20260617000100_add_ai_assistant_mecot_rag_tables.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260620000100_add_ai_chat_ledger_persistence.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260623000100_add_extended_emotion_tags.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260624000100_add_qq_bot_binding.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->

@@ -11,8 +11,8 @@ import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.config.QqBotProperties;
 import com.everycent.domain.User;
-import com.everycent.repository.UserRepository;
 import com.everycent.service.LedgerService;
+import com.everycent.service.QqBotBindingService;
 import com.everycent.service.dto.LedgerDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -26,7 +26,7 @@ import org.mockito.ArgumentCaptor;
 class QqBotAssistantBridgeServiceTest {
 
     private final QqBotProperties properties = properties();
-    private final UserRepository userRepository = org.mockito.Mockito.mock(UserRepository.class);
+    private final QqBotBindingService qqBotBindingService = org.mockito.Mockito.mock(QqBotBindingService.class);
     private final AiAssistantService aiAssistantService = org.mockito.Mockito.mock(AiAssistantService.class);
     private final QqOfficialBotClient qqOfficialBotClient = org.mockito.Mockito.mock(QqOfficialBotClient.class);
     private final LedgerService ledgerService = org.mockito.Mockito.mock(LedgerService.class);
@@ -34,7 +34,7 @@ class QqBotAssistantBridgeServiceTest {
     private final QqAssistantReplyRenderer replyRenderer = new QqAssistantReplyRenderer(objectMapper);
     private final QqBotAssistantBridgeService service = new QqBotAssistantBridgeService(
         properties,
-        userRepository,
+        qqBotBindingService,
         aiAssistantService,
         qqOfficialBotClient,
         replyRenderer,
@@ -45,7 +45,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldSendAssistantRawMessageBackToQqOfficialBot() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已为您查询账单。{\"mood\":50,\"emoji\":\"peace\"}");
@@ -65,7 +65,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldRenderQueryCardDataForQqReply() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已查询账单。");
@@ -108,7 +108,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldRenderAllTransactionRowsForQqReply() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已查询账单。");
@@ -130,7 +130,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldRenderExportDownloadLinkForQqReply() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("导出结果准备好了，链接在下面喵。{\"mood\":42,\"emoji\":\"calm\"}");
@@ -161,7 +161,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldSwitchLedgerByNaturalLanguageAndUseItForNextRequest() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
@@ -187,7 +187,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldListLedgersAndSwitchByReplyingIndex() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
@@ -220,7 +220,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldRecognizeLedgerTypoForListAndSwitchCommands() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
         when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
 
@@ -243,7 +243,7 @@ class QqBotAssistantBridgeServiceTest {
         properties.setDefaultLedgerId(0L);
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
 
         QqOfficialEvent listEvent = c2cMessage("账本列表");
@@ -263,13 +263,41 @@ class QqBotAssistantBridgeServiceTest {
     }
 
     @Test
+    void shouldPromptWhenQqOpenIdIsNotBound() throws Exception {
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.empty());
+
+        QqOfficialEvent event = c2cMessage("查账单");
+        service.handleEvent(event);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(event),
+                org.mockito.ArgumentMatchers.argThat(reply -> reply.contains("还没有绑定 EveryCent 账号") && reply.contains("ECQQ-XXXXXXXX"))
+            );
+        verifyNoInteractions(aiAssistantService, ledgerService);
+    }
+
+    @Test
+    void shouldBindQqOpenIdWithBindingCode() throws Exception {
+        when(qqBotBindingService.bind("ECQQ-ABCD2345", "openid-1"))
+            .thenReturn(QqBotBindingService.BindResult.success("绑定成功喵，接下来我会使用 EveryCent 账号「alice」处理记账和查账。"));
+
+        QqOfficialEvent event = c2cMessage("绑定 ECQQ-ABCD2345");
+        service.handleEvent(event);
+
+        verify(qqBotBindingService).bind("ECQQ-ABCD2345", "openid-1");
+        verify(qqOfficialBotClient).sendReply(org.mockito.ArgumentMatchers.eq(event), org.mockito.ArgumentMatchers.contains("绑定成功"));
+        verifyNoInteractions(aiAssistantService, ledgerService);
+    }
+
+    @Test
     void shouldIgnoreNonMessageEvent() {
         QqOfficialEvent event = new QqOfficialEvent();
         event.setT("READY");
 
         service.handleEvent(event);
 
-        verifyNoInteractions(userRepository, aiAssistantService, qqOfficialBotClient, ledgerService);
+        verifyNoInteractions(qqBotBindingService, aiAssistantService, qqOfficialBotClient, ledgerService);
     }
 
     private QqOfficialEvent c2cMessage(String text) throws Exception {

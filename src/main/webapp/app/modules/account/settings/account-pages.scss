@@ -123,6 +123,82 @@
   opacity: 0.7;
 }
 
+.everycent-account-page__bot {
+  display: grid;
+  gap: 1rem;
+}
+
+.everycent-account-page__bot-main {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.everycent-account-page__bot-qr {
+  width: 116px;
+  height: 116px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+}
+
+.everycent-account-page__bot h2 {
+  margin: 0 0 0.35rem;
+  color: var(--ec-text);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.everycent-account-page__bot p,
+.everycent-account-page__bot small {
+  margin: 0;
+  color: var(--ec-muted);
+}
+
+.everycent-account-page__bot-code {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.everycent-account-page__bot-code span {
+  flex: 1;
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  overflow-wrap: anywhere;
+  color: var(--ec-text);
+  font-weight: 800;
+  background: color-mix(in srgb, var(--ec-panel) 86%, var(--ec-accent) 14%);
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+}
+
+.everycent-account-page__bot-code button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 42px;
+  padding: 0 0.9rem;
+  color: var(--ec-text);
+  font-weight: 800;
+  background: var(--ec-panel);
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+}
+
+.everycent-account-page__bot-code button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.everycent-account-page__bot-code .everycent-account-page__bot-reset {
+  color: #b42318;
+  border-color: color-mix(in srgb, #b42318 38%, var(--ec-border));
+}
+
 .dark .everycent-account-page__form .invalid-feedback {
   color: #fda29b;
 }
@@ -139,5 +215,23 @@
   .everycent-account-page__actions button {
     justify-content: center;
     width: 100%;
+  }
+
+  .everycent-account-page__bot-code {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .everycent-account-page__bot-code button {
+    justify-content: center;
+  }
+
+  .everycent-account-page__bot-main {
+    grid-template-columns: 1fr;
+  }
+
+  .everycent-account-page__bot-qr {
+    width: 144px;
+    height: 144px;
   }
 }

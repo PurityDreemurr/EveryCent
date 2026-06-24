@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260624000100-1" author="codex">
+        <createTable tableName="qq_bot_binding">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_qq_bot_binding"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="binding_code" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="qq_open_id" type="varchar(128)"/>
+            <column name="created_date" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bound_date" type="${datetimeType}"/>
+        </createTable>
+
+        <addUniqueConstraint tableName="qq_bot_binding" columnNames="user_id" constraintName="uk_qq_bot_binding_user"/>
+        <addUniqueConstraint tableName="qq_bot_binding" columnNames="binding_code" constraintName="uk_qq_bot_binding_code"/>
+        <addUniqueConstraint tableName="qq_bot_binding" columnNames="qq_open_id" constraintName="uk_qq_bot_binding_open_id"/>
+        <addForeignKeyConstraint
+            baseTableName="qq_bot_binding"
+            baseColumnNames="user_id"
+            referencedTableName="jhi_user"
+            referencedColumnNames="id"
+            constraintName="fk_qq_bot_binding_user_id"
+            onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>
