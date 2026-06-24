@@ -75,7 +75,7 @@ public class LedgerService {
 
     public LedgerDTO createLedger(User user, LedgerCreateDTO createDTO) {
         String ledgerName = normalizeLedgerName(createDTO.getName());
-        rejectDuplicateLedgerName(ledgerName, null);
+        rejectDuplicateLedgerName(user, ledgerName, null);
 
         Instant now = Instant.now();
         Ledger ledger = new Ledger()
@@ -109,7 +109,7 @@ public class LedgerService {
         permissionService.checkOwner(user, ledgerId);
         Ledger ledger = permissionService.getLedgerOrThrow(ledgerId);
         String ledgerName = normalizeLedgerName(updateDTO.getName());
-        rejectDuplicateLedgerName(ledgerName, ledgerId);
+        rejectDuplicateLedgerName(user, ledgerName, ledgerId);
         ledger.setName(ledgerName);
         ledger.setDescription(updateDTO.getDescription());
         ledger.setLastModifiedDate(Instant.now());
@@ -217,9 +217,9 @@ public class LedgerService {
         return name == null ? null : name.trim();
     }
 
-    private void rejectDuplicateLedgerName(String name, Long currentLedgerId) {
+    private void rejectDuplicateLedgerName(User owner, String name, Long currentLedgerId) {
         ledgerRepository
-            .findFirstByNameIgnoreCase(name)
+            .findFirstByCreatorAndNameIgnoreCase(owner, name)
             .filter(existing -> !Objects.equals(existing.getId(), currentLedgerId))
             .ifPresent(existing -> {
                 throw new BadRequestAlertException("Ledger name already exists", ENTITY_NAME, "ledgernameexists");

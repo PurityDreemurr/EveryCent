@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 public interface LedgerRepository extends JpaRepository<Ledger, Long> {
     List<Ledger> findAllByCreator(User creator);
 
-    Optional<Ledger> findFirstByNameIgnoreCase(String name);
+    Optional<Ledger> findFirstByCreatorAndNameIgnoreCase(User creator, String name);
 
     @Query(
         """

@@ -96,7 +96,7 @@ class LedgerServiceTest {
         createDTO.setName("My ledger");
         createDTO.setDescription("Daily bookkeeping");
 
-        when(ledgerRepository.findFirstByNameIgnoreCase("My ledger")).thenReturn(Optional.empty());
+        when(ledgerRepository.findFirstByCreatorAndNameIgnoreCase(owner, "My ledger")).thenReturn(Optional.empty());
         when(ledgerRepository.save(any(Ledger.class))).thenAnswer(invocation -> {
             Ledger saved = invocation.getArgument(0);
             saved.setId(10L);
@@ -126,9 +126,29 @@ class LedgerServiceTest {
         Ledger existing = ledger(99L, owner);
         existing.setName("My ledger");
 
-        when(ledgerRepository.findFirstByNameIgnoreCase("My ledger")).thenReturn(Optional.of(existing));
+        when(ledgerRepository.findFirstByCreatorAndNameIgnoreCase(owner, "My ledger")).thenReturn(Optional.of(existing));
 
         assertThatThrownBy(() -> service.createLedger(owner, createDTO)).isInstanceOf(BadRequestAlertException.class);
+    }
+
+    @Test
+    void createLedgerShouldAllowSameNameForDifferentUsers() {
+        LedgerCreateDTO createDTO = new LedgerCreateDTO();
+        createDTO.setName("My ledger");
+        createDTO.setDescription("Daily bookkeeping");
+
+        when(ledgerRepository.findFirstByCreatorAndNameIgnoreCase(owner, "My ledger")).thenReturn(Optional.empty());
+        when(ledgerRepository.save(any(Ledger.class))).thenAnswer(invocation -> {
+            Ledger saved = invocation.getArgument(0);
+            saved.setId(10L);
+            return saved;
+        });
+        when(permissionRepository.save(any(UserLedgerPermission.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LedgerDTO result = service.createLedger(owner, createDTO);
+
+        assertThat(result.getName()).isEqualTo("My ledger");
+        verify(ledgerRepository).findFirstByCreatorAndNameIgnoreCase(owner, "My ledger");
     }
 
     @Test
@@ -152,7 +172,7 @@ class LedgerServiceTest {
         existing.setName("Family");
 
         when(permissionService.getLedgerOrThrow(10L)).thenReturn(ledger);
-        when(ledgerRepository.findFirstByNameIgnoreCase("Family")).thenReturn(Optional.of(existing));
+        when(ledgerRepository.findFirstByCreatorAndNameIgnoreCase(owner, "Family")).thenReturn(Optional.of(existing));
 
         assertThatThrownBy(() -> service.updateLedger(owner, 10L, updateDTO)).isInstanceOf(BadRequestAlertException.class);
     }
