@@ -5,15 +5,19 @@ import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.config.QqBotProperties;
 import com.everycent.domain.User;
-import com.everycent.repository.UserRepository;
 import com.everycent.service.LedgerService;
+import com.everycent.service.QqBotBindingService;
 import com.everycent.service.dto.LedgerDTO;
 import com.everycent.web.rest.errors.BadRequestAlertException;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -28,9 +32,10 @@ public class QqBotAssistantBridgeService {
 
     private static final Logger LOG = LoggerFactory.getLogger(QqBotAssistantBridgeService.class);
     private static final String ENTITY_NAME = "qqBot";
+    private static final Pattern BINDING_CODE_PATTERN = Pattern.compile("(?i)\\bECQQ-[A-Z0-9]{8}\\b");
 
     private final QqBotProperties properties;
-    private final UserRepository userRepository;
+    private final QqBotBindingService qqBotBindingService;
     private final AiAssistantService aiAssistantService;
     private final QqOfficialBotClient qqOfficialBotClient;
     private final QqAssistantReplyRenderer replyRenderer;
@@ -40,14 +45,14 @@ public class QqBotAssistantBridgeService {
 
     public QqBotAssistantBridgeService(
         QqBotProperties properties,
-        UserRepository userRepository,
+        QqBotBindingService qqBotBindingService,
         AiAssistantService aiAssistantService,
         QqOfficialBotClient qqOfficialBotClient,
         QqAssistantReplyRenderer replyRenderer,
         LedgerService ledgerService
     ) {
         this.properties = properties;
-        this.userRepository = userRepository;
+        this.qqBotBindingService = qqBotBindingService;
         this.aiAssistantService = aiAssistantService;
         this.qqOfficialBotClient = qqOfficialBotClient;
         this.replyRenderer = replyRenderer;
@@ -67,8 +72,33 @@ public class QqBotAssistantBridgeService {
         if (!StringUtils.hasText(text)) {
             return;
         }
-        User user = defaultUser();
+        String qqOpenId = senderOpenId(event);
         String senderKey = senderKey(event);
+        try {
+            handleMessage(event, text, qqOpenId, senderKey);
+        } catch (QqReplyTimeoutException e) {
+            LOG.warn("QQ bot reply generation timed out; senderKey={}", senderKey);
+            resetSenderState(senderKey);
+            sendControlReply(event, "这条回复生成超过 " + replyTimeoutSeconds() + " 秒了，我先把本次状态重置了喵。请再发一次，后续消息可以继续处理喵。");
+        } catch (RuntimeException e) {
+            LOG.warn("QQ bot message handling failed; senderKey={}, error={}", senderKey, e.getClass().getSimpleName(), e);
+            resetSenderState(senderKey);
+            sendControlReply(event, "这条消息处理失败了，我先把本次状态重置了喵。请稍后再试或换个说法喵。");
+        }
+    }
+
+    private void handleMessage(QqOfficialEvent event, String text, String qqOpenId, String senderKey) {
+        String bindingCode = parseBindingCode(text);
+        if (bindingCode != null) {
+            QqBotBindingService.BindResult result = qqBotBindingService.bind(bindingCode, qqOpenId);
+            sendControlReply(event, result.message());
+            return;
+        }
+        User user = qqBotBindingService.findBoundUser(qqOpenId).orElse(null);
+        if (user == null) {
+            sendControlReply(event, "这个 QQ 还没有绑定 EveryCent 账号喵。请先登录前端，在个人资料页复制机器人绑定码，然后发给我：绑定 ECQQ-XXXXXXXX。");
+            return;
+        }
         LedgerSelection selection = parseLedgerSelection(text, senderKey);
         if (selection != null) {
             sendControlReply(event, switchLedger(user, senderKey, selection.ledger()));
@@ -83,16 +113,37 @@ public class QqBotAssistantBridgeService {
             sendControlReply(event, switchLedger(user, senderKey, switchRequest.ledgerName()));
             return;
         }
-        if (properties.getDefaultLedgerId() == null || properties.getDefaultLedgerId() <= 0) {
-            throw new BadRequestAlertException("QQ bot default ledger id is not configured", ENTITY_NAME, "defaultledgernotconfigured");
-        }
-
         LedgerDTO currentLedger = currentLedger(user, senderKey);
         ChatRequestDTO request = new ChatRequestDTO();
         request.setLedgerId(currentLedger.getId());
         request.setMessage(text);
-        ChatResponseDTO response = aiAssistantService.chat(user, request);
+        ChatResponseDTO response = chatWithTimeout(user, request);
         qqOfficialBotClient.sendReply(event, replyRenderer.render(response, currentLedger.getName(), isLedgerOperation(text, response)));
+    }
+
+    private ChatResponseDTO chatWithTimeout(User user, ChatRequestDTO request) {
+        CompletableFuture<ChatResponseDTO> future = CompletableFuture.supplyAsync(() -> aiAssistantService.chat(user, request));
+        try {
+            return future.get(replyTimeoutSeconds(), TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            throw new QqReplyTimeoutException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            future.cancel(true);
+            throw new QqReplyGenerationException(e);
+        } catch (ExecutionException e) {
+            throw new QqReplyGenerationException(e.getCause());
+        }
+    }
+
+    private long replyTimeoutSeconds() {
+        return Math.max(1, properties.getReplyTimeoutSeconds());
+    }
+
+    private void resetSenderState(String senderKey) {
+        currentLedgerIds.remove(senderKey);
+        pendingLedgerSelections.remove(senderKey);
     }
 
     private boolean isSupportedMessage(QqOfficialEvent event) {
@@ -117,13 +168,30 @@ public class QqBotAssistantBridgeService {
     }
 
     private LedgerDTO currentLedger(User user, String senderKey) {
-        Long ledgerId = currentLedgerIds.getOrDefault(senderKey, properties.getDefaultLedgerId());
-        try {
-            return ledgerService.findOne(user, ledgerId);
-        } catch (RuntimeException e) {
-            currentLedgerIds.remove(senderKey);
-            return ledgerService.findOne(user, properties.getDefaultLedgerId());
+        Long ledgerId = currentLedgerIds.get(senderKey);
+        if (ledgerId != null) {
+            try {
+                return ledgerService.findOne(user, ledgerId);
+            } catch (RuntimeException e) {
+                currentLedgerIds.remove(senderKey);
+            }
         }
+        if (properties.getDefaultLedgerId() != null && properties.getDefaultLedgerId() > 0) {
+            try {
+                LedgerDTO defaultLedger = ledgerService.findOne(user, properties.getDefaultLedgerId());
+                currentLedgerIds.put(senderKey, defaultLedger.getId());
+                return defaultLedger;
+            } catch (RuntimeException ignored) {
+                currentLedgerIds.remove(senderKey);
+            }
+        }
+        List<LedgerDTO> ledgers = ledgerService.findLedgersForUser(user);
+        if (ledgers.isEmpty()) {
+            throw new BadRequestAlertException("No available ledger for QQ bot user", ENTITY_NAME, "ledgernotfound");
+        }
+        LedgerDTO firstLedger = ledgers.get(0);
+        currentLedgerIds.put(senderKey, firstLedger.getId());
+        return firstLedger;
     }
 
     private String switchLedger(User user, String senderKey, String ledgerName) {
@@ -273,14 +341,22 @@ public class QqBotAssistantBridgeService {
                 .trim();
     }
 
+    private String parseBindingCode(String text) {
+        if (!StringUtils.hasText(text)) {
+            return null;
+        }
+        Matcher matcher = BINDING_CODE_PATTERN.matcher(text.trim());
+        return matcher.find() ? matcher.group().toUpperCase(java.util.Locale.ROOT) : null;
+    }
+
     private String senderKey(QqOfficialEvent event) {
+        String openId = senderOpenId(event);
+        if (StringUtils.hasText(openId)) {
+            return "user_openid:" + openId;
+        }
         JsonNode data = event == null ? null : event.getD();
         if (data == null) {
             return "unknown";
-        }
-        String userOpenId = textAt(data, "author", "user_openid");
-        if (StringUtils.hasText(userOpenId)) {
-            return "user_openid:" + userOpenId;
         }
         String authorId = textAt(data, "author", "id");
         if (StringUtils.hasText(authorId)) {
@@ -292,6 +368,18 @@ public class QqBotAssistantBridgeService {
         }
         String messageId = data.path("id").asText();
         return StringUtils.hasText(messageId) ? "message:" + messageId : "unknown";
+    }
+
+    private String senderOpenId(QqOfficialEvent event) {
+        JsonNode data = event == null ? null : event.getD();
+        if (data == null) {
+            return null;
+        }
+        String userOpenId = textAt(data, "author", "user_openid");
+        if (StringUtils.hasText(userOpenId)) {
+            return userOpenId;
+        }
+        return textAt(data, "author", "id");
     }
 
     private String textAt(JsonNode node, String... path) {
@@ -332,16 +420,21 @@ public class QqBotAssistantBridgeService {
         );
     }
 
-    private User defaultUser() {
-        if (!StringUtils.hasText(properties.getDefaultUserLogin())) {
-            throw new BadRequestAlertException("QQ bot default user login is not configured", ENTITY_NAME, "defaultusernotconfigured");
-        }
-        return userRepository
-            .findOneByLogin(properties.getDefaultUserLogin())
-            .orElseThrow(() -> new BadRequestAlertException("QQ bot default user not found", ENTITY_NAME, "defaultusernotfound"));
-    }
-
     private record LedgerSwitchRequest(String ledgerName) {}
 
     private record LedgerSelection(LedgerDTO ledger) {}
+
+    private static class QqReplyTimeoutException extends RuntimeException {
+
+        private QqReplyTimeoutException(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    private static class QqReplyGenerationException extends RuntimeException {
+
+        private QqReplyGenerationException(Throwable cause) {
+            super(cause);
+        }
+    }
 }

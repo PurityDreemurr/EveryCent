@@ -1,9 +1,12 @@
 package com.everycent.assistant.skill;
 
+import com.everycent.config.QqBotProperties;
 import com.everycent.domain.User;
+import com.everycent.service.ExportDownloadTokenService;
 import com.everycent.service.ExcelExportService;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+import tech.jhipster.config.JHipsterProperties;
 
 @Component
 public class ExportReadSkill implements Skill {
@@ -14,9 +17,24 @@ public class ExportReadSkill implements Skill {
 
     private final SkillCurrentUserResolver currentUserResolver;
 
-    public ExportReadSkill(ExcelExportService excelExportService, SkillCurrentUserResolver currentUserResolver) {
+    private final ExportDownloadTokenService exportDownloadTokenService;
+
+    private final QqBotProperties qqBotProperties;
+
+    private final JHipsterProperties jHipsterProperties;
+
+    public ExportReadSkill(
+        ExcelExportService excelExportService,
+        SkillCurrentUserResolver currentUserResolver,
+        ExportDownloadTokenService exportDownloadTokenService,
+        QqBotProperties qqBotProperties,
+        JHipsterProperties jHipsterProperties
+    ) {
         this.excelExportService = excelExportService;
         this.currentUserResolver = currentUserResolver;
+        this.exportDownloadTokenService = exportDownloadTokenService;
+        this.qqBotProperties = qqBotProperties;
+        this.jHipsterProperties = jHipsterProperties;
     }
 
     @Override
@@ -42,6 +60,8 @@ public class ExportReadSkill implements Skill {
         java.time.LocalDate startDate = args.dateValue("startDate");
         java.time.LocalDate endDate = args.dateValue("endDate");
         byte[] bytes = excelExportService.exportTransactions(user, ledgerId, startDate, endDate);
+        String token = exportDownloadTokenService.create(user.getId(), ledgerId, startDate, endDate);
+        String downloadPath = "/api/public/exports/transactions/" + token;
         return SkillResult.success(
             action.getName(),
             Map.of(
@@ -60,8 +80,30 @@ public class ExportReadSkill implements Skill {
                 "endDate",
                 endDate.toString(),
                 "downloadUrl",
-                "/api/ledgers/" + ledgerId + "/transactions/export?startDate=" + startDate + "&endDate=" + endDate
+                absoluteUrl(downloadPath),
+                "expiresInMinutes",
+                30
             )
         );
+    }
+
+    private String absoluteUrl(String path) {
+        String baseUrl = firstText(
+            qqBotProperties == null ? null : qqBotProperties.getPublicBaseUrl(),
+            jHipsterProperties == null || jHipsterProperties.getMail() == null ? null : jHipsterProperties.getMail().getBaseUrl()
+        );
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return path;
+        }
+        return baseUrl.replaceAll("/+$", "") + path;
+    }
+
+    private String firstText(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 }

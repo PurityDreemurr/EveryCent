@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.everycent.config.QqBotProperties;
 import com.everycent.domain.User;
 import com.everycent.domain.enumeration.BudgetCycle;
 import com.everycent.domain.enumeration.TransactionType;
@@ -13,6 +14,7 @@ import com.everycent.repository.UserRepository;
 import com.everycent.service.BudgetService;
 import com.everycent.service.DashboardService;
 import com.everycent.service.ExcelExportService;
+import com.everycent.service.ExportDownloadTokenService;
 import com.everycent.service.LedgerService;
 import com.everycent.service.LlmParsingService;
 import com.everycent.service.NotificationService;
@@ -36,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tech.jhipster.config.JHipsterProperties;
 
 class ReadOnlySkillTest {
 
@@ -230,8 +233,12 @@ class ReadOnlySkillTest {
     @SuppressWarnings("unchecked")
     void exportReadSkillShouldReturnMetadataInsteadOfBinaryBytes() {
         ExcelExportService service = org.mockito.Mockito.mock(ExcelExportService.class);
-        ExportReadSkill skill = new ExportReadSkill(service, currentUserResolver);
+        ExportDownloadTokenService tokenService = org.mockito.Mockito.mock(ExportDownloadTokenService.class);
+        QqBotProperties properties = new QqBotProperties();
+        properties.setPublicBaseUrl("https://everycent.example.com/");
+        ExportReadSkill skill = new ExportReadSkill(service, currentUserResolver, tokenService, properties, new JHipsterProperties());
         when(service.exportTransactions(user, 10L, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30))).thenReturn(new byte[] { 1, 2, 3 });
+        when(tokenService.create(1L, 10L, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30))).thenReturn("token-1");
 
         SkillResult result = skill.execute(
             new AssistantAction("export.transactions", Map.of("ledgerId", 10L, "startDate", "2026-06-01", "endDate", "2026-06-30")),
@@ -243,10 +250,31 @@ class ReadOnlySkillTest {
         assertThat(data)
             .containsEntry("downloadReady", true)
             .containsEntry("byteLength", 3)
-            .containsEntry("downloadUrl", "/api/ledgers/10/transactions/export?startDate=2026-06-01&endDate=2026-06-30")
+            .containsEntry("downloadUrl", "https://everycent.example.com/api/public/exports/transactions/token-1")
             .containsEntry("fileName", "everycent-transactions.xlsx");
         assertThat(data).doesNotContainKey("bytes");
         verify(service).exportTransactions(user, 10L, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
+        verify(tokenService).create(1L, 10L, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void exportReadSkillShouldFallbackToJhipsterBaseUrl() {
+        ExcelExportService service = org.mockito.Mockito.mock(ExcelExportService.class);
+        ExportDownloadTokenService tokenService = org.mockito.Mockito.mock(ExportDownloadTokenService.class);
+        JHipsterProperties jHipsterProperties = new JHipsterProperties();
+        jHipsterProperties.getMail().setBaseUrl("https://mail-base.example.com");
+        ExportReadSkill skill = new ExportReadSkill(service, currentUserResolver, tokenService, new QqBotProperties(), jHipsterProperties);
+        when(service.exportTransactions(user, 10L, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30))).thenReturn(new byte[] { 1 });
+        when(tokenService.create(1L, 10L, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30))).thenReturn("token-2");
+
+        SkillResult result = skill.execute(
+            new AssistantAction("export.transactions", Map.of("ledgerId", 10L, "startDate", "2026-06-01", "endDate", "2026-06-30")),
+            context
+        );
+
+        Map<String, Object> data = (Map<String, Object>) result.getData();
+        assertThat(data.get("downloadUrl")).isEqualTo("https://mail-base.example.com/api/public/exports/transactions/token-2");
     }
 
     @Test

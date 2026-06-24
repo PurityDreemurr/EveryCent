@@ -3,6 +3,7 @@ package com.everycent.web.rest;
 import com.everycent.domain.User;
 import com.everycent.repository.UserRepository;
 import com.everycent.security.SecurityUtils;
+import com.everycent.service.ExportDownloadTokenService;
 import com.everycent.service.ExcelExportService;
 import com.everycent.web.rest.errors.BadRequestAlertException;
 import java.time.LocalDate;
@@ -31,9 +32,16 @@ public class ExportResource {
 
     private final UserRepository userRepository;
 
-    public ExportResource(ExcelExportService excelExportService, UserRepository userRepository) {
+    private final ExportDownloadTokenService exportDownloadTokenService;
+
+    public ExportResource(
+        ExcelExportService excelExportService,
+        UserRepository userRepository,
+        ExportDownloadTokenService exportDownloadTokenService
+    ) {
         this.excelExportService = excelExportService;
         this.userRepository = userRepository;
+        this.exportDownloadTokenService = exportDownloadTokenService;
     }
 
     @GetMapping({ "/ledgers/{ledgerId}/transactions/export", "/ledgers/{ledgerId}/transactions/export/" })
@@ -45,6 +53,20 @@ public class ExportResource {
         User currentUser = getCurrentUser();
         LOG.debug("REST request to export transactions for Ledger : {}", ledgerId);
         byte[] result = excelExportService.exportTransactions(currentUser, ledgerId, startDate, endDate);
+        return ResponseEntity
+            .ok()
+            .contentType(XLSX_MEDIA_TYPE)
+            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename("everycent-transactions.xlsx").build().toString())
+            .body(result);
+    }
+
+    @GetMapping("/public/exports/transactions/{token}")
+    public ResponseEntity<byte[]> downloadExportByToken(@PathVariable String token) {
+        ExportDownloadTokenService.ExportDownloadToken download = exportDownloadTokenService.resolve(token);
+        User user = userRepository
+            .findById(download.userId())
+            .orElseThrow(() -> new BadRequestAlertException("Export user not found", ENTITY_NAME, "usernotfound"));
+        byte[] result = excelExportService.exportTransactions(user, download.ledgerId(), download.startDate(), download.endDate());
         return ResponseEntity
             .ok()
             .contentType(XLSX_MEDIA_TYPE)

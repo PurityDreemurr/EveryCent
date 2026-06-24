@@ -31,6 +31,10 @@ public class QqBotProperties {
 
     private Long defaultLedgerId;
 
+    private String publicBaseUrl;
+
+    private long replyTimeoutSeconds = 10;
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -133,5 +137,21 @@ public class QqBotProperties {
 
     public void setDefaultLedgerId(Long defaultLedgerId) {
         this.defaultLedgerId = defaultLedgerId;
+    }
+
+    public String getPublicBaseUrl() {
+        return publicBaseUrl;
+    }
+
+    public void setPublicBaseUrl(String publicBaseUrl) {
+        this.publicBaseUrl = publicBaseUrl;
+    }
+
+    public long getReplyTimeoutSeconds() {
+        return replyTimeoutSeconds;
+    }
+
+    public void setReplyTimeoutSeconds(long replyTimeoutSeconds) {
+        this.replyTimeoutSeconds = replyTimeoutSeconds;
     }
 }

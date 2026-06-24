@@ -11,13 +11,14 @@ import com.everycent.assistant.dto.ChatRequestDTO;
 import com.everycent.assistant.dto.ChatResponseDTO;
 import com.everycent.config.QqBotProperties;
 import com.everycent.domain.User;
-import com.everycent.repository.UserRepository;
 import com.everycent.service.LedgerService;
+import com.everycent.service.QqBotBindingService;
 import com.everycent.service.dto.LedgerDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,7 +26,7 @@ import org.mockito.ArgumentCaptor;
 class QqBotAssistantBridgeServiceTest {
 
     private final QqBotProperties properties = properties();
-    private final UserRepository userRepository = org.mockito.Mockito.mock(UserRepository.class);
+    private final QqBotBindingService qqBotBindingService = org.mockito.Mockito.mock(QqBotBindingService.class);
     private final AiAssistantService aiAssistantService = org.mockito.Mockito.mock(AiAssistantService.class);
     private final QqOfficialBotClient qqOfficialBotClient = org.mockito.Mockito.mock(QqOfficialBotClient.class);
     private final LedgerService ledgerService = org.mockito.Mockito.mock(LedgerService.class);
@@ -33,7 +34,7 @@ class QqBotAssistantBridgeServiceTest {
     private final QqAssistantReplyRenderer replyRenderer = new QqAssistantReplyRenderer(objectMapper);
     private final QqBotAssistantBridgeService service = new QqBotAssistantBridgeService(
         properties,
-        userRepository,
+        qqBotBindingService,
         aiAssistantService,
         qqOfficialBotClient,
         replyRenderer,
@@ -44,7 +45,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldSendAssistantRawMessageBackToQqOfficialBot() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已为您查询账单。{\"mood\":50,\"emoji\":\"peace\"}");
@@ -64,7 +65,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldRenderQueryCardDataForQqReply() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已查询账单。");
@@ -107,7 +108,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldRenderAllTransactionRowsForQqReply() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         ChatResponseDTO response = new ChatResponseDTO();
         response.setAssistantMessage("已查询账单。");
@@ -126,10 +127,41 @@ class QqBotAssistantBridgeServiceTest {
     }
 
     @Test
+    void shouldRenderExportDownloadLinkForQqReply() throws Exception {
+        User user = new User();
+        user.setLogin("admin");
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
+        ChatResponseDTO response = new ChatResponseDTO();
+        response.setAssistantMessage("导出结果准备好了，链接在下面喵。{\"mood\":42,\"emoji\":\"calm\"}");
+        response.setCards(
+            List.of(
+                new AssistantResponseCardDTO(
+                    "download_result",
+                    "导出已准备",
+                    "账单导出已准备好。",
+                    Map.of("downloadUrl", "https://everycent.example.com/api/public/exports/transactions/token-1", "byteLength", 3)
+                )
+            )
+        );
+        when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class))).thenReturn(response);
+
+        QqOfficialEvent event = c2cMessage("导出本月账单");
+        service.handleEvent(event);
+
+        ArgumentCaptor<String> replyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(qqOfficialBotClient).sendReply(org.mockito.ArgumentMatchers.eq(event), replyCaptor.capture());
+        assertThat(replyCaptor.getValue())
+            .contains("下载链接：https://everycent.example.com/api/public/exports/transactions/token-1")
+            .doesNotContain("byteLength")
+            .doesNotContain("/api/ledgers/10/transactions/export");
+    }
+
+    @Test
     void shouldSwitchLedgerByNaturalLanguageAndUseItForNextRequest() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
@@ -155,7 +187,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldListLedgersAndSwitchByReplyingIndex() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
         when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
         when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
@@ -188,7 +220,7 @@ class QqBotAssistantBridgeServiceTest {
     void shouldRecognizeLedgerTypoForListAndSwitchCommands() throws Exception {
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
         when(ledgerService.findOne(user, 20L)).thenReturn(ledger(20L, "旅行账本"));
 
@@ -211,7 +243,7 @@ class QqBotAssistantBridgeServiceTest {
         properties.setDefaultLedgerId(0L);
         User user = new User();
         user.setLogin("admin");
-        when(userRepository.findOneByLogin("admin")).thenReturn(Optional.of(user));
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
         when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
 
         QqOfficialEvent listEvent = c2cMessage("账本列表");
@@ -231,13 +263,98 @@ class QqBotAssistantBridgeServiceTest {
     }
 
     @Test
+    void shouldResetSenderStateAndContinueReplyingWhenAssistantChatTimesOut() throws Exception {
+        properties.setReplyTimeoutSeconds(1);
+        User user = new User();
+        user.setLogin("admin");
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
+        when(ledgerService.findLedgersForUser(user)).thenReturn(List.of(ledger(10L, "日常账本"), ledger(20L, "旅行账本")));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
+        java.util.concurrent.atomic.AtomicInteger chatCalls = new java.util.concurrent.atomic.AtomicInteger();
+        when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class)))
+            .thenAnswer(invocation -> {
+                if (chatCalls.incrementAndGet() == 1) {
+                    Thread.sleep(1500);
+                    ChatResponseDTO slowResponse = new ChatResponseDTO();
+                    slowResponse.setAssistantMessage("这条回复太慢了喵。");
+                    return slowResponse;
+                }
+                ChatResponseDTO response = new ChatResponseDTO();
+                response.setAssistantMessage("后续消息已经正常处理喵。{\"mood\":42,\"emoji\":\"calm\"}");
+                return response;
+            });
+
+        QqOfficialEvent listEvent = c2cMessage("账本列表");
+        service.handleEvent(listEvent);
+        QqOfficialEvent timeoutEvent = c2cMessage("查账单");
+        service.handleEvent(timeoutEvent);
+        QqOfficialEvent nextEvent = c2cMessage("2");
+        service.handleEvent(nextEvent);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(timeoutEvent),
+                org.mockito.ArgumentMatchers.argThat(reply -> reply.contains("超过 1 秒") && reply.contains("状态重置"))
+            );
+        verify(qqOfficialBotClient)
+            .sendReply(org.mockito.ArgumentMatchers.eq(nextEvent), org.mockito.ArgumentMatchers.contains("后续消息已经正常处理喵"));
+    }
+
+    @Test
+    void shouldResetSenderStateAndReplyWhenAssistantChatFails() throws Exception {
+        User user = new User();
+        user.setLogin("admin");
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.of(user));
+        when(ledgerService.findOne(user, 10L)).thenReturn(ledger(10L, "日常账本"));
+        when(aiAssistantService.chat(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(ChatRequestDTO.class)))
+            .thenThrow(new IllegalStateException("boom"));
+
+        QqOfficialEvent event = c2cMessage("查账单");
+        service.handleEvent(event);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(event),
+                org.mockito.ArgumentMatchers.argThat(reply -> reply.contains("处理失败") && reply.contains("状态重置") && reply.contains("喵"))
+            );
+    }
+
+    @Test
+    void shouldPromptWhenQqOpenIdIsNotBound() throws Exception {
+        when(qqBotBindingService.findBoundUser("openid-1")).thenReturn(Optional.empty());
+
+        QqOfficialEvent event = c2cMessage("查账单");
+        service.handleEvent(event);
+
+        verify(qqOfficialBotClient)
+            .sendReply(
+                org.mockito.ArgumentMatchers.eq(event),
+                org.mockito.ArgumentMatchers.argThat(reply -> reply.contains("还没有绑定 EveryCent 账号") && reply.contains("ECQQ-XXXXXXXX"))
+            );
+        verifyNoInteractions(aiAssistantService, ledgerService);
+    }
+
+    @Test
+    void shouldBindQqOpenIdWithBindingCode() throws Exception {
+        when(qqBotBindingService.bind("ECQQ-ABCD2345", "openid-1"))
+            .thenReturn(QqBotBindingService.BindResult.success("绑定成功喵，接下来我会使用 EveryCent 账号「alice」处理记账和查账。"));
+
+        QqOfficialEvent event = c2cMessage("绑定 ECQQ-ABCD2345");
+        service.handleEvent(event);
+
+        verify(qqBotBindingService).bind("ECQQ-ABCD2345", "openid-1");
+        verify(qqOfficialBotClient).sendReply(org.mockito.ArgumentMatchers.eq(event), org.mockito.ArgumentMatchers.contains("绑定成功"));
+        verifyNoInteractions(aiAssistantService, ledgerService);
+    }
+
+    @Test
     void shouldIgnoreNonMessageEvent() {
         QqOfficialEvent event = new QqOfficialEvent();
         event.setT("READY");
 
         service.handleEvent(event);
 
-        verifyNoInteractions(userRepository, aiAssistantService, qqOfficialBotClient, ledgerService);
+        verifyNoInteractions(qqBotBindingService, aiAssistantService, qqOfficialBotClient, ledgerService);
     }
 
     private QqOfficialEvent c2cMessage(String text) throws Exception {
