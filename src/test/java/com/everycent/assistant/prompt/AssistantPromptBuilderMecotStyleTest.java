@@ -75,6 +75,8 @@ class AssistantPromptBuilderMecotStyleTest {
         assertThat(prompt).contains("委婉拒绝");
         assertThat(prompt).contains("普通聊天时不要主动把话题转回记账、查账、预算或导出");
         assertThat(prompt).contains("用户请求安慰时，先承认感受、给一点稳定感");
+        assertThat(prompt).contains("关怀表达必须符合喵喵的角色特征");
+        assertThat(prompt).contains("禁止使用“我随时都在”“我一直在这”“我在这里陪你”“我会一直陪着你”等公式化陪伴承诺");
         assertThat(prompt).contains("日常对话确保角色生动活泼");
         assertThat(prompt).contains("当用户输入包含明确账单信息时，优先处理记账");
         assertThat(prompt).contains("如果用户只是日常聊天或抱怨，且没有金额或明确记账意图，不要主动记账");
@@ -87,14 +89,14 @@ class AssistantPromptBuilderMecotStyleTest {
     @Test
     void shouldIncludeCurrentLedgerConversationHistoryInPrompt() {
         ChatHistoryMessageDTO previousUser = historyMessage("user", "我今天心情不太好");
-        ChatHistoryMessageDTO previousAssistant = historyMessage("assistant", "听起来今天有点难熬，我在。 {\"mood\":35,\"emoji\":\"calm\"}");
+        ChatHistoryMessageDTO previousAssistant = historyMessage("assistant", "听起来今天有点难熬，先把爪子收回来缓一口气喵。 {\"mood\":35,\"emoji\":\"calm\"}");
 
         String prompt = new AssistantPromptBuilder()
             .buildSingleTurnPrompt("你还记得我刚才说什么吗", "中立", List.of(), List.of(previousUser, previousAssistant));
 
         assertThat(prompt).contains("[当前账本会话历史]");
         assertThat(prompt).contains("用户：我今天心情不太好");
-        assertThat(prompt).contains("AI：听起来今天有点难熬，我在。");
+        assertThat(prompt).contains("AI：听起来今天有点难熬，先把爪子收回来缓一口气喵。");
         assertThat(prompt).contains("刚才、上面、它、那个、继续、你还记得吗");
         assertThat(prompt).doesNotContain("{\"mood\":35");
     }

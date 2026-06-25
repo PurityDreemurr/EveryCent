@@ -86,7 +86,7 @@ public class AssistantReplyPostProcessor {
             case JOKE -> "喵，先当作玩笑处理。 {\"mood\":52,\"emoji\":\"pleased\"}";
             case COLD_REPLY -> "好，喵，那我先不追问。 {\"mood\":40,\"emoji\":\"calm\"}";
             case SELF_BLAME -> "别这么判自己。今天状态差，不等于你这个人差，先拿下一件很小的事喵。 {\"mood\":55,\"emoji\":\"sad\"}";
-            case LONELINESS -> "一个人待着会有点发空。先让环境里有点声音，我在这里陪你守一会儿喵。 {\"mood\":50,\"emoji\":\"sad\"}";
+            case LONELINESS -> "一个人待着会有点发空。先让房间里有点声音，再把爪子搭到最容易做的一件小事上喵。 {\"mood\":50,\"emoji\":\"sad\"}";
             case FATIGUE -> "累的话先别硬撑，喵。今天可以先把力气省下来。 {\"mood\":48,\"emoji\":\"tired\"}";
             case FRUSTRATION -> "这事确实烦，喵。先抓住最关键的一步就好。 {\"mood\":58,\"emoji\":\"tired\"}";
             case EMOTION_HEAVY, EMOTION_LIGHT -> "先别急着压自己，喵。我看到了。 {\"mood\":45,\"emoji\":\"calm\"}";

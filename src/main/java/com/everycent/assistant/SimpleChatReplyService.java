@@ -21,7 +21,7 @@ public class SimpleChatReplyService {
             return "我可以帮你自然语言记账、查账单、看预算状态、设置预算和导出账单。删除和账号权限类操作需要你到页面里手动处理，喵。 {\"mood\":35,\"emoji\":\"calm\"}";
         }
         if (containsAny(text, "能聊天吗", "可以聊天吗", "陪我聊", "和我聊天", "聊天")) {
-            return "可以，喵。你想随便聊几句，我就在这里。 {\"mood\":38,\"emoji\":\"calm\"}";
+            return "可以，喵。你抛个话题过来，我把耳朵支起来接招。 {\"mood\":38,\"emoji\":\"calm\"}";
         }
         return null;
     }

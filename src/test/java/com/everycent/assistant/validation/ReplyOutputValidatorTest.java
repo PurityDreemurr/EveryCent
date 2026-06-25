@@ -33,8 +33,15 @@ class ReplyOutputValidatorTest {
 
     @Test
     void shouldAllowNormalComfortingDailyChat() {
-        ReplyValidationResult result = validator.validate("可以。我先陪你把这口气放慢一点，今天不用马上把自己整理好。{\"mood\":45,\"emoji\":\"calm\"}", DialogueScene.DAILY_CHAT);
+        ReplyValidationResult result = validator.validate("可以。先把爪子收回来，让这口气慢一点，今天不用马上把自己整理好喵。{\"mood\":45,\"emoji\":\"calm\"}", DialogueScene.DAILY_CHAT);
         assertThat(result.isPassed()).isTrue();
+    }
+
+    @Test
+    void shouldFailOnFormulaicCompanionComfort() {
+        ReplyValidationResult result = validator.validate("别担心，我一直在这里陪你喵。{\"mood\":45,\"emoji\":\"calm\"}", DialogueScene.EMOTION_LIGHT);
+        assertThat(result.isPassed()).isFalse();
+        assertThat(result.getViolations()).contains("OVER_COMFORT:我一直在这里");
     }
 
     @Test

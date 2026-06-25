@@ -174,7 +174,7 @@ class AssistantApplicationServiceTest {
         AssistantPlan dailyChatPlan = new AssistantPlan();
         dailyChatPlan.setIntent(AssistantIntent.DAILY_CHAT);
         com.everycent.assistant.dto.ChatResponseDTO llmResponse = new com.everycent.assistant.dto.ChatResponseDTO();
-        llmResponse.setAssistantMessage("那我陪你待一会儿。{\"mood\":40,\"emoji\":\"calm\"}");
+        llmResponse.setAssistantMessage("那就先随便聊几句，我把耳朵支起来接招喵。{\"mood\":40,\"emoji\":\"calm\"}");
         ChatHistoryMessageDTO previousMessage = new ChatHistoryMessageDTO();
         previousMessage.setRole("user");
         previousMessage.setContent("我今天心情不太好");
@@ -194,7 +194,7 @@ class AssistantApplicationServiceTest {
         var response = service.chat(user(), request);
 
         assertThat(request.getConversationId()).isEqualTo(88L);
-        assertThat(response.getAssistantMessage()).contains("陪你");
+        assertThat(response.getAssistantMessage()).contains("耳朵支起来");
         assertThat(response.getResponseType()).isEqualTo("message");
         verify(conversationStore).recentMessagesForPrompt(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(request));
         verifyNoInteractions(router);

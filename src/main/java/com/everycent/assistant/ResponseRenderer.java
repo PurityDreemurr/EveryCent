@@ -62,7 +62,7 @@ public class ResponseRenderer {
 
     private String messageFor(AssistantPlan plan, List<SkillResult> results) {
         if (results.isEmpty()) {
-            return withState("我在，喵。你可以直接告诉我要查账、记账、设置预算，或者先聊聊喵。", 40, "calm");
+            return withState("喵，耳朵已经支起来了。你可以直接告诉我要查账、记账、设置预算，或者先聊聊喵。", 40, "calm");
         }
         SkillResult first = results.get(0);
         if (Boolean.TRUE.equals(first.getBlockedByPolicy())) {

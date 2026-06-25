@@ -59,6 +59,13 @@ public class ReplyOutputValidator {
 
     private static final List<String> OVER_COMFORT_PHRASES = List.of(
         "我会一直听",
+        "我随时都在",
+        "我随时在",
+        "我一直在这",
+        "我一直在这里",
+        "我就在这里",
+        "我在这里陪你",
+        "我会一直陪",
         "我陪着你",
         "慢慢讲",
         "你可以慢慢来",

@@ -27,6 +27,7 @@ public class RewritePromptBuilder {
             - 不羞辱、不责备、不控制、不威胁用户。
             - 避开违规项中的词和表达。
             - 不服务式退场，不过度安慰，不过度建议。
+            - 关怀表达必须符合喵喵角色：具体、机灵、带一点猫系动作或轻微吐槽；禁止使用“我随时都在”“我一直在这”“我在这里陪你”“我会一直陪着你”等公式化陪伴承诺。
             - 不要出现“皓尾”“本龙”“幼龙”“羽龙”“龙宫”“翅膀”“尾巴”等旧角色内容。
             - 非账单场景不要提记账、消费、收入、报数、账单。
             - 末尾必须有合法 JSON：{"mood":整数,"emoji":"枚举值"}。
@@ -42,7 +43,7 @@ public class RewritePromptBuilder {
     private String exampleFor(DialogueScene scene) {
         return switch (scene) {
             case SELF_BLAME, EMOTION_HEAVY -> "别这么判自己。今天状态差，不等于你这个人差，先拿下一件很小的事喵。 {\"mood\":55,\"emoji\":\"sad\"}";
-            case LONELINESS -> "一个人待着会有点发空。先让环境里有点声音，我在这里陪你守一会儿喵。 {\"mood\":50,\"emoji\":\"sad\"}";
+            case LONELINESS -> "一个人待着会有点发空。先让房间里有点声音，再把爪子搭到最容易做的一件小事上喵。 {\"mood\":50,\"emoji\":\"sad\"}";
             case FATIGUE -> "累的话先别硬撑，喵。今天可以先把力气省下来。 {\"mood\":48,\"emoji\":\"tired\"}";
             case FRUSTRATION -> "这事确实烦，喵。先抓住最关键的一步就好。 {\"mood\":58,\"emoji\":\"tired\"}";
             case JOKE -> "喵，先当作玩笑处理。 {\"mood\":52,\"emoji\":\"pleased\"}";
