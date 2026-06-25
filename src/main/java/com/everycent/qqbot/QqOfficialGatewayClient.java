@@ -32,7 +32,9 @@ public class QqOfficialGatewayClient implements SmartLifecycle {
     private static final int OP_RECONNECT = 7;
     private static final int OP_INVALID_SESSION = 9;
     private static final int OP_HELLO = 10;
-    private static final long RECONNECT_DELAY_SECONDS = 5;
+    private static final long INITIAL_RECONNECT_DELAY_SECONDS = 5;
+    private static final long MAX_RECONNECT_DELAY_SECONDS = 300;
+    private static final long TOKEN_REFRESH_RETRY_DELAY_SECONDS = 300;
 
     private final QqBotProperties properties;
     private final QqOfficialBotClient botClient;
@@ -44,7 +46,9 @@ public class QqOfficialGatewayClient implements SmartLifecycle {
 
     private volatile WebSocket webSocket;
     private volatile ScheduledFuture<?> heartbeatTask;
+    private volatile ScheduledFuture<?> accessTokenRefreshTask;
     private volatile Long lastSequence;
+    private volatile long nextReconnectDelaySeconds = INITIAL_RECONNECT_DELAY_SECONDS;
 
     public QqOfficialGatewayClient(
         QqBotProperties properties,
@@ -72,6 +76,7 @@ public class QqOfficialGatewayClient implements SmartLifecycle {
     public void stop() {
         running.set(false);
         stopHeartbeat();
+        stopAccessTokenRefresh();
         WebSocket socket = webSocket;
         if (socket != null) {
             socket.sendClose(WebSocket.NORMAL_CLOSURE, "EveryCent shutdown");
@@ -109,12 +114,12 @@ public class QqOfficialGatewayClient implements SmartLifecycle {
                 .thenAccept(socket -> this.webSocket = socket)
                 .exceptionally(error -> {
                     LOG.warn("QQ official bot gateway connect failed: {}", error.getMessage());
-                    connectLater(RECONNECT_DELAY_SECONDS);
+                    scheduleReconnect();
                     return null;
                 });
         } catch (RuntimeException e) {
             LOG.warn("QQ official bot gateway connect failed: {}", e.getMessage());
-            connectLater(RECONNECT_DELAY_SECONDS);
+            scheduleReconnect();
         }
     }
 
@@ -139,6 +144,7 @@ public class QqOfficialGatewayClient implements SmartLifecycle {
 
     private void handleHello(JsonNode data) {
         long interval = data.path("heartbeat_interval").asLong(45000L);
+        resetReconnectDelay();
         sendIdentify();
         startHeartbeat(interval);
     }
@@ -159,6 +165,7 @@ public class QqOfficialGatewayClient implements SmartLifecycle {
         data.put("shard", java.util.List.of(0, 1));
         data.put("properties", Map.of("os", "linux", "browser", "everycent", "device", "everycent"));
         sendJson(OP_IDENTIFY, data);
+        scheduleAccessTokenRefresh();
     }
 
     private void startHeartbeat(long intervalMillis) {
@@ -174,13 +181,60 @@ public class QqOfficialGatewayClient implements SmartLifecycle {
         }
     }
 
+    private void scheduleAccessTokenRefresh() {
+        scheduleAccessTokenRefresh(botClient.secondsUntilAccessTokenRefresh());
+    }
+
+    private void scheduleAccessTokenRefresh(long delaySeconds) {
+        stopAccessTokenRefresh();
+        accessTokenRefreshTask = scheduler.schedule(this::refreshAccessTokenAndReconnect, delaySeconds, TimeUnit.SECONDS);
+        LOG.info("QQ official bot access token refresh scheduled in {} seconds.", delaySeconds);
+    }
+
+    private void stopAccessTokenRefresh() {
+        ScheduledFuture<?> task = accessTokenRefreshTask;
+        if (task != null) {
+            task.cancel(true);
+            accessTokenRefreshTask = null;
+        }
+    }
+
+    private void refreshAccessTokenAndReconnect() {
+        if (!running.get()) {
+            return;
+        }
+        try {
+            botClient.refreshAccessToken();
+            LOG.info("QQ official bot access token refreshed; reconnecting gateway.");
+            reconnect();
+        } catch (RuntimeException e) {
+            LOG.warn(
+                "QQ official bot access token refresh failed: {}; retrying in {} seconds.",
+                e.getMessage(),
+                TOKEN_REFRESH_RETRY_DELAY_SECONDS
+            );
+            scheduleAccessTokenRefresh(TOKEN_REFRESH_RETRY_DELAY_SECONDS);
+        }
+    }
+
     private void reconnect() {
         stopHeartbeat();
+        stopAccessTokenRefresh();
         WebSocket socket = webSocket;
         if (socket != null) {
             socket.abort();
         }
-        connectLater(RECONNECT_DELAY_SECONDS);
+        scheduleReconnect();
+    }
+
+    private void scheduleReconnect() {
+        long delaySeconds = nextReconnectDelaySeconds;
+        nextReconnectDelaySeconds = Math.min(MAX_RECONNECT_DELAY_SECONDS, Math.max(INITIAL_RECONNECT_DELAY_SECONDS, delaySeconds * 2));
+        connectLater(delaySeconds);
+    }
+
+    private void resetReconnectDelay() {
+        nextReconnectDelaySeconds = INITIAL_RECONNECT_DELAY_SECONDS;
     }
 
     private void sendJson(int op, Object data) {
@@ -223,9 +277,10 @@ public class QqOfficialGatewayClient implements SmartLifecycle {
         @Override
         public CompletionStage<?> onClose(WebSocket socket, int statusCode, String reason) {
             stopHeartbeat();
+            stopAccessTokenRefresh();
             if (running.get()) {
                 LOG.warn("QQ official bot gateway closed status={}, reason={}", statusCode, reason);
-                connectLater(RECONNECT_DELAY_SECONDS);
+                scheduleReconnect();
             }
             return null;
         }

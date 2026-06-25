@@ -7,9 +7,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -18,13 +21,19 @@ public class QqOfficialBotClient {
     private static final long TOKEN_REFRESH_SKEW_SECONDS = 60;
 
     private final QqBotProperties properties;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     private String cachedAccessToken;
     private Instant cachedAccessTokenExpiresAt = Instant.EPOCH;
 
+    @Autowired
     public QqOfficialBotClient(QqBotProperties properties) {
+        this(properties, new RestTemplate());
+    }
+
+    QqOfficialBotClient(QqBotProperties properties, RestTemplate restTemplate) {
         this.properties = properties;
+        this.restTemplate = restTemplate;
     }
 
     public void sendReply(QqOfficialEvent event, String message) {
@@ -51,11 +60,23 @@ public class QqOfficialBotClient {
         if (StringUtils.hasText(properties.getGatewayUrl())) {
             return properties.getGatewayUrl();
         }
+        return gatewayUrl(false);
+    }
+
+    private String gatewayUrl(boolean refreshed) {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.AUTHORIZATION, "QQBot " + accessToken());
-        JsonNode response = restTemplate
-            .exchange(resolveApiUrl("/gateway"), org.springframework.http.HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class)
-            .getBody();
+        JsonNode response;
+        try {
+            response = restTemplate.exchange(resolveApiUrl("/gateway"), HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class).getBody();
+        } catch (HttpClientErrorException.Unauthorized e) {
+            if (refreshed) {
+                throw e;
+            }
+            invalidateAccessToken();
+            refreshAccessToken(false);
+            return gatewayUrl(true);
+        }
         String url = text(response, "url", null);
         if (!StringUtils.hasText(url)) {
             throw new IllegalStateException("QQ official bot gateway response is empty");
@@ -67,7 +88,21 @@ public class QqOfficialBotClient {
         return resolveAccessToken();
     }
 
+    public synchronized String refreshAccessToken() {
+        return refreshAccessToken(true);
+    }
+
+    public synchronized long secondsUntilAccessTokenRefresh() {
+        resolveAccessToken();
+        long seconds = java.time.Duration.between(Instant.now(), cachedAccessTokenExpiresAt.minusSeconds(TOKEN_REFRESH_SKEW_SECONDS)).getSeconds();
+        return Math.max(1, seconds);
+    }
+
     private void postMessage(String path, String content, String msgId) {
+        postMessage(path, content, msgId, false);
+    }
+
+    private void postMessage(String path, String content, String msgId, boolean refreshed) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("msg_type", 0);
         body.put("content", content);
@@ -78,7 +113,16 @@ public class QqOfficialBotClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(HttpHeaders.AUTHORIZATION, "QQBot " + accessToken());
-        restTemplate.postForEntity(resolveApiUrl(path), new HttpEntity<>(body, headers), String.class);
+        try {
+            restTemplate.postForEntity(resolveApiUrl(path), new HttpEntity<>(body, headers), String.class);
+        } catch (HttpClientErrorException.Unauthorized e) {
+            if (refreshed) {
+                throw e;
+            }
+            invalidateAccessToken();
+            refreshAccessToken(false);
+            postMessage(path, content, msgId, true);
+        }
     }
 
     private String resolveAccessToken() {
@@ -102,12 +146,33 @@ public class QqOfficialBotClient {
         return cachedAccessToken;
     }
 
+    private synchronized String refreshAccessToken(boolean preserveCachedTokenOnFailure) {
+        String previousToken = cachedAccessToken;
+        Instant previousExpiresAt = cachedAccessTokenExpiresAt;
+        cachedAccessToken = null;
+        cachedAccessTokenExpiresAt = Instant.EPOCH;
+        try {
+            return resolveAccessToken();
+        } catch (RuntimeException e) {
+            if (preserveCachedTokenOnFailure) {
+                cachedAccessToken = previousToken;
+                cachedAccessTokenExpiresAt = previousExpiresAt;
+            }
+            throw e;
+        }
+    }
+
     private String resolveApiUrl(String path) {
         return trimTrailingSlash(properties.getApiBaseUrl()) + path;
     }
 
     private String resolveTokenUrl(String path) {
         return trimTrailingSlash(properties.getTokenBaseUrl()) + path;
+    }
+
+    private synchronized void invalidateAccessToken() {
+        cachedAccessToken = null;
+        cachedAccessTokenExpiresAt = Instant.EPOCH;
     }
 
     private String trimTrailingSlash(String value) {
